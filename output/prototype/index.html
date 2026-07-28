@@ -885,7 +885,7 @@
                 <div style="margin-bottom:16px;font-weight:600;font-size:15px;">上架配置</div>
                 <el-form>
                   <div style="display:flex;flex-direction:column;align-items:flex-start;width:100%;">
-                    <el-form-item label="局校公用" required v-if="currentAppIsLowcode" style="width:50%;padding:0 8px;">
+                    <el-form-item label="局校共用" required v-if="currentAppIsLowcode" style="width:50%;padding:0 8px;">
                       <el-radio-group v-model="shelfConfig.crossTenant" @change="onCrossTenantChange">
                         <el-radio value="yes">是</el-radio>
                         <el-radio value="no">否</el-radio>
