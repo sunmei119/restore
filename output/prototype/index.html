@@ -584,6 +584,20 @@
                     <el-form-item label="推送地址" required v-show="appDataSync === 'yes'" style="width:50%;padding:0 8px;">
                       <el-input v-model="pushUrl" placeholder="https:// 或 http://" />
                     </el-form-item>
+                    <el-form-item label="TOKEN" required v-show="appDataSync === 'yes'" style="width:50%;padding:0 8px;">
+                      <el-input v-model="syncToken" placeholder="点击右侧按钮生成" maxlength="50" show-word-limit :readonly="true">
+                        <template #append>
+                          <el-button @click="genSyncToken">随机生成Token</el-button>
+                        </template>
+                      </el-input>
+                    </el-form-item>
+                    <el-form-item label="EncodingAesKey" required v-show="appDataSync === 'yes'" style="width:50%;padding:0 8px;">
+                      <el-input v-model="syncAesKey" placeholder="点击右侧按钮生成" maxlength="43" show-word-limit :readonly="true">
+                        <template #append>
+                          <el-button @click="genSyncAesKey">随机生成AesKey</el-button>
+                        </template>
+                      </el-input>
+                    </el-form-item>
                     <el-form-item label="打开方式" required style="width:50%;padding:0 8px;">
                       <el-checkbox-group v-model="openWay">
                         <el-checkbox value="pcweb">PCweb</el-checkbox>
@@ -646,6 +660,9 @@
                     <el-divider content-position="left" style="font-weight:600;width:100%;">应用属性</el-divider>
                     <el-form-item label="应用属性" required style="width:50%;padding:0 8px;">
                       <el-cascader v-model="appAttr" :options="appAttrOptions" :props="{ expandTrigger: 'hover' }" placeholder="请选择" style="width:100%;" />
+                    </el-form-item>
+                    <el-form-item label="应用ID" required v-if="appAttr[1]==='lowcode'" style="width:50%;padding:0 8px;">
+                      <el-input v-model="lowcodeAppId" placeholder="请输入低代码应用ID" />
                     </el-form-item>
                     <el-divider content-position="left" style="font-weight:600;width:100%;">可见性配置</el-divider>
                     <el-form-item label="移动端角色" required v-show="openWay.includes('mini_standalone')" style="width:50%;padding:0 8px;">
@@ -735,6 +752,10 @@
                     </div>
                   </el-form-item>
                   <el-form-item label="应用属性" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentApp.type }}{{ currentApp.native_type ? ' / ' + currentApp.native_type : '' }}</span></el-form-item>
+                  <el-form-item label="是否数据同步" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ appDataSync === 'yes' ? '是' : '否' }}</span></el-form-item>
+                  <el-form-item label="推送地址" v-show="appDataSync === 'yes'" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ pushUrl || '-' }}</span></el-form-item>
+                  <el-form-item label="TOKEN" v-show="appDataSync === 'yes'" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ syncToken || '-' }}</span></el-form-item>
+                  <el-form-item label="EncodingAesKey" v-show="appDataSync === 'yes'" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ syncAesKey || '-' }}</span></el-form-item>
                   <el-form-item label="应用来源" style="width:50%;padding:0 8px;"><span style="line-height:32px;">省、自治区、直辖区级</span></el-form-item>
                   <el-form-item label="移动端角色" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教育局职工、学生、学校教职工</span></el-form-item>
                   <el-form-item label="移动端地址" style="width:50%;padding:0 8px;"><span style="line-height:32px;">https://app.example.com/m</span></el-form-item>
@@ -852,6 +873,10 @@
                   <el-form-item label="适用机构" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentApp.scope }}</span></el-form-item>
                   <el-form-item label="适用学段" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentApp.level }}</span></el-form-item>
                   <el-form-item label="应用属性" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentApp.type }}{{ currentApp.native_type ? ' / ' + currentApp.native_type : '' }}</span></el-form-item>
+                  <el-form-item label="是否数据同步" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ appDataSync === 'yes' ? '是' : '否' }}</span></el-form-item>
+                  <el-form-item label="推送地址" v-show="appDataSync === 'yes'" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ pushUrl || '-' }}</span></el-form-item>
+                  <el-form-item label="TOKEN" v-show="appDataSync === 'yes'" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ syncToken || '-' }}</span></el-form-item>
+                  <el-form-item label="EncodingAesKey" v-show="appDataSync === 'yes'" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ syncAesKey || '-' }}</span></el-form-item>
                   <el-form-item label="应用来源" style="width:50%;padding:0 8px;"><span style="line-height:32px;">省、自治区、直辖区级</span></el-form-item>
                 </div>
               </el-card>
@@ -860,7 +885,7 @@
                 <div style="margin-bottom:16px;font-weight:600;font-size:15px;">上架配置</div>
                 <el-form>
                   <div style="display:flex;flex-direction:column;align-items:flex-start;width:100%;">
-                    <el-form-item label="是否跨租户" required v-if="currentAppIsLowcode" style="width:50%;padding:0 8px;">
+                    <el-form-item label="局校公用" required v-if="currentAppIsLowcode" style="width:50%;padding:0 8px;">
                       <el-radio-group v-model="shelfConfig.crossTenant" @change="onCrossTenantChange">
                         <el-radio value="yes">是</el-radio>
                         <el-radio value="no">否</el-radio>
@@ -884,23 +909,23 @@
                       </div>
                     </el-form-item>
                     <template v-if="!currentAppIsLowcode">
-                      <el-form-item label="是否可试用" required style="width:50%;padding:0 8px;">
-                        <el-radio-group v-model="shelfConfig.canTrial">
-                          <el-radio value="yes">是</el-radio>
-                          <el-radio value="no">否</el-radio>
-                        </el-radio-group>
-                      </el-form-item>
-                      <el-form-item label="试用套餐" required v-if="shelfConfig.canTrial==='yes'" style="width:50%;padding:0 8px;">
-                        <el-select v-model="shelfConfig.trialPackage" placeholder="请选择" style="width:100%;">
-                          <el-option label="7 天免费试用" value="trial_7d" />
-                          <el-option label="30 天免费试用" value="trial_30d" />
-                        </el-select>
-                      </el-form-item>
                       <el-form-item label="收费方式" required style="width:50%;padding:0 8px;">
                         <el-radio-group v-model="shelfConfig.chargeType">
                           <el-radio value="free">免费</el-radio>
                           <el-radio value="paid">收费</el-radio>
                         </el-radio-group>
+                      </el-form-item>
+                      <el-form-item label="是否可试用" required v-if="shelfConfig.chargeType==='paid'" style="width:50%;padding:0 8px;">
+                        <el-radio-group v-model="shelfConfig.canTrial">
+                          <el-radio value="yes">是</el-radio>
+                          <el-radio value="no">否</el-radio>
+                        </el-radio-group>
+                      </el-form-item>
+                      <el-form-item label="试用套餐" required v-if="shelfConfig.canTrial==='yes' && shelfConfig.chargeType==='paid'" style="width:50%;padding:0 8px;">
+                        <el-select v-model="shelfConfig.trialPackage" placeholder="请选择" style="width:100%;">
+                          <el-option label="7 天免费试用" value="trial_7d" />
+                          <el-option label="30 天免费试用" value="trial_30d" />
+                        </el-select>
                       </el-form-item>
                       <el-form-item label="授权套餐" required v-if="shelfConfig.chargeType==='paid'" style="width:50%;padding:0 8px;">
                         <el-select v-model="shelfConfig.authPackages" multiple filterable placeholder="从套餐管理选择（可多选）" style="width:100%;">
@@ -910,8 +935,8 @@
                         </el-select>
                       </el-form-item>
                     </template>
-                    <!-- 范围选择：桂教通超级管理员（含非低代码与低代码）、租户管理员低代码且跨租户=否 时展示 -->
-                    <template v-if="(currentRole==='platform_admin') || (currentRole==='tenant_admin' && currentAppIsLowcode && shelfConfig.crossTenant==='no')">
+                    <!-- 范围选择：桂教通超级管理员（含非低代码与低代码）、租户管理员 时展示 -->
+                    <template v-if="(currentRole==='platform_admin') || (currentRole==='tenant_admin')">
                       <el-form-item label="范围选择" :required="currentRole==='tenant_admin'" style="width:50%;padding:0 8px;">
                         <el-radio-group v-model="shelfConfig.scopeType">
                           <el-radio value="all" v-if="!(currentAppIsLowcode && currentRole==='platform_admin' && shelfConfig.crossTenant==='yes')">全平台</el-radio>
@@ -930,8 +955,8 @@
                         </el-select>
                       </el-form-item>
                     </template>
-                    <!-- 租户管理员低代码应用：分享范围 + 版本号 -->
-                    <template v-if="currentRole==='tenant_admin' && currentAppIsLowcode">
+                    <!-- 租户管理员：分享范围 + 版本号 -->
+                    <template v-if="currentRole==='tenant_admin'">
                       <el-form-item label="分享范围" style="width:50%;padding:0 8px;">
                         <el-checkbox-group v-model="shelfConfig.shareScope">
                           <el-checkbox value="guide">桂教通平台</el-checkbox>
@@ -2462,6 +2487,8 @@
           appType: '',
           appDataSync: 'no',
           pushUrl: '',
+          syncToken: '',
+          syncAesKey: '',
           appCategoryOptions: [
             { value:'教学管理', label:'教学管理', children:[{value:'课堂工具',label:'课堂工具'},{value:'作业管理',label:'作业管理'}] },
             { value:'教务管理', label:'教务管理', children:[{value:'排课管理',label:'排课管理'},{value:'考务管理',label:'考务管理'}] },
@@ -2469,10 +2496,11 @@
           ],
           openWay: ['pcweb','h5'],
           appAttrOptions: [
-            { value:'native', label:'原生应用', children:[{value:'lowcode',label:'低代码应用'},{value:'selfbuilt',label:'自建应用'},{value:'customdev',label:'定开应用'}] },
+            { value:'native', label:'原生应用', children:[{value:'lowcode',label:'低代码应用'},{value:'selfbuilt',label:'自建应用'}] },
             { value:'ecosystem', label:'生态应用' },
           ],
           appAttr: ['native','selfbuilt'],
+          lowcodeAppId: '',
           institutionScope: ['school'],
           schoolLevelsMode: 'all',
           schoolLevels: [],
@@ -3144,8 +3172,11 @@
           this.appType = '';
           this.appDataSync = 'no';
           this.pushUrl = '';
+          this.syncToken = '';
+          this.syncAesKey = '';
           this.openWay = ['pcweb','h5'];
           this.appAttr = ['native','selfbuilt'];
+          this.lowcodeAppId = '';
           this.institutionScope = ['school'];
           this.schoolLevelsMode = 'all';
           this.schoolLevels = [];
@@ -3174,8 +3205,11 @@
           this.appType = a && a.appTypeLabel === '平台应用' ? 'platform' : 'non_platform';
           this.appDataSync = 'no';
           this.pushUrl = '';
+          this.syncToken = '';
+          this.syncAesKey = '';
           this.openWay = ['pcweb','h5'];
           this.appAttr = a && a.type === '原生应用' ? ['native','selfbuilt'] : (a ? ['ecosystem'] : ['native','selfbuilt']);
+          this.lowcodeAppId = a && a.lowcodeAppId ? a.lowcodeAppId : '';
           this.institutionScope = a && a.scope && a.scope.includes('学校') ? ['school'] : (a && a.scope ? [] : ['school']);
           this.schoolLevelsMode = a && a.level && a.level !== '所有学段' ? 'partial' : 'all';
           this.schoolLevels = a && a.level && a.level !== '所有学段' ? a.level.split('/') : [];
@@ -3190,16 +3224,52 @@
             this.$message.warning('推送地址格式必须为 http:// 或 https://');
             return;
           }
+          if (this.appDataSync === 'yes' && !(this.syncToken || '').trim()) {
+            this.$message.warning('请填写 TOKEN');
+            return;
+          }
+          if (this.appDataSync === 'yes' && !(this.syncAesKey || '').trim()) {
+            this.$message.warning('请填写 EncodingAesKey');
+            return;
+          }
+          if (this.appAttr[1] === 'lowcode' && !(this.lowcodeAppId || '').trim()) {
+            this.$message.warning('低代码应用请填写应用ID');
+            return;
+          }
           const finalAppType = this.currentRole === 'tenant_admin' ? 'non_platform' : this.appType;
           const label = finalAppType === 'platform' ? '平台应用' : '非平台应用';
           if (this.editAppId) {
             const t = this.appList.find(x => x.id === this.editAppId);
-            if (t) t.appTypeLabel = label;
+            if (t) { t.appTypeLabel = label; t.lowcodeAppId = this.lowcodeAppId; }
           } else {
-            this.appList.unshift({ id: Date.now(), name:'新建应用', cat: (this.appCategory || []).join('/'), appTypeLabel: label, type:'原生应用', native_type:'自建应用', scope:'学校', level:'所有学段', source:'本机构', status:'offline', listing:'unlisted', logo:'新' });
+            this.appList.unshift({ id: Date.now(), name:'新建应用', cat: (this.appCategory || []).join('/'), appTypeLabel: label, type:'原生应用', native_type: this.appAttr[1] === 'lowcode' ? '低代码应用' : '自建应用', scope:'学校', level:'所有学段', source:'本机构', status:'offline', listing:'unlisted', logo:'新', lowcodeAppId: this.lowcodeAppId });
           }
           this.$message.success(this.editMode ? '提交成功，需重新上架审核后生效' : '上线申请已提交');
           this.goPage('P01');
+        },
+        genSyncToken() {
+          let uuid = '';
+          if (crypto.randomUUID) {
+            uuid = crypto.randomUUID();
+          } else {
+            const hex = [];
+            const r = crypto.getRandomValues(new Uint8Array(16));
+            for (let i = 0; i < 16; i++) hex.push(r[i].toString(16).padStart(2, '0'));
+            uuid = hex.slice(0,4).join('') + '-' + hex.slice(4,6).join('') + '-' + hex.slice(6,8).join('') + '-' + hex.slice(8,10).join('') + '-' + hex.slice(10,16).join('');
+          }
+          this.syncToken = uuid.length > 50 ? uuid.slice(0, 50) : uuid;
+        },
+        genSyncAesKey() {
+          // 生成 32 字节随机密钥（AES-256），Base64 编码后去掉填充 = 43 字符
+          const bytes = crypto.getRandomValues(new Uint8Array(32));
+          let base64 = '';
+          try {
+            base64 = btoa(String.fromCharCode.apply(null, bytes));
+          } catch (e) {
+            base64 = btoa([].reduce.call(bytes, (s, b) => s + String.fromCharCode(b), ''));
+          }
+          // 去掉 Base64 填充 =（32 字节 -> 44 字符 -> 去掉末尾 = -> 43 字符）
+          this.syncAesKey = base64.replace(/=+$/, '');
         },
         onRoleChange() {
           this.shelfConfig.crossTenant = 'no';
