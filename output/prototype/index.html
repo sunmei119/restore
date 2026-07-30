@@ -542,7 +542,7 @@
                     <td>{{ app.level }}</td>
                     <td><el-tag size="small" :type="app.status==='online'?'success':'info'">{{ app.status==='online'?'已上线':'未上线' }}</el-tag></td>
                     <td>
-                      <el-button text size="small" v-if="app.status==='online'" @click="onManageApp(app)">管理</el-button>
+                      <el-button text size="small" @click="onManageApp(app)">管理</el-button>
                       <el-button text size="small" v-if="app.status==='offline'" @click="onOnlineApp(app)">上线</el-button>
                       <el-button text size="small" v-if="app.status==='online' && app.listing==='unlisted'" @click="onOfflineApp(app)">下线</el-button>
                     </td>
@@ -1218,6 +1218,7 @@
                   </el-form-item>
                   <el-button type="primary" size="small" @click="onSearchZoneDetail">查询</el-button>
                   <el-button size="small" @click="onResetZoneDetail">重置</el-button>
+                  <el-button size="small" type="success" @click="onSyncZoneOrgs">同步范围机构</el-button>
                 </div>
                 <table class="data-table">
                   <thead><tr><th>机构名称</th><th>机构 ID</th><th>机构类型</th></tr></thead>
@@ -2808,6 +2809,7 @@
             page: 1,
             pageSize: 10,
             searched: false,
+            scopeOrgIds: [], // 当前范围实际包含的机构 ID（成员关系，区别于完整机构池 zoneOrgPool）
           },
           // 标签机构列表页（P12a）：分页查询当前标签范围内机构
           tagDetail: {
@@ -3897,6 +3899,8 @@
           this.zoneDetail.name = z.name;
           this.zoneDetail.query = { name: '', type: '', id: '' };
           this.zoneDetail.page = 1;
+          // 模拟进入范围时仅包含部分机构（用于演示「同步范围机构」自动补足）
+          this.zoneDetail.scopeOrgIds = this.zoneOrgPool.slice(0, 12).map(o => o.id);
           this.queryZoneOrgs();
           this.currentPage = 'P07a';
         },
@@ -3906,10 +3910,11 @@
           const type = d.query.type;
           const id = (d.query.id || '').trim().toLowerCase();
           const matched = this.zoneOrgPool.filter(o => {
+            const inScope = d.scopeOrgIds.includes(o.id); // 仅展示当前范围已包含的机构
             const okName = !name || o.name.toLowerCase().includes(name);
             const okType = !type || o.type === type;
             const okId = !id || o.id.toLowerCase().includes(id);
-            return okName && okType && okId;
+            return inScope && okName && okType && okId;
           });
           d.total = matched.length;
           const start = (d.page - 1) * d.pageSize;
@@ -3928,6 +3933,21 @@
         onZoneDetailPageChange(p) {
           this.zoneDetail.page = p;
           this.queryZoneOrgs();
+        },
+        onSyncZoneOrgs() {
+          const d = this.zoneDetail;
+          // 模拟后端校验：当前范围是否已包含该范围类型下全部机构
+          const allIds = this.zoneOrgPool.map(o => o.id);
+          const missing = allIds.filter(id => !d.scopeOrgIds.includes(id));
+          if (missing.length === 0) {
+            this.$message.success('当前范围机构已完整，无需同步');
+            return;
+          }
+          // 后端自动补足遗漏机构
+          d.scopeOrgIds = allIds.slice();
+          d.page = 1;
+          this.queryZoneOrgs();
+          this.$message.success('已同步范围机构，自动补足 ' + missing.length + ' 个机构');
         },
         goTagDetail(tag) {
           this.tagDetail.name = tag.name;
