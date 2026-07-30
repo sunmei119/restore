@@ -774,13 +774,13 @@
                   <div style="margin-bottom:16px;font-weight:600;font-size:15px;">上线配置</div>
                   <el-form>
                     <div style="display:flex;flex-direction:column;align-items:flex-start;width:100%;">
-                      <el-form-item label="局校共用" required v-if="currentAppIsLowcode" style="width:50%;padding:0 8px;">
+                      <el-form-item label="是否跨机构" required v-if="currentAppIsLowcode" style="width:50%;padding:0 8px;">
                         <el-radio-group v-model="shelfConfig.crossTenant" @change="onCrossTenantChange">
                           <el-radio value="yes">是</el-radio>
                           <el-radio value="no">否</el-radio>
                         </el-radio-group>
                       </el-form-item>
-                      <el-form-item label="局校共用层级" required v-if="currentAppIsLowcode && currentRole==='platform_admin' && shelfConfig.crossTenant==='yes'" style="width:50%;padding:0 8px;">
+                      <el-form-item label="跨机构层级" required v-if="currentAppIsLowcode && currentRole==='platform_admin' && shelfConfig.crossTenant==='yes'" style="width:50%;padding:0 8px;">
                         <el-radio-group v-model="shelfConfig.crossLevel">
                           <el-radio value="hall">厅</el-radio>
                           <el-radio value="city">市</el-radio>
@@ -824,7 +824,7 @@
                           </el-select>
                         </el-form-item>
                       </template>
-                      <el-form-item label="版本号" required v-if="currentAppIsLowcode && shelfConfig.crossTenant==='no'" style="width:50%;padding:0 8px;">
+                      <el-form-item label="版本号" :required="shelfConfig.crossTenant==='no'" v-if="currentAppIsLowcode" style="width:50%;padding:0 8px;">
                         <el-select v-model="shelfConfig.versionNo" filterable remote :remote-method="onVersionRemoteSearch" @visible-change="(v)=>{ if(v) onVersionRemoteSearch('') }" placeholder="根据低代码应用ID自动获取版本列表" style="width:100%;">
                           <el-option v-for="v in versionOptions" :key="v.value" :label="v.label" :value="v.value" />
                         </el-select>
@@ -959,7 +959,7 @@
             <!-- ===== P06 全平台应用页（仅超管） ===== -->
             <div v-show="currentPage === 'P06'" class="shell-workbench">
               <div style="background:#f0f7ff;border:1px solid #d7e4ff;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:13px;color:var(--shell-text-secondary);line-height:1.6;">
-                <b style="color:var(--shell-text);">全平台应用治理：</b>展示全平台所有租户已上架的应用（<code>listing_status = listed</code>），支持跨租户强制下架。强制下架后对应租户在应用上架管理页看到该应用状态回落为「未上架」，已安装的应用不会被卸载。
+                <b style="color:var(--shell-text);">全平台应用治理：</b>展示全平台所有租户已上架的应用（<code>listing_status = listed</code>），支持跨机构强制下架。强制下架后对应租户在应用上架管理页看到该应用状态回落为「未上架」，已安装的应用不会被卸载。
               </div>
               <div class="filter-bar">
                 <span style="font-size:13px;color:var(--shell-text-secondary);white-space:nowrap;">应用名称:</span>
@@ -3799,7 +3799,7 @@
           if (lvl === 'hall') this.tenantPickerOptions = ['广西壮族自治区教育厅'];
           else if (lvl === 'city') this.tenantPickerOptions = ['南宁市教育局','柳州市教育局','桂林市教育局','梧州市教育局','北海市教育局','防城港市教育局','钦州市教育局','贵港市教育局','玉林市教育局','百色市教育局','贺州市教育局','河池市教育局','来宾市教育局','崇左市教育局'];
           else if (lvl === 'district') this.tenantPickerOptions = ['南宁市青秀区教育局','南宁市兴宁区教育局','南宁市西乡塘区教育局','柳州市城中区教育局','桂林市秀峰区教育局'];
-          else { this.$message.warning('请先选择局校共用层级'); return; }
+          else { this.$message.warning('请先选择跨机构层级'); return; }
           this.pickerTemp = this.shelfConfig.targetTenant;
           this.tenantPickerVisible = true;
         },
@@ -3978,19 +3978,19 @@
           if (this.currentAppIsLowcode) {
             if (this.currentRole === 'tenant_admin') {
               const tenant = '南宁市教育局';
-              // 局校共用上架：范围=局校共用范围，自动安装到范围内租户的应用中心
+              // 是否跨机构上架：范围=跨机构范围，自动安装到范围内租户的应用中心
               if (this.shelfConfig.crossTenant === 'yes') {
-                const zoneName = this.shelfConfig.targetTenant || '局校共用范围';
+                const zoneName = this.shelfConfig.targetTenant || '跨机构范围';
                 this.shelfList.unshift({ initial, name, cat, dev: tenant, zone: zoneName, time: this.today(), status: 'unlisted', source: tenant, appTypeLabel: app.appTypeLabel });
-                this.$message.success('局校共用上架成功，已自动安装到范围内租户的应用中心');
+                this.$message.success('是否跨机构上架成功，已自动安装到范围内租户的应用中心');
                 this.goPage('P04');
                 return;
               }
-              // 非局校共用：范围选择必填
+              // 非跨机构：范围选择必填
               if (!this.shelfConfig.scopeType) { this.$message.warning('请选择范围'); return; }
               const zones = this.shelfConfig.scopeType === 'all' ? ['当前租户及所有下级租户'] : this.shelfConfig.selectedZones;
               zones.forEach(z => this.shelfList.unshift({ initial, name, cat, dev: tenant, zone: z, time: this.today(), status: 'unlisted', source: tenant, appTypeLabel: app.appTypeLabel }));
-              // 版本号（租户管理员 + 低代码 + 局校共用=否，必填）
+              // 版本号（租户管理员 + 低代码 + 是否跨机构=否，必填）
               if (this.currentAppIsLowcode && this.shelfConfig.crossTenant === 'no' && !this.shelfConfig.versionNo) { this.$message.warning('请选择版本号'); return; }
               // 分享范围（多选，非必填）；勾选“其他机构”时需选择机构
               if (this.shelfConfig.shareScope.includes('other') && this.shelfConfig.targetOrgs.length === 0) { this.$message.warning('请选择其他机构'); return; }
@@ -4005,9 +4005,9 @@
             }
             // 桂教通超级管理员
             if (this.shelfConfig.crossTenant === 'yes') {
-              const zoneName = this.shelfConfig.targetTenant || '局校共用范围';
+              const zoneName = this.shelfConfig.targetTenant || '跨机构范围';
               this.shelfList.unshift({ initial, name, cat, dev: '自治区教育厅', zone: zoneName, time: this.today(), status: 'unlisted', source: '自治区教育厅', appTypeLabel: app.appTypeLabel });
-              this.$message.success('局校共用上架成功，已自动安装到范围内租户的应用中心');
+              this.$message.success('是否跨机构上架成功，已自动安装到范围内租户的应用中心');
               this.goPage('P04');
               return;
             }
