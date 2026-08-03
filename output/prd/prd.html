@@ -186,7 +186,7 @@
 <p>从 P02b 应用详情页的"修改"链接进入，字段按当前值回填，底部按钮为"提交"和"取消"。</p>
 <p>提交时全量校验必填项。校验通过后覆盖写入 app 记录（app.system_suite_id 不变）。如属于已上架应用，同步生成一条待审核 review 记录，toast 提示"提交成功，需重新上架审核后生效"，返回 P02b。</p>
 <h4 id="h-14">P02b 应用详情页</h4>
-<p>页面由面包屑、头部凭证区、基本信息区（上线申请模式下基本信息区下方嵌入「上线配置」区，二者同属一个模块）和底部操作区组成。根据进入入口分为四种模式：管理模式（P01"管理"进入，仅 online 应用）、上线申请模式（P01"上线"进入，仅 offline 应用）、只读查看模式（P01 其他用户"查看"进入）、审核详情模式（P10"详情"进入）。</p>
+<p>页面由面包屑、头部凭证区、基本信息区（上线申请模式下基本信息区下方嵌入「上线配置」区，二者同属一个模块）和底部操作区组成。根据进入入口分为四种模式：管理模式（P01"管理"进入，所有状态应用，含上线/下线）、上线申请模式（P01"上线"进入，仅 offline 应用）、只读查看模式（P01 其他用户"查看"进入）、审核详情模式（P10"详情"进入）。</p>
 <p>（1）查看头部凭证区</p>
 <table><thead><tr><th>展示项</th><th>字段</th><th>形式</th></tr></thead><tbody><tr><td>应用 Logo</td><td>app.logo</td><td>大尺寸圆角图标，与凭证区左右布局</td></tr><tr><td>应用标题</td><td>app.name + 分类拼接</td><td>加粗标题</td></tr><tr><td>SuiteId</td><td>app.system_suite_id</td><td>标签+值两栏，纯只读，全局唯一不可修改</td></tr><tr><td>SuiteKey</td><td>app.system_suite_key</td><td>标签+值两栏 + 右侧"更新"链接按钮</td></tr></tbody></table>
 <p>仅管理模式显示 SuiteKey 的"更新"链接。上线申请模式不展示凭证区（应用尚未通过审核，凭证未生成）。只读查看模式和审核详情模式显示凭证区但不显示"更新"链接。</p>
@@ -246,14 +246,16 @@
 <p>P05 底部仍展示上架承诺书文案及蓝色链接，点击可打开免责声明弹窗；勾选/同意承诺书作为提交校验项已迁移至 P02b 上线申请模式。</p>
 <h4 id="h-18b">P06 全平台应用页</h4>
 <p>桂教通超级管理员专属页面，跨机构查看<strong>全平台已上架应用</strong>并支持强制下架治理。仅超管可见（tenant_admin、教职工不可访问）。菜单入口：应用管理 → 全平台应用。</p>
-<p>（1）查询区</p>
-<table><thead><tr><th>字段</th><th>控件</th><th>说明</th></tr></thead><tbody><tr><td>应用名称</td><td>文本框</td><td>app.name 模糊查询</td></tr><tr><td>应用分类</td><td>级联下拉</td><td>app.category_id，一级→二级</td></tr><tr><td>应用ID</td><td>文本框</td><td>app.app_id 精确匹配（业务应用ID）</td></tr></tbody></table>
-<p>按钮：搜索、重置。</p>
+<p>（1）查询：</p>
+<table><thead><tr><th>字段</th><th>控件</th><th>说明</th></tr></thead><tbody><tr><td>应用名称</td><td>文本</td><td>app.name 模糊查询</td></tr><tr><td>应用分类</td><td>下拉单选</td><td>app.category_id，一级或二级</td></tr><tr><td>应用ID</td><td>文本</td><td>app.app_id 精确匹配（业务应用 ID）</td></tr></tbody></table>
+<p>按钮：查询、重置。</p>
 <p>（2）列表展示</p>
-<p>数据范围：仅 <code>app.listing_status = listed</code> 的应用（跨全部租户）。列如下：Logo、应用名称、应用ID、应用openId、上架租户（app.tenant_name）、应用分类（级联路径）、应用类型（平台应用/非平台应用）、应用属性（拼接展示如"原生应用/低代码应用"）、适用机构、学段、状态（展示为"已上架"标签）、操作（强制下架）。</p>
+<p>数据范围为 <code>app.listing_status = listed</code> 的应用（即全平台已上架应用）。</p>
+<table><thead><tr><th>列</th><th>字段</th><th>备注</th></tr></thead><tbody><tr><td>Logo</td><td>app.logo</td><td>圆形图</td></tr><tr><td>应用名称</td><td>app.name</td><td>—</td></tr><tr><td>应用ID</td><td>app.app_id</td><td>业务应用 ID</td></tr><tr><td>应用openId</td><td>app.app_open_id</td><td>—</td></tr><tr><td>上架租户</td><td>app.tenant_name</td><td>所属租户</td></tr><tr><td>应用分类</td><td>app.category</td><td>分类路径 一级/二级</td></tr><tr><td>应用类型</td><td>app.app_type</td><td>平台应用/非平台应用</td></tr><tr><td>应用形态</td><td>app.type + app.native_type</td><td>拼接展示，如"原生应用/低代码应用"</td></tr><tr><td>用户范围</td><td>app.institution_scope</td><td>值</td></tr><tr><td>学段</td><td>app.school_levels_mode + app.school_levels</td><td>值</td></tr><tr><td>状态</td><td>app.listing_status</td><td>展示为"已上架"标签</td></tr><tr><td>操作</td><td>强制下架</td><td>按钮</td></tr></tbody></table>
 <p>（3）操作：强制下架</p>
-<ul><li>仅 <code>app.listing_status = listed</code> 行显示。</li><li>点击弹窗二次确认："确定要强制下架【{app.name}】吗？下架后该应用在【{app.tenant_name}】的上架列表将变为未上架状态，已安装的应用不会被卸载。"</li><li>确认后：<code>app.listing_status = unlisted</code>（回到未上架，与租户自主下架进入 dismissed 区别）；已安装应用不卸载；写 OperationLog（<code>log.action = force_delist</code>、<code>log.operator_role = platform_admin</code>）；toast「强制下架成功」；列表刷新（该条移出）。</li><li>对应租户管理员在 P04 应用上架管理页看到该应用状态由"已上架"回落为"未上架"。</li><li>取消：不变更。</li></ul>
-<p>（4）说明：本页不提供其他跨机构操作（无编辑、无审核、无上架），仅治理性下架。</p>
+<ul><li>仅 <code>app.listing_status = listed</code> 行显示。</li><li>点击弹窗二次确认："确定要强制下架【{app.name}】吗？下架后该应用在【{app.tenant_name}】的上架列表将变为未上架状态，已安装的应用不会被卸载。"</li><li>确认后：<code>app.listing_status = unlisted</code>（回到未上架，与租户自主下架进入 dismissed 区别）；已安装应用不卸载；写 OperationLog（<code>log.action = force_delist</code>、<code>log.operator_role = platform_admin</code>，detail 记录下架应用、原上架租户、执行人）；toast「强制下架成功」；列表刷新（该条移出）。</li><li>对应租户管理员在 P04 应用上架管理页看到该应用状态由"已上架"回落为"未上架"。</li><li>取消：不变更。</li></ul>
+<p>（4）说明</p>
+<ul><li>本页不提供其他跨机构操作（无编辑、无审核、无上架），仅治理性下架。</li><li>状态固定展示"已上架"（数据范围已限定 listed），字段占位均已填入，无需额外展开。</li></ul>
 <h4 id="h-19">P07 上架范围管理页</h4>
 <p>页面顶部为两个 Tab 切换："自定义范围"和"默认范围"。</p>
 <p>（1）查看自定义范围列表</p>
