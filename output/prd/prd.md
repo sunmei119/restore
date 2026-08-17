@@ -204,12 +204,13 @@ tenant_admin 可在任意状态下点击列表页右上角"新增应用"按钮�
 | suiteID |   | 单行文本框 | 仅应用属性=生态应用时展示，最大 64 字符；生态应用时必填，缺失提示"请填写 suiteID" |
 | 应用ID | * | 单行文本框 | 仅应用属性=低代码应用时展示；输入低代码应用ID，必填，缺失提示"低代码应用请填写应用ID" |
 | 可见性-移动端角色 | * | 多选 | 仅打开方式含独立小程序时展示；10 类角色：教育局职工/学生/学校教职工/家长/毕业生/退休教职工/租户管理员/临时成员/公共账号/开发者，至少 1 项 |
-| 可见性-移动端地址 | * | 文本框 | 仅打开方式含独立小程序时展示，展示时必填，最大 500 字符 |
+| 可见性-移动端地址 | * | 前缀下拉+文本框 | 仅打开方式含独立小程序时展示，展示时必填；前缀下拉选择 http/https，文本框填写域名或路径，地址最大 500 字符（不含前缀） |
 | 可见性-微信 appid | * | 文本框 | 仅打开方式含独立小程序时展示，最大 64 字符 |
 | 可见性-PC 端角色 | * | 多选 | 仅打开方式含 PCweb 时展示；同移动端角色枚举，至少 1 项 |
-| 可见性-PC 端地址 | * | 文本框 | 仅打开方式含 PCweb 时展示，展示时必填，最大 500 字符 |
+| 可见性-PC 端地址 | * | 前缀下拉+文本框 | 仅打开方式含 PCweb 时展示，展示时必填；前缀下拉选择 http/https，文本框填写域名或路径，地址最大 500 字符（不含前缀） |
 | 可见性-H5 角色 | * | 多选 | 仅打开方式含 H5 时展示；同移动端角色枚举，至少 1 项 |
-| 可见性-H5 地址 | * | 文本框 | 仅打开方式含 H5 时展示，展示时必填，最大 500 字符 |
+| 可见性-H5 地址 | * | 前缀下拉+文本框 | 仅打开方式含 H5 时展示，展示时必填；前缀下拉选择 http/https，文本框填写域名或路径，地址最大 500 字符（不含前缀） |
+| 白名单配置 |   | 默认回填标签+新增按钮+白名单输入行列表 | 默认根据已填写的移动端/PC端/H5 地址自动回填（标签展示完整地址，标签带删除按钮，删除后不再自动回填展示）；点击"新增白名单"按钮新增一条白名单输入行（前缀下拉 http/https + 文本框 + 删除按钮，文本框宽度与表单其他字段一致），输入完成后自动拼入白名单；重复地址去重；最多 5 个（含默认回填），达到上限禁用新增；手动行支持删除 |
 | 查看接入文档 |   | 链接 | 蓝色文字链接，点击新窗口打开接入文档 URL |
 
 点击"新建"触发全量校验，未通过时页面滚动定位到首个错误字段。校验通过后写入 app 记录，系统自动生成 app.system_suite_id（全局唯一，不可修改）与 app.system_suite_key，同时自动生成业务应用ID（app.app_id，当前最大应用ID +1、全局唯一）与应用 openId（app.app_open_id：非低代码应用生成长度 15 的英文/数字/下划线串，低代码应用取填写的低代码应用ID），并生成 review 记录（review.status = pending），toast 提示"上线申请已提交"，返回 P01 列表。
@@ -258,7 +259,7 @@ SuiteKey 更新失败时 toast 红色提示"SuiteKey 更新失败，请稍后重
 - 详情介绍：应用详情介绍（只读富文本渲染，必填字段）
 - 应用视频：展示已上传视频文件列表（名称标签），无视频时隐藏
 - 应用属性：应用属性（完整属性，如"原生应用/低代码应用"）、生态 suiteID（仅 type=ecosystem 时展示）
-- 收费与可见：移动端可见性（角色列表+访问地址+微信 appid，仅打开方式含独立小程序时展示）、PC 端可见性（角色列表+地址，仅打开方式含 PCweb 时展示）、H5 可见性（角色列表+地址，仅打开方式含 H5 时展示）
+- 收费与可见：移动端可见性（角色列表+访问地址+微信 appid，仅打开方式含独立小程序时展示）、PC 端可见性（角色列表+地址，仅打开方式含 PCweb 时展示）、H5 可见性（角色列表+地址，仅打开方式含 H5 时展示）、白名单（标签列表展示，默认回填三个地址，最多 5 个）
 
 （4）底部按钮
 
@@ -349,7 +350,7 @@ P04 页面顶部以两个 Tab 组织：**应用上架管理**（见上）与**�
 
 （1）上架配置
 
-应用基本信息区完整展示 P02b 管理模式全部字段（头部凭证区展示 SuiteId/SuiteKey 仅只读文本 + 基本信息全字段：应用名称/简介/所属分类/打开方式/机构/学段/应用详情介绍/应用视频/属性/来源/移动端角色地址/微信appid/PC端角色地址/H5角色地址），仅隐藏"更新"与"修改"链接，凭证区不显示操作按钮。
+应用基本信息区完整展示 P02b 管理模式全部字段（头部凭证区展示 SuiteId/SuiteKey 仅只读文本 + 基本信息全字段：应用名称/简介/所属分类/打开方式/机构/学段/应用详情介绍/应用视频/属性/来源/移动端角色地址/微信appid/PC端角色地址/H5角色地址/白名单），仅隐藏"更新"与"修改"链接，凭证区不显示操作按钮。
 
 上架配置区依次包含以下字段：
 
@@ -550,7 +551,7 @@ P04 页面顶部以两个 Tab 组织：**应用上架管理**（见上）与**�
 | 详情介绍 | 应用详情介绍（只读富文本渲染，必填字段） |
 | 应用视频 | 已上传视频文件标签列表 |
 | 应用属性 | 应用属性（完整属性，如"原生应用/低代码应用"） |
-| 可见性 | 移动端（独立小程序）角色列表+地址+微信appid、PC端（PCweb）角色列表+地址、H5角色列表+地址，按打开方式动态展示 |
+| 可见性 | 移动端（独立小程序）角色列表+地址+微信appid、PC端（PCweb）角色列表+地址、H5角色列表+地址、白名单（标签列表），按打开方式动态展示 |
 
 （2）审批操作（下方卡片）
 
@@ -941,12 +942,13 @@ flowchart TD
 | app.school_levels_mode | enum | 是 | all / partial |
 | app.school_levels | string | 否 | school_levels_mode=partial 时必填；多值枚举：kindergarten / primary / junior / senior / vocational_secondary / vocational_higher / undergraduate |
 | app.visibility_mobile_roles | string | 是 | 多值枚举：edu_staff / student / school_staff / parent / graduate / retired_staff / tenant_admin / temp_member / public_account / developer |
-| app.visibility_mobile_url | string | 是 | form_types 含 mini_standalone 时必填 |
+| app.visibility_mobile_url | string | 是 | form_types 含 mini_standalone 时必填；存储完整地址（含 http/https 前缀），前端以前缀下拉+文本框录入后拼接 |
 | app.visibility_wechat_appid | string | 是 | form_types 含 mini_standalone 时必填 |
 | app.visibility_pc_roles | string | 是 | 同 mobile 角色枚举 |
-| app.visibility_pc_url | string | 是 | form_types 含 pcweb 时必填 |
+| app.visibility_pc_url | string | 是 | form_types 含 pcweb 时必填；存储完整地址（含 http/https 前缀），前端以前缀下拉+文本框录入后拼接 |
 | app.visibility_h5_roles | string | 是 | 同 mobile 角色枚举 |
-| app.visibility_h5_url | string | 是 | form_types 含 h5 时必填 |
+| app.visibility_h5_url | string | 是 | form_types 含 h5 时必填；存储完整地址（含 http/https 前缀），前端以前缀下拉+文本框录入后拼接 |
+| app.visibility_whitelist | string | 否 | 应用白名单，多值地址列表（完整地址含前缀，JSON 数组存储）；默认回填移动端/PC端/H5 地址（可删除，删除后不再自动回填），点击"新增白名单"按钮新增输入行手动添加（可删除），去重，最多 5 个 |
 | app.status | enum | 是 | online / offline |
 | app.listing_status | enum | 是 | listed / unlisted |
 | app.tenant_id | string | 是 | 归属租户 |

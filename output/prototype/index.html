@@ -678,7 +678,13 @@
                       </el-checkbox-group>
                     </el-form-item>
                     <el-form-item label="移动端地址" required v-show="openWay.includes('mini_standalone')" style="width:50%;padding:0 8px;">
-                      <el-input placeholder="https://" />
+                      <div style="display:flex;gap:6px;width:100%;">
+                        <el-select v-model="mobileUrlScheme" style="width:100px;">
+                          <el-option label="https" value="https" />
+                          <el-option label="http" value="http" />
+                        </el-select>
+                        <el-input v-model="mobileUrlHost" placeholder="app.example.com/m" />
+                      </div>
                     </el-form-item>
                     <el-form-item label="微信 appid" v-show="openWay.includes('mini_standalone')" style="width:50%;padding:0 8px;">
                       <el-input placeholder="wx..." />
@@ -693,7 +699,13 @@
                       </el-checkbox-group>
                     </el-form-item>
                     <el-form-item label="PC 端地址" required v-show="openWay.includes('pcweb')" style="width:50%;padding:0 8px;">
-                      <el-input placeholder="https://" />
+                      <div style="display:flex;gap:6px;width:100%;">
+                        <el-select v-model="pcUrlScheme" style="width:100px;">
+                          <el-option label="https" value="https" />
+                          <el-option label="http" value="http" />
+                        </el-select>
+                        <el-input v-model="pcUrlHost" placeholder="app.example.com" />
+                      </div>
                     </el-form-item>
                     <el-form-item label="H5 角色" required v-show="openWay.includes('h5')" style="width:50%;padding:0 8px;">
                       <el-checkbox-group :model-value="['edu_staff','student','school_staff']">
@@ -705,7 +717,38 @@
                       </el-checkbox-group>
                     </el-form-item>
                     <el-form-item label="H5 地址" required v-show="openWay.includes('h5')" style="width:50%;padding:0 8px;">
-                      <el-input placeholder="https://" />
+                      <div style="display:flex;gap:6px;width:100%;">
+                        <el-select v-model="h5UrlScheme" style="width:100px;">
+                          <el-option label="https" value="https" />
+                          <el-option label="http" value="http" />
+                        </el-select>
+                        <el-input v-model="h5UrlHost" placeholder="app.example.com/h5" />
+                      </div>
+                    </el-form-item>
+                    <!-- 白名单配置：默认回填移动端/PC/H5 地址，点击新增一条白名单输入行，最多 5 个 -->
+                    <el-form-item label="白名单配置" style="width:50%;padding:0 8px;">
+                      <div style="width:100%;">
+                        <div v-if="whitelistAuto.length" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px;">
+                          <span style="font-size:12px;color:var(--shell-text-secondary,#8b95a7);">默认回填：</span>
+                          <el-tag v-for="(w, i) in whitelistAuto" :key="'a'+i" closable :disable-transitions="true" @close="removeWhitelistAuto(w)" style="background:var(--shell-primary-light,#eef3ff);border-color:var(--shell-primary,#3b6ef6);color:var(--shell-primary,#3b6ef6);">{{ w }}</el-tag>
+                        </div>
+                        <div v-for="(item, i) in whitelist" :key="'m'+i" style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">
+                          <el-select v-model="item.scheme" style="width:90px;flex-shrink:0;">
+                            <el-option label="https" value="https" />
+                            <el-option label="http" value="http" />
+                          </el-select>
+                          <div style="flex:1;min-width:0;display:flex;gap:6px;align-items:center;">
+                            <el-input v-model="item.host" placeholder="请输入域名/地址" style="flex:1;min-width:0;" @keyup.enter="addWhitelistRow" />
+                            
+                          </div>
+                          <el-button type="danger" size="small" style="flex-shrink:0;width:48px;padding:0;font-size:12px;white-space:nowrap;" @click="removeWhitelist(i)">删除</el-button>
+                        </div>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                          <el-button type="primary" plain :disabled="whitelistItems.length >= 5" @click="addWhitelistRow">新增白名单</el-button>
+                          <span v-if="!whitelistItems.length" style="color:var(--shell-text-secondary,#8b95a7);font-size:13px;">暂无白名单，默认根据移动端/PC/H5 地址自动回填</span>
+                        </div>
+                        <div style="font-size:12px;color:var(--shell-text-secondary,#8b95a7);margin-top:6px;">最多可配置 5 个白名单地址（含默认回填）</div>
+                      </div>
                     </el-form-item>
                   </div>
 
@@ -767,6 +810,14 @@
                   <el-form-item label="PC 端地址" style="width:50%;padding:0 8px;"><span style="line-height:32px;">https://app.example.com</span></el-form-item>
                   <el-form-item label="H5 角色" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教育局职工、学生、学校教职工</span></el-form-item>
                   <el-form-item label="H5 地址" style="width:50%;padding:0 8px;"><span style="line-height:32px;">https://app.example.com/h5</span></el-form-item>
+                  <el-form-item label="白名单" style="width:50%;padding:0 8px;">
+                    <div style="display:flex;flex-wrap:wrap;gap:6px;line-height:24px;">
+                      <el-tag size="small" style="background:var(--shell-primary-light,#eef3ff);border-color:var(--shell-primary,#3b6ef6);color:var(--shell-primary,#3b6ef6);">https://app.example.com/m</el-tag>
+                      <el-tag size="small" style="background:var(--shell-primary-light,#eef3ff);border-color:var(--shell-primary,#3b6ef6);color:var(--shell-primary,#3b6ef6);">https://app.example.com</el-tag>
+                      <el-tag size="small" style="background:var(--shell-primary-light,#eef3ff);border-color:var(--shell-primary,#3b6ef6);color:var(--shell-primary,#3b6ef6);">https://app.example.com/h5</el-tag>
+                      <span style="font-size:12px;color:var(--shell-text-secondary);">（最多 5 个）</span>
+                    </div>
+                  </el-form-item>
                 </div>
 
                 <!-- 上线配置（仅上线申请模式，与应用信息同处一个模块） -->
@@ -1450,6 +1501,14 @@
                   <el-form-item label="PC 端地址" style="width:50%;padding:0 8px;"><span style="line-height:32px;">https://app.example.com</span></el-form-item>
                   <el-form-item label="H5 角色" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教育局职工、学生、学校教职工</span></el-form-item>
                   <el-form-item label="H5 地址" style="width:50%;padding:0 8px;"><span style="line-height:32px;">https://app.example.com/h5</span></el-form-item>
+                  <el-form-item label="白名单" style="width:50%;padding:0 8px;">
+                    <div style="display:flex;flex-wrap:wrap;gap:6px;line-height:24px;">
+                      <el-tag size="small" style="background:var(--shell-primary-light,#eef3ff);border-color:var(--shell-primary,#3b6ef6);color:var(--shell-primary,#3b6ef6);">https://app.example.com/m</el-tag>
+                      <el-tag size="small" style="background:var(--shell-primary-light,#eef3ff);border-color:var(--shell-primary,#3b6ef6);color:var(--shell-primary,#3b6ef6);">https://app.example.com</el-tag>
+                      <el-tag size="small" style="background:var(--shell-primary-light,#eef3ff);border-color:var(--shell-primary,#3b6ef6);color:var(--shell-primary,#3b6ef6);">https://app.example.com/h5</el-tag>
+                      <span style="font-size:12px;color:var(--shell-text-secondary);">（最多 5 个）</span>
+                    </div>
+                  </el-form-item>
                 </div>
               </el-card>
               <el-card class="shell-block-card" shadow="never" style="margin-top:16px;">
@@ -1516,6 +1575,14 @@
                   <el-form-item label="PC 端地址" style="width:50%;padding:0 8px;"><span style="line-height:32px;">https://app.example.com</span></el-form-item>
                   <el-form-item label="H5 角色" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教育局职工、学生、学校教职工</span></el-form-item>
                   <el-form-item label="H5 地址" style="width:50%;padding:0 8px;"><span style="line-height:32px;">https://app.example.com/h5</span></el-form-item>
+                  <el-form-item label="白名单" style="width:50%;padding:0 8px;">
+                    <div style="display:flex;flex-wrap:wrap;gap:6px;line-height:24px;">
+                      <el-tag size="small" style="background:var(--shell-primary-light,#eef3ff);border-color:var(--shell-primary,#3b6ef6);color:var(--shell-primary,#3b6ef6);">https://app.example.com/m</el-tag>
+                      <el-tag size="small" style="background:var(--shell-primary-light,#eef3ff);border-color:var(--shell-primary,#3b6ef6);color:var(--shell-primary,#3b6ef6);">https://app.example.com</el-tag>
+                      <el-tag size="small" style="background:var(--shell-primary-light,#eef3ff);border-color:var(--shell-primary,#3b6ef6);color:var(--shell-primary,#3b6ef6);">https://app.example.com/h5</el-tag>
+                      <span style="font-size:12px;color:var(--shell-text-secondary);">（最多 5 个）</span>
+                    </div>
+                  </el-form-item>
                 </div>
               </el-card>
               <el-card class="shell-block-card" shadow="never" style="margin-top:16px;">
@@ -2750,6 +2817,14 @@
             { value:'校园办公', label:'校园办公', children:[{value:'家校互动',label:'家校互动'},{value:'通知公告',label:'通知公告'}] },
           ],
           openWay: ['pcweb','h5'],
+          mobileUrlScheme: 'https',
+          mobileUrlHost: '',
+          pcUrlScheme: 'https',
+          pcUrlHost: '',
+          h5UrlScheme: 'https',
+          h5UrlHost: '',
+          whitelist: [],
+          whitelistRemoved: [],
           appAttrOptions: [
             { value:'native', label:'原生应用', children:[{value:'lowcode',label:'低代码应用'},{value:'selfbuilt',label:'自建应用'}] },
             { value:'ecosystem', label:'生态应用' },
@@ -3234,6 +3309,19 @@
         },
         currentApp() { return this.appList.find(a => a.id === this.editAppId) || null; },
         currentAppIsLowcode() { return !!this.currentApp && this.currentApp.native_type === '低代码应用'; },
+        whitelistAuto() {
+          // 默认回填：移动端/PC/H5 地址生成的完整地址（已删除的默认项不再展示）
+          const auto = [];
+          if (this.mobileUrlHost && this.openWay.includes('mini_standalone')) auto.push(this.mobileUrlScheme + '://' + this.mobileUrlHost);
+          if (this.pcUrlHost && this.openWay.includes('pcweb')) auto.push(this.pcUrlScheme + '://' + this.pcUrlHost);
+          if (this.h5UrlHost && this.openWay.includes('h5')) auto.push(this.h5UrlScheme + '://' + this.h5UrlHost);
+          return auto.filter(w => !this.whitelistRemoved.includes(w));
+        },
+        whitelistItems() {
+          // 默认回填 + 手动添加行（前缀+host 拼接、去空），去重、最多 5 个
+          const manual = this.whitelist.filter(x => x.host && x.host.trim()).map(x => x.scheme + '://' + x.host.trim());
+          return [...new Set([...this.whitelistAuto, ...manual])].slice(0, 5);
+        },
         currentRoleLabel() { return this.currentRole === 'platform_admin' ? '桂教通超级管理员' : '租户管理员'; },
         filteredOrgList() {
           const s = this.installFilter.status;
@@ -3589,12 +3677,24 @@
           this.syncToken = '';
           this.syncAesKey = '';
           this.openWay = ['pcweb','h5'];
+          this.whitelist = [];
+          this.whitelistRemoved = [];
           this.appAttr = a && a.type === '原生应用' ? ['native','selfbuilt'] : (a ? ['ecosystem'] : ['native','selfbuilt']);
           this.lowcodeAppId = a && a.lowcodeAppId ? a.lowcodeAppId : '';
           this.institutionScope = a && a.scope && a.scope.includes('学校') ? ['school'] : (a && a.scope ? [] : ['school']);
           this.schoolLevelsMode = a && a.level && a.level !== '所有学段' ? 'partial' : 'all';
           this.schoolLevels = a && a.level && a.level !== '所有学段' ? a.level.split('/') : [];
           this.goPage('P02');
+        },
+        addWhitelistRow() {
+          if (this.whitelistItems.length >= 5) { this.$message.warning('白名单最多 5 个'); return; }
+          this.whitelist.push({ scheme: 'https', host: '' });
+        },
+        removeWhitelist(i) {
+          this.whitelist.splice(i, 1);
+        },
+        removeWhitelistAuto(w) {
+          if (!this.whitelistRemoved.includes(w)) this.whitelistRemoved.push(w);
         },
         onSaveApp() {
           if (this.currentRole === 'platform_admin' && !this.appType) {
