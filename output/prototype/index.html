@@ -205,8 +205,15 @@
     .app-detail-name { font-size: 20px; font-weight: 700; color: #1f2329; }
     .app-detail-sub { font-size: 13px; color: #86909c; margin: 6px 0; }
     .app-detail-desc { font-size: 14px; color: #4e5969; line-height: 1.6; margin-bottom: 14px; }
-    .app-detail-actions { display: flex; gap: 12px; }
+    .app-detail-actions { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
     .app-detail-actions .el-button { width: 200px; }
+    .app-detail-buy-row { display: flex; gap: 12px; }
+    .app-detail-pkgs { display: flex; flex-wrap: wrap; gap: 10px; }
+    .app-detail-pkg { display: flex; flex-direction: column; gap: 4px; border: 1px solid #e5e8ef; border-radius: 8px; padding: 10px 14px; cursor: pointer; transition: .2s; background: #fff; }
+    .app-detail-pkg:hover { border-color: #f7ba2a; box-shadow: 0 2px 8px rgba(247,186,42,.18); }
+    .app-detail-pkg.is-active { border-color: #f7ba2a; background: #fffdf5; box-shadow: 0 2px 8px rgba(247,186,42,.22); }
+    .app-detail-pkg-name { font-size: 13px; color: #1f2329; }
+    .app-detail-pkg-price { font-size: 14px; font-weight: 700; color: #e54d42; }
     .app-detail-trial-btn:hover, .app-detail-trial-btn:focus { opacity: .9; }
     .app-detail-interactions { display: flex; gap: 24px; padding: 14px 0 18px; border-bottom: 1px solid #f0f2f5; margin-bottom: 18px; }
     .app-detail-interactions .inter-item { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: #4e5969; cursor: pointer; user-select: none; transition: .2s; position: relative; }
@@ -444,7 +451,7 @@
             <span class="role-switch-trigger">当前角色：{{ currentRoleLabel }}<span class="role-caret">▾</span></span>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item command="tenant_admin" :class="{'role-item-active': currentRole==='tenant_admin'}">租户管理员</el-dropdown-item>
+                <el-dropdown-item command="tenant_admin" :class="{'role-item-active': currentRole==='tenant_admin'}">机构管理员</el-dropdown-item>
                 <el-dropdown-item command="platform_admin" :class="{'role-item-active': currentRole==='platform_admin'}">桂教通超级管理员</el-dropdown-item>
               </el-dropdown-menu>
             </template>
@@ -465,7 +472,7 @@
               <el-menu-item index="P06" v-if="currentRole==='platform_admin'">全平台应用</el-menu-item>
               <el-menu-item index="P07">上架范围管理</el-menu-item>
               <el-menu-item index="P09">应用分类管理</el-menu-item>
-              <el-menu-item index="P10">应用审核管理</el-menu-item>
+              <el-menu-item index="P10" v-if="currentRole==='platform_admin'">应用审核管理</el-menu-item>
               <el-menu-item index="P12">标签管理</el-menu-item>
             </el-menu>
           </div>
@@ -519,9 +526,9 @@
                 <span style="font-size:13px;color:var(--shell-text-secondary);white-space:nowrap;">应用名称:</span>
                 <input type="text" placeholder="" style="width:180px;height:28px;border:1px solid var(--shell-line);border-radius:4px;padding:0 8px;font-size:13px;outline:none;">
                 <span style="font-size:13px;color:var(--shell-text-secondary);white-space:nowrap;margin-left:4px;">分类:</span>
-                <el-select placeholder="" style="width:140px;" size="small"><el-option label="全部" value="" /><el-option label="教学管理" value="教学管理" /><el-option label="教务管理" value="教务管理" /><el-option label="校园办公" value="校园办公" /></el-select>
+                <el-select placeholder="" style="width:140px;" size="small"><el-option label="全部" value=""></el-option><el-option label="教学管理" value="教学管理"></el-option><el-option label="教务管理" value="教务管理"></el-option><el-option label="校园办公" value="校园办公"></el-option></el-select>
                 <span style="font-size:13px;color:var(--shell-text-secondary);white-space:nowrap;margin-left:4px;">状态:</span>
-                <el-select placeholder="" style="width:120px;" size="small"><el-option label="全部" value="" /><el-option label="已上线" value="online" /><el-option label="未上线" value="offline" /></el-select>
+                <el-select placeholder="" style="width:120px;" size="small"><el-option label="全部" value=""></el-option><el-option label="已上线" value="online"></el-option><el-option label="待审核" value="reviewing"></el-option><el-option label="未上线" value="offline"></el-option></el-select>
                 <el-button type="primary" size="small">搜索</el-button>
                 <el-button size="small">重置</el-button>
                 <!-- <span style="flex:1"></span> -->
@@ -540,10 +547,10 @@
                     <td>{{ app.type }}{{ app.native_type ? ' / ' + app.native_type : '' }}</td>
                     <td>{{ app.scope }}</td>
                     <td>{{ app.level }}</td>
-                    <td><el-tag size="small" :type="app.status==='online'?'success':'info'">{{ app.status==='online'?'已上线':'未上线' }}</el-tag></td>
+                    <td><el-tag size="small" :type="app.status==='online'?'success':(hasPendingReview(app)?'warning':'info')">{{ app.status==='online'?'已上线':(hasPendingReview(app)?'待审核':'未上线') }}</el-tag></td>
                     <td>
-                      <el-button text size="small" @click="onManageApp(app)">管理</el-button>
-                      <el-button text size="small" v-if="app.status==='offline'" @click="onOnlineApp(app)">上线</el-button>
+                      <el-button text size="small" :disabled="hasPendingReview(app)" @click="onManageApp(app)">管理</el-button>
+                      <el-button text size="small" v-if="app.status==='offline' && !hasPendingReview(app)" @click="onOnlineApp(app)">上线</el-button>
                       <el-button text size="small" v-if="app.status==='online' && app.listing==='unlisted'" @click="onOfflineApp(app)">下线</el-button>
                     </td>
                   </tr>
@@ -680,8 +687,8 @@
                     <el-form-item label="移动端地址" required v-show="openWay.includes('mini_standalone')" style="width:50%;padding:0 8px;">
                       <div style="display:flex;gap:6px;width:100%;">
                         <el-select v-model="mobileUrlScheme" style="width:100px;">
-                          <el-option label="https" value="https" />
-                          <el-option label="http" value="http" />
+                          <el-option label="https" value="https"></el-option>
+                          <el-option label="http" value="http"></el-option>
                         </el-select>
                         <el-input v-model="mobileUrlHost" placeholder="app.example.com/m" />
                       </div>
@@ -701,8 +708,8 @@
                     <el-form-item label="PC 端地址" required v-show="openWay.includes('pcweb')" style="width:50%;padding:0 8px;">
                       <div style="display:flex;gap:6px;width:100%;">
                         <el-select v-model="pcUrlScheme" style="width:100px;">
-                          <el-option label="https" value="https" />
-                          <el-option label="http" value="http" />
+                          <el-option label="https" value="https"></el-option>
+                          <el-option label="http" value="http"></el-option>
                         </el-select>
                         <el-input v-model="pcUrlHost" placeholder="app.example.com" />
                       </div>
@@ -719,8 +726,8 @@
                     <el-form-item label="H5 地址" required v-show="openWay.includes('h5')" style="width:50%;padding:0 8px;">
                       <div style="display:flex;gap:6px;width:100%;">
                         <el-select v-model="h5UrlScheme" style="width:100px;">
-                          <el-option label="https" value="https" />
-                          <el-option label="http" value="http" />
+                          <el-option label="https" value="https"></el-option>
+                          <el-option label="http" value="http"></el-option>
                         </el-select>
                         <el-input v-model="h5UrlHost" placeholder="app.example.com/h5" />
                       </div>
@@ -734,8 +741,8 @@
                         </div>
                         <div v-for="(item, i) in whitelist" :key="'m'+i" style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">
                           <el-select v-model="item.scheme" style="width:90px;flex-shrink:0;">
-                            <el-option label="https" value="https" />
-                            <el-option label="http" value="http" />
+                            <el-option label="https" value="https"></el-option>
+                            <el-option label="http" value="http"></el-option>
                           </el-select>
                           <div style="flex:1;min-width:0;display:flex;gap:6px;align-items:center;">
                             <el-input v-model="item.host" placeholder="请输入域名/地址" style="flex:1;min-width:0;" @keyup.enter="addWhitelistRow" />
@@ -841,9 +848,9 @@
                       <el-form-item label="所属租户" required v-if="currentAppIsLowcode && currentRole==='platform_admin' && shelfConfig.crossTenant==='yes'" style="width:50%;padding:0 8px;">
                         <div style="display:flex;align-items:center;gap:8px;width:100%;">
                           <el-select v-model="shelfConfig.targetTenant" filterable placeholder="搜索并选择租户" style="flex:1;">
-                            <el-option label="南宁市教育局" value="t-nnedu" />
-                            <el-option label="柳州市教育局" value="t-lzedu" />
-                            <el-option label="桂林市教育局" value="t-gledu" />
+                            <el-option label="南宁市教育局" value="t-nnedu"></el-option>
+                            <el-option label="柳州市教育局" value="t-lzedu"></el-option>
+                            <el-option label="桂林市教育局" value="t-gledu"></el-option>
                           </el-select>
                           <el-button @click="onOpenTenantPicker">添加</el-button>
                         </div>
@@ -863,21 +870,24 @@
                         </el-form-item>
                         <el-form-item label="试用套餐" required v-if="shelfConfig.canTrial==='yes' && shelfConfig.chargeType==='paid'" style="width:50%;padding:0 8px;">
                           <el-select v-model="shelfConfig.trialPackage" placeholder="请选择" style="width:100%;">
-                            <el-option label="7 天免费试用" value="trial_7d" />
-                            <el-option label="30 天免费试用" value="trial_30d" />
+                            <el-option label="7 天免费试用" value="trial_7d"></el-option>
+                            <el-option label="30 天免费试用" value="trial_30d"></el-option>
                           </el-select>
                         </el-form-item>
                         <el-form-item label="授权套餐" required v-if="shelfConfig.chargeType==='paid'" style="width:50%;padding:0 8px;">
-                          <el-select v-model="shelfConfig.authPackages" multiple filterable placeholder="从套餐管理选择（可多选）" style="width:100%;">
-                            <el-option label="基座标准套餐" value="pkg_base_std" />
-                            <el-option label="基座高级套餐" value="pkg_base_pro" />
-                            <el-option label="存储容量充值包" value="pkg_storage" />
+                          <el-select v-model="shelfConfig.authPackages" multiple filterable collapse-tags collapse-tags-tooltip placeholder="从套餐管理选择（可多选）" style="width:100%;">
+                            <el-option label="基座标准套餐" value="pkg_base_std"></el-option>
+                            <el-option label="基座高级套餐" value="pkg_base_pro"></el-option>
+                            <el-option label="存储容量充值包" value="pkg_storage"></el-option>
+                            <el-option label="课堂互动助手专业版" value="pkg_class_pro"></el-option>
+                            <el-option label="AI增强服务包" value="pkg_ai_pro"></el-option>
+                            <el-option label="校园通年度版" value="pkg_campus_year"></el-option>
                           </el-select>
                         </el-form-item>
                       </template>
                       <el-form-item label="版本号" :required="shelfConfig.crossTenant==='no'" v-if="currentAppIsLowcode" style="width:50%;padding:0 8px;">
                         <el-select v-model="shelfConfig.versionNo" filterable remote :remote-method="onVersionRemoteSearch" @visible-change="(v)=>{ if(v) onVersionRemoteSearch('') }" placeholder="根据低代码应用ID自动获取版本列表" style="width:100%;">
-                          <el-option v-for="v in versionOptions" :key="v.value" :label="v.label" :value="v.value" />
+                          <el-option v-for="v in versionOptions" :key="v.value" :label="v.label" :value="v.value"></el-option>
                         </el-select>
                         <div v-if="versionSearched && versionOptions.length===0" style="font-size:12px;color:#f56c6c;margin-top:4px;">未获取到版本号，请先将应用上架到低代码应用市场</div>
                       </el-form-item>
@@ -893,7 +903,7 @@
                       <div v-for="o in tenantPickerOptions" :key="o" @click="onPickTenant(o)" style="padding:10px 12px;border:1px solid var(--shell-line);border-radius:6px;cursor:pointer;font-size:13px;" onmouseover="this.style.borderColor='#2f7df6'" onmouseout="this.style.borderColor='var(--shell-line)'">{{ o }}</div>
                     </div>
                     <el-select v-else v-model="pickerTemp" filterable placeholder="请选择机构（共 {{ tenantPickerOptions.length }} 个）" style="width:100%;">
-                      <el-option v-for="o in tenantPickerOptions" :key="o" :label="o" :value="o" />
+                      <el-option v-for="o in tenantPickerOptions" :key="o" :label="o" :value="o"></el-option>
                     </el-select>
                     <template #footer>
                       <el-button v-if="tenantPickerOptions.length > 10" type="primary" @click="onPickTenant(pickerTemp)">确定</el-button>
@@ -921,9 +931,9 @@
                 <span style="font-size:13px;color:var(--shell-text-secondary);white-space:nowrap;">应用名称:</span>
                 <input type="text" placeholder="" style="width:160px;height:28px;border:1px solid var(--shell-line);border-radius:4px;padding:0 8px;font-size:13px;outline:none;">
                 <span style="font-size:13px;color:var(--shell-text-secondary);white-space:nowrap;margin-left:4px;">分类:</span>
-                <el-select placeholder="" style="width:130px;" size="small"><el-option label="全部" value="" /></el-select>
+                <el-select placeholder="" style="width:130px;" size="small"><el-option label="全部" value=""></el-option></el-select>
                 <span style="font-size:13px;color:var(--shell-text-secondary);white-space:nowrap;margin-left:4px;">上架范围:</span>
-                <el-select placeholder="" style="width:150px;" size="small"><el-option label="全部" value="" /><el-option label="南宁市教育范围" value="nanning" /><el-option label="自治区直属范围" value="zizhi" /></el-select>
+                <el-select placeholder="" style="width:150px;" size="small"><el-option label="全部" value=""></el-option><el-option label="南宁市教育范围" value="nanning"></el-option><el-option label="自治区直属范围" value="zizhi"></el-option></el-select>
                 <el-button type="primary" size="small">搜索</el-button>
                 <el-button size="small">重置</el-button>
               </div>
@@ -955,16 +965,16 @@
                     <input type="text" v-model="shareFilter.name" placeholder="" style="width:160px;height:28px;border:1px solid var(--shell-line);border-radius:4px;padding:0 8px;font-size:13px;outline:none;">
                     <span style="font-size:13px;color:var(--shell-text-secondary);white-space:nowrap;margin-left:4px;">应用分类:</span>
                     <el-select v-model="shareFilter.cat" placeholder="全部" style="width:130px;" size="small" clearable>
-                      <el-option label="全部" value="" />
-                      <el-option label="教学管理" value="教学管理" />
-                      <el-option label="教务管理" value="教务管理" />
-                      <el-option label="校园办公" value="校园办公" />
+                      <el-option label="全部" value=""></el-option>
+                      <el-option label="教学管理" value="教学管理"></el-option>
+                      <el-option label="教务管理" value="教务管理"></el-option>
+                      <el-option label="校园办公" value="校园办公"></el-option>
                     </el-select>
                     <span style="font-size:13px;color:var(--shell-text-secondary);white-space:nowrap;margin-left:4px;">应用属性:</span>
                     <el-select v-model="shareFilter.attr" placeholder="全部" style="width:130px;" size="small" clearable>
-                      <el-option label="全部" value="" />
-                      <el-option label="平台应用" value="平台应用" />
-                      <el-option label="非平台应用" value="非平台应用" />
+                      <el-option label="全部" value=""></el-option>
+                      <el-option label="平台应用" value="平台应用"></el-option>
+                      <el-option label="非平台应用" value="非平台应用"></el-option>
                     </el-select>
                     <el-button type="primary" size="small" @click="onShareSearch">搜索</el-button>
                     <el-button size="small" @click="onShareReset">重置</el-button>
@@ -996,7 +1006,7 @@
                 <el-form label-width="96px">
                   <el-form-item label="停止分享范围" required>
                     <el-select v-model="stopShareForm.scopes" multiple style="width:100%;" placeholder="请选择要停止分享的范围（可多选）">
-                      <el-option v-for="o in stopShareOptions" :key="o.value" :label="o.label" :value="o.value" />
+                      <el-option v-for="o in stopShareOptions" :key="o.value" :label="o.label" :value="o.value"></el-option>
                     </el-select>
                   </el-form-item>
                 </el-form>
@@ -1017,10 +1027,10 @@
                 <input type="text" v-model="platformAppFilter.name" placeholder="" style="width:160px;height:28px;border:1px solid var(--shell-line);border-radius:4px;padding:0 8px;font-size:13px;outline:none;">
                 <span style="font-size:13px;color:var(--shell-text-secondary);white-space:nowrap;margin-left:4px;">应用分类:</span>
                 <el-select v-model="platformAppFilter.cat" placeholder="" style="width:160px;" size="small" clearable>
-                  <el-option label="全部" value="" />
-                  <el-option label="教学管理" value="教学管理" />
-                  <el-option label="教务管理" value="教务管理" />
-                  <el-option label="校园办公" value="校园办公" />
+                  <el-option label="全部" value=""></el-option>
+                  <el-option label="教学管理" value="教学管理"></el-option>
+                  <el-option label="教务管理" value="教务管理"></el-option>
+                  <el-option label="校园办公" value="校园办公"></el-option>
                 </el-select>
                 <span style="font-size:13px;color:var(--shell-text-secondary);white-space:nowrap;margin-left:4px;">应用ID:</span>
                 <input type="text" v-model="platformAppFilter.appId" placeholder="" style="width:120px;height:28px;border:1px solid var(--shell-line);border-radius:4px;padding:0 8px;font-size:13px;outline:none;">
@@ -1072,9 +1082,9 @@
                 <span style="font-size:13px;color:var(--shell-text-secondary);white-space:nowrap;margin-left:4px;">机构 ID:</span>
                 <input type="text" v-model="installFilter.id" placeholder="" style="width:140px;height:28px;border:1px solid var(--shell-line);border-radius:4px;padding:0 8px;font-size:13px;outline:none;">
                 <el-select placeholder="安装状态" v-model="installFilter.status" style="width:130px;" size="small" clearable>
-                  <el-option label="安装成功" value="installed" />
-                  <el-option label="安装失败" value="failed" />
-                  <el-option label="未安装" value="uninstalled" />
+                  <el-option label="安装成功" value="installed"></el-option>
+                  <el-option label="安装失败" value="failed"></el-option>
+                  <el-option label="未安装" value="uninstalled"></el-option>
                 </el-select>
                 <el-button type="primary" size="small">搜索</el-button>
                 <el-button size="small">重置</el-button>
@@ -1136,7 +1146,7 @@
                 <div style="margin-bottom:16px;font-weight:600;font-size:15px;">上架配置</div>
                 <el-form>
                   <div style="display:flex;flex-direction:column;align-items:flex-start;width:100%;">
-                    <!-- 范围选择：桂教通超级管理员（含非低代码与低代码）、租户管理员 时展示 -->
+                    <!-- 范围选择：桂教通超级管理员（含非低代码与低代码）、机构管理员 时展示 -->
                     <template v-if="(currentRole==='platform_admin') || (currentRole==='tenant_admin')">
                       <el-form-item label="范围选择" :required="currentRole==='tenant_admin'" style="width:50%;padding:0 8px;">
                         <el-radio-group v-model="shelfConfig.scopeType">
@@ -1146,17 +1156,17 @@
                       </el-form-item>
                       <el-form-item v-if="shelfConfig.scopeType==='all'" style="width:50%;padding:0 8px;font-size:12px;color:var(--shell-text-secondary);">
                         <span v-if="currentRole==='platform_admin'">全平台指的是上架到当前机构所有下属机构和学校</span>
-                        <span v-else>上架到当前租户及所有下级租户，并自动安装到应用中心</span>
+                        <span v-else>上架到当前机构及所有下级机构，并自动安装到应用中心</span>
                       </el-form-item>
                       <el-form-item v-if="shelfConfig.scopeType==='zone'" style="width:50%;padding:0 8px;">
-                        <el-select v-model="shelfConfig.selectedZones" multiple filterable placeholder="搜索并选择范围（数据来源：本租户上架范围管理）" style="width:100%;">
-                          <el-option label="南宁默认范围" value="z-nn-default" />
-                          <el-option label="柳州默认范围" value="z-lz-default" />
-                          <el-option label="桂林默认范围" value="z-gl-default" />
+                        <el-select v-model="shelfConfig.selectedZones" multiple filterable placeholder="搜索并选择范围（数据来源：本机构上架范围管理）" style="width:100%;">
+                          <el-option label="南宁默认范围" value="z-nn-default"></el-option>
+                          <el-option label="柳州默认范围" value="z-lz-default"></el-option>
+                          <el-option label="桂林默认范围" value="z-gl-default"></el-option>
                         </el-select>
                       </el-form-item>
                     </template>
-                    <!-- 租户管理员：分享范围 + 其他机构 -->
+                    <!-- 机构管理员：分享范围 + 其他机构 -->
                     <template v-if="currentRole==='tenant_admin'">
                       <el-form-item label="分享范围" style="width:50%;padding:0 8px;">
                         <el-checkbox-group v-model="shelfConfig.shareScope">
@@ -1168,7 +1178,7 @@
                       <!-- 其他机构：模糊筛选机构下拉，最多50条，可多选 -->
                       <el-form-item label="其他机构" v-if="shelfConfig.shareScope.includes('other')" style="width:50%;padding:0 8px;">
                         <el-select v-model="shelfConfig.targetOrgs" multiple filterable remote :remote-method="onOrgRemoteSearch" :loading="orgSearching" placeholder="输入机构名称模糊搜索（最多50条，可多选）" no-match-text="无匹配机构" style="width:100%;">
-                          <el-option v-for="o in orgOptions" :key="o.value" :label="o.label" :value="o.value" />
+                          <el-option v-for="o in orgOptions" :key="o.value" :label="o.label" :value="o.value"></el-option>
                         </el-select>
                       </el-form-item>
                     </template>
@@ -1201,9 +1211,9 @@
                   </el-form-item>
                   <el-form-item label="类型" style="margin:0;width:200px;">
                     <el-select v-model="zoneQuery.scopeType" placeholder="请选择类型" clearable style="width:100%;">
-                      <el-option label="自定义" value="自定义" />
-                      <el-option label="按教育机构" value="按教育机构" />
-                      <el-option label="按标签" value="按标签" />
+                      <el-option label="自定义" value="自定义"></el-option>
+                      <el-option label="按教育机构" value="按教育机构"></el-option>
+                      <el-option label="按标签" value="按标签"></el-option>
                     </el-select>
                   </el-form-item>
                   <el-button type="primary" size="small" @click="onSearchZone">查询</el-button>
@@ -1256,12 +1266,12 @@
                   </el-form-item>
                   <el-form-item label="机构类型" style="margin:0;width:180px;">
                     <el-select v-model="zoneDetail.query.type" placeholder="请选择类型" clearable style="width:100%;">
-                      <el-option label="教育局" value="教育局" />
-                      <el-option label="高中" value="高中" />
-                      <el-option label="初中" value="初中" />
-                      <el-option label="小学" value="小学" />
-                      <el-option label="完全中学" value="完全中学" />
-                      <el-option label="九年一贯制" value="九年一贯制" />
+                      <el-option label="教育局" value="教育局"></el-option>
+                      <el-option label="高中" value="高中"></el-option>
+                      <el-option label="初中" value="初中"></el-option>
+                      <el-option label="小学" value="小学"></el-option>
+                      <el-option label="完全中学" value="完全中学"></el-option>
+                      <el-option label="九年一贯制" value="九年一贯制"></el-option>
                     </el-select>
                   </el-form-item>
                   <el-form-item label="机构 ID" style="margin:0;width:220px;">
@@ -1326,11 +1336,11 @@
 
                       <div v-if="zoneForm.scopeType==='by_org'" style="width:100%;">
                         <el-select v-model="zoneForm.selectedOrgs" multiple placeholder="请选择机构（可多选）" style="width:100%;" @change="onZoneOrgChange">
-                          <el-option label="南宁市教育局" value="南宁市教育局" />
-                          <el-option label="南宁市青秀区教育局" value="南宁市青秀区教育局" />
-                          <el-option label="南宁市兴宁区教育局" value="南宁市兴宁区教育局" />
-                          <el-option label="南宁市第一中学" value="南宁市第一中学" />
-                          <el-option label="南宁市第二中学" value="南宁市第二中学" />
+                          <el-option label="南宁市教育局" value="南宁市教育局"></el-option>
+                          <el-option label="南宁市青秀区教育局" value="南宁市青秀区教育局"></el-option>
+                          <el-option label="南宁市兴宁区教育局" value="南宁市兴宁区教育局"></el-option>
+                          <el-option label="南宁市第一中学" value="南宁市第一中学"></el-option>
+                          <el-option label="南宁市第二中学" value="南宁市第二中学"></el-option>
                         </el-select>
                         <div style="display:flex;flex-wrap:wrap;align-content:flex-start;gap:6px;margin-top:8px;height:180px;overflow-y:auto;background:#fafcff;border:1px solid #eef2f7;border-radius:6px;padding:12px;">
                           <el-tag v-for="(org,i) in zoneForm.visibleOrgs" :key="i" closable :disable-transitions="true" @close="removeZoneVisibleOrg(i)" style="margin-bottom:4px;">{{ org }}</el-tag>
@@ -1340,7 +1350,7 @@
 
                       <div v-if="zoneForm.scopeType==='by_tag'" style="width:100%;">
                         <el-select v-model="zoneForm.selectedTags" multiple placeholder="请选择标签（可多选）" style="width:100%;" @change="zoneForm.visibleOrgs=[...zoneForm.selectedTags]">
-                          <el-option v-for="tag in tagList" :key="tag.id" :label="tag.name" :value="tag.name" />
+                          <el-option v-for="tag in tagList" :key="tag.id" :label="tag.name" :value="tag.name"></el-option>
                         </el-select>
                         <div style="display:flex;flex-wrap:wrap;align-content:flex-start;gap:6px;margin-top:8px;height:180px;overflow-y:auto;background:#fafcff;border:1px solid #eef2f7;border-radius:6px;padding:12px;">
                           <el-tag v-for="(t,i) in zoneForm.visibleOrgs" :key="i" closable :disable-transitions="true" @close="zoneForm.visibleOrgs.splice(i,1);zoneForm.selectedTags.indexOf(t)>-1&&zoneForm.selectedTags.splice(zoneForm.selectedTags.indexOf(t),1)" style="margin-bottom:4px;">{{ t }}</el-tag>
@@ -1608,9 +1618,9 @@
                 <input type="text" v-model="tagFilter.name" placeholder="" style="width:160px;height:28px;border:1px solid var(--shell-line);border-radius:4px;padding:0 8px;font-size:13px;outline:none;">
                 <span style="font-size:13px;color:var(--shell-text-secondary);white-space:nowrap;margin-left:4px;">标签类型:</span>
                 <el-select v-model="tagFilter.type" placeholder="" style="width:140px;" size="small">
-                  <el-option label="全部" value="" />
-                  <el-option label="自定义" value="custom" />
-                  <el-option label="机构类型" value="institution_type" />
+                  <el-option label="全部" value=""></el-option>
+                  <el-option label="自定义" value="custom"></el-option>
+                  <el-option label="机构类型" value="institution_type"></el-option>
                 </el-select>
                 <el-button type="primary" size="small">搜索</el-button>
                 <el-button size="small" @click="tagFilter={name:'',type:''}">重置</el-button>
@@ -1651,12 +1661,12 @@
                   </el-form-item>
                   <el-form-item label="机构类型" style="margin:0;width:180px;">
                     <el-select v-model="tagDetail.query.type" placeholder="请选择类型" clearable style="width:100%;">
-                      <el-option label="教育局" value="教育局" />
-                      <el-option label="高中" value="高中" />
-                      <el-option label="初中" value="初中" />
-                      <el-option label="小学" value="小学" />
-                      <el-option label="完全中学" value="完全中学" />
-                      <el-option label="九年一贯制" value="九年一贯制" />
+                      <el-option label="教育局" value="教育局"></el-option>
+                      <el-option label="高中" value="高中"></el-option>
+                      <el-option label="初中" value="初中"></el-option>
+                      <el-option label="小学" value="小学"></el-option>
+                      <el-option label="完全中学" value="完全中学"></el-option>
+                      <el-option label="九年一贯制" value="九年一贯制"></el-option>
                     </el-select>
                   </el-form-item>
                   <el-form-item label="机构 ID" style="margin:0;width:220px;">
@@ -1719,7 +1729,7 @@
                     <el-form-item label="可见范围" required style="width:50%;padding:0 8px;" v-if="tagForm.tagType==='institution_type'">
                       <div style="width:100%;">
                         <el-select v-model="tagForm.selectedInstitutionTypes" multiple placeholder="请选择机构类型（可多选）" style="width:100%;">
-                          <el-option v-for="t in institutionTypes" :key="t" :label="t" :value="t" />
+                          <el-option v-for="t in institutionTypes" :key="t" :label="t" :value="t"></el-option>
                         </el-select>
                         <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">
                           <el-tag v-for="(t,i) in tagForm.selectedInstitutionTypes" :key="i" closable :disable-transitions="true" @close="tagForm.selectedInstitutionTypes.splice(i,1)" style="margin-bottom:4px;">{{ t }}</el-tag>
@@ -1973,8 +1983,16 @@
                       <div class="app-detail-actions">
                         <el-button v-if="!currentAppDetail.paid" type="primary" size="default" @click="onFreeInstall">免费安装</el-button>
                         <template v-else>
-                          <el-button type="warning" size="default" @click="openBuy(currentAppDetail)">立即购买</el-button>
-                          <el-button v-if="currentAppDetail.trial" size="default" class="app-detail-trial-btn" :style="{ background: currentAppDetail.gradient, borderColor: 'transparent', color: '#fff' }" @click="onBuyTrial">免费试用</el-button>
+                          <div v-if="currentAppDetail.packages && currentAppDetail.packages.length" class="app-detail-pkgs">
+                            <div class="app-detail-pkg" v-for="(pk, i) in currentAppDetail.packages" :key="i" :class="{ 'is-active': detailPkgIdx === i }" @click="detailPkgIdx = i">
+                              <span class="app-detail-pkg-name">{{ pk.name }}</span>
+                              <span class="app-detail-pkg-price">¥{{ pk.price }}{{ pk.unit || '' }}</span>
+                            </div>
+                          </div>
+                          <div class="app-detail-buy-row">
+                            <el-button type="warning" size="default" @click="openBuy(currentAppDetail, detailPkgIdx)">立即购买 ¥{{ detailPkgPrice }}</el-button>
+                            <el-button v-if="currentAppDetail.trial" size="default" class="app-detail-trial-btn" :style="{ background: currentAppDetail.gradient, borderColor: 'transparent', color: '#fff' }" @click="onBuyTrial">免费试用</el-button>
+                          </div>
                         </template>
                       </div>
                     </div>
@@ -2022,7 +2040,7 @@
                               <div class="checkout-app-version">版本：{{ buyPackage }} | 数量：{{ buyQty }}</div>
                             </div>
                           </div>
-                          <div class="checkout-price-row"><span>商品单价</span><span>{{ currentAppDetail.price || '免费' }}</span></div>
+                          <div class="checkout-price-row"><span>商品单价</span><span>¥{{ buyUnitPrice.toFixed(2) }}</span></div>
                           <div class="checkout-price-row"><span>购买数量</span><span>{{ buyQty }}</span></div>
                           <div class="checkout-price-row"><span>优惠减免</span><span>¥0.00</span></div>
                           <div class="checkout-price-row total"><span>实付金额</span><span>¥{{ buyTotalPrice.toFixed(2) }}</span></div>
@@ -2044,8 +2062,8 @@
                             </div>
                             <el-form-item label="发票类型">
                               <el-select v-model="invoiceForm.type" style="width:100%">
-                                <el-option label="增值税普通发票" value="增值税普通发票" />
-                                <el-option label="增值税专用发票" value="增值税专用发票" />
+                                <el-option label="增值税普通发票" value="增值税普通发票"></el-option>
+                                <el-option label="增值税专用发票" value="增值税专用发票"></el-option>
                               </el-select>
                             </el-form-item>
                             <div class="checkout-tip">提示：机构采购请完整填写对公信息，电子发票将发送至预留手机号/邮箱</div>
@@ -2416,9 +2434,9 @@
                 <input type="text" v-model="orderFilter.name" placeholder="" style="width:160px;height:28px;border:1px solid var(--shell-line);border-radius:4px;padding:0 8px;font-size:13px;outline:none;">
                 <span style="font-size:13px;color:var(--shell-text-secondary);white-space:nowrap;margin-left:4px;">授权方式:</span>
                 <el-select v-model="orderFilter.authMode" placeholder="" style="width:120px;" size="small">
-                  <el-option label="全部" value="" />
-                  <el-option label="自动" value="自动" />
-                  <el-option label="手动" value="手动" />
+                  <el-option label="全部" value=""></el-option>
+                  <el-option label="自动" value="自动"></el-option>
+                  <el-option label="手动" value="手动"></el-option>
                 </el-select>
                 <el-button type="primary" size="small">搜索</el-button>
                 <el-button size="small" @click="orderFilter={name:'',authMode:''}">重置</el-button>
@@ -2456,10 +2474,10 @@
                 <input type="text" v-model="orderReceiveFilter" placeholder="" style="width:160px;height:28px;border:1px solid var(--shell-line);border-radius:4px;padding:0 8px;font-size:13px;outline:none;">
                 <span style="font-size:13px;color:var(--shell-text-secondary);white-space:nowrap;margin-left:4px;">订单状态:</span>
                 <el-select v-model="orderReceiveStatusFilter" placeholder="" style="width:130px;" size="small">
-                  <el-option label="全部" value="" />
-                  <el-option label="待支付" value="待支付" />
-                  <el-option label="已支付" value="已支付" />
-                  <el-option label="已取消" value="已取消" />
+                  <el-option label="全部" value=""></el-option>
+                  <el-option label="待支付" value="待支付"></el-option>
+                  <el-option label="已支付" value="已支付"></el-option>
+                  <el-option label="已取消" value="已取消"></el-option>
                 </el-select>
                 <el-button type="primary" size="small">搜索</el-button>
                 <el-button size="small" @click="orderReceiveFilter='';orderReceiveStatusFilter=''">重置</el-button>
@@ -2534,11 +2552,11 @@
                 <input type="text" v-model="trialFilter.user" placeholder="" style="width:140px;height:28px;border:1px solid var(--shell-line);border-radius:4px;padding:0 8px;font-size:13px;outline:none;">
                 <span style="font-size:13px;color:var(--shell-text-secondary);white-space:nowrap;margin-left:4px;">状态:</span>
                 <el-select v-model="trialFilter.status" placeholder="" style="width:120px;" size="small">
-                  <el-option label="全部" value="" /><el-option label="使用中" value="使用中" /><el-option label="已到期" value="已到期" /><el-option label="停用" value="停用" />
+                  <el-option label="全部" value=""></el-option><el-option label="使用中" value="使用中"></el-option><el-option label="已到期" value="已到期"></el-option><el-option label="停用" value="停用"></el-option>
                 </el-select>
                 <span style="font-size:13px;color:var(--shell-text-secondary);white-space:nowrap;margin-left:4px;">试用期限:</span>
                 <el-select v-model="trialFilter.duration" placeholder="" style="width:120px;" size="small">
-                  <el-option label="全部" value="" /><el-option label="7天" value="7" /><el-option label="15天" value="15" /><el-option label="30天" value="30" /><el-option label="90天" value="90" />
+                  <el-option label="全部" value=""></el-option><el-option label="7天" value="7"></el-option><el-option label="15天" value="15"></el-option><el-option label="30天" value="30"></el-option><el-option label="90天" value="90"></el-option>
                 </el-select>
                 <el-button type="primary" size="small">搜索</el-button>
                 <el-button size="small" @click="trialFilter={org:'',user:'',status:'',duration:''}">重置</el-button>
@@ -2614,8 +2632,8 @@
                 <input type="text" v-model="pkgFilter.code" placeholder="" style="width:140px;height:28px;border:1px solid var(--shell-line);border-radius:4px;padding:0 8px;font-size:13px;outline:none;">
                 <span style="font-size:13px;color:var(--shell-text-secondary);white-space:nowrap;margin-left:4px;">套餐类型:</span>
                 <el-select v-model="pkgFilter.type" placeholder="" style="width:150px;" size="small">
-                  <el-option label="全部" value="" />
-                  <el-option v-for="t in pkgTypes" :key="t" :label="t" :value="t" />
+                  <el-option label="全部" value=""></el-option>
+                  <el-option v-for="t in pkgTypes" :key="t" :label="t" :value="t"></el-option>
                 </el-select>
                 <el-button type="primary" size="small">搜索</el-button>
                 <el-button size="small" @click="pkgFilter={name:'',code:'',type:''}">重置</el-button>
@@ -2624,7 +2642,7 @@
               </div>
               <div style="overflow-x:auto;">
                 <table class="data-table" style="min-width:1400px;">
-                  <thead><tr><th>序号</th><th>套餐类型</th><th>套餐编码</th><th>套餐名称</th><th>价格</th><th>适用应用范围</th><th>分配大小</th><th>计量单位</th><th>有效期(天)</th><th>基座套餐关联</th><th>是否手动开通业务</th><th>状态</th><th>操作</th></tr></thead>
+                  <thead><tr><th>序号</th><th>套餐类型</th><th>套餐编码</th><th>套餐名称</th><th>价格</th><th>适用应用范围</th><th>分配大小</th><th>计量单位</th><th>有效期(天)</th><th>基座套餐关联</th><th>是否手动开通业务</th><th>操作</th></tr></thead>
                   <tbody>
                     <tr v-for="(p,i) in filteredPkgList" :key="i">
                       <td>{{ i + 1 }}</td>
@@ -2638,12 +2656,9 @@
                       <td>{{ p.duration || '—' }}</td>
                       <td>{{ (p.basePkg && p.basePkg.length) ? p.basePkg.join('、') : '—' }}</td>
                       <td>{{ p.authMode }}</td>
-                      <td><el-tag size="small" :type="p.status==='enabled'?'success':'danger'">{{ p.status==='enabled'?'启用':'停用' }}</el-tag></td>
                       <td style="white-space:nowrap;">
                         <el-button text size="small" @click="onEditPkg(p)">编辑</el-button>
-                        <el-button text size="small" style="color:#f56c6c;" @click="onDeletePkg(i)">删除</el-button>
-                        <el-button text size="small" v-if="p.status==='enabled'" @click="onTogglePkg(p)">停用</el-button>
-                        <el-button text size="small" v-else @click="onTogglePkg(p)">启用</el-button>
+                        <el-button text size="small" style="color:#f56c6c;" @click="onDeletePkg(p)">删除</el-button>
                       </td>
                     </tr>
                   </tbody>
@@ -2659,7 +2674,7 @@
                   <div style="display:flex;flex-direction:column;align-items:flex-start;width:100%;">
                     <el-form-item label="套餐类型" :required="true" style="width:50%;padding:0 8px;">
                       <el-select v-model="pkgForm.type" placeholder="请选择（数据字典）" style="width:100%;">
-                        <el-option v-for="t in pkgTypes" :key="t" :label="t" :value="t" />
+                        <el-option v-for="t in pkgTypes" :key="t" :label="t" :value="t"></el-option>
                       </el-select>
                     </el-form-item>
                     <el-form-item label="套餐编码" :required="true" style="width:50%;padding:0 8px;">
@@ -2685,13 +2700,13 @@
                     </el-form-item>
                     <el-form-item label="基座套餐关联" :required="pkgForm.type==='基座套餐'" style="width:50%;padding:0 8px;">
                       <el-select v-model="pkgForm.basePkg" multiple collapse-tags clearable placeholder="请选择已存在的套餐配置（可多选）" style="width:100%;">
-                        <el-option v-for="p in pkgList.filter(x => x.code !== pkgForm.code)" :key="p.code" :label="p.name" :value="p.name" />
+                        <el-option v-for="p in pkgList.filter(x => x.code !== pkgForm.code)" :key="p.code" :label="p.name" :value="p.name"></el-option>
                       </el-select>
                     </el-form-item>
                     <el-form-item label="套餐适用对象" style="width:50%;padding:0 8px;">
                       <el-select v-model="pkgForm.targetType" clearable placeholder="请选择" style="width:100%;">
-                        <el-option label="机构" value="机构" />
-                        <el-option label="个人" value="个人" />
+                        <el-option label="机构" value="机构"></el-option>
+                        <el-option label="个人" value="个人"></el-option>
                       </el-select>
                     </el-form-item>
                     <el-form-item label="是否手动开通业务" :required="true" style="width:50%;padding:0 8px;">
@@ -3020,12 +3035,12 @@
             { id:'ORD-20260710-010', authMode:'手动', pkgName:'存储500G', scope:'通用', bizType:'存储容量充值', duration:365, allocSize:'500', org:'自治区教育厅', userId:'user_010', expireTime:'2027-07-10', receiveTime:'2026-07-10 10:20', authStatus:'pending' },
           ],
           pkgList: [
-            { code:'SMS_100_10000', name:'短信服务-100元/1W条', type:'短信充值', authMode:'自动', scope:'', allocSize:'10000', unit:'条', duration:'', basePkg:'', targetType:'机构', status:'enabled', price:100 },
-            { code:'RLCZ_365_1T', name:'存储容量-1年/1T', type:'存储容量充值', authMode:'自动', scope:'', allocSize:'1024', unit:'G', duration:365, basePkg:'', targetType:'机构', status:'enabled', price:999 },
-            { code:'TOKEN_100_10000', name:'TOKEN充值-100元/1W资源点', type:'TOKEN充值', authMode:'自动', scope:'', allocSize:'10000', unit:'资源点', duration:'', basePkg:'', targetType:'机构', status:'enabled', price:100 },
-            { code:'GJT_JZ_000001', name:'桂教通基座', type:'基座套餐', authMode:'自动', scope:'', allocSize:'', unit:'', duration:365, basePkg:['短信服务-100元/1W条','存储容量-1年/1T'], targetType:'机构', status:'enabled', price:8999 },
-            { code:'APP_USE_00001', name:'优加志愿-开通1年', type:'应用使用授权', authMode:'自动', scope:'优加志愿应用ID', allocSize:'', unit:'', duration:365, basePkg:'', targetType:'个人', status:'enabled', price:1999 },
-            { code:'APP_USE_BI_1_NAN', name:'BI应用开通一年', type:'应用使用授权', authMode:'手动', scope:'BI应用', allocSize:'', unit:'', duration:356, basePkg:'', targetType:'机构', status:'enabled', price:2999 },
+            { code:'SMS_100_10000', name:'短信服务-100元/1W条', type:'短信充值', authMode:'自动', scope:'', allocSize:'10000', unit:'条', duration:'', basePkg:'', targetType:'机构', price:100 },
+            { code:'RLCZ_365_1T', name:'存储容量-1年/1T', type:'存储容量充值', authMode:'自动', scope:'', allocSize:'1024', unit:'G', duration:365, basePkg:'', targetType:'机构', price:999 },
+            { code:'TOKEN_100_10000', name:'TOKEN充值-100元/1W资源点', type:'TOKEN充值', authMode:'自动', scope:'', allocSize:'10000', unit:'资源点', duration:'', basePkg:'', targetType:'机构', price:100 },
+            { code:'GJT_JZ_000001', name:'桂教通基座', type:'基座套餐', authMode:'自动', scope:'', allocSize:'', unit:'', duration:365, basePkg:['短信服务-100元/1W条','存储容量-1年/1T'], targetType:'机构', price:8999 },
+            { code:'APP_USE_00001', name:'优加志愿-开通1年', type:'应用使用授权', authMode:'自动', scope:'优加志愿应用ID', allocSize:'', unit:'', duration:365, basePkg:'', targetType:'个人', price:1999 },
+            { code:'APP_USE_BI_1_NAN', name:'BI应用开通一年', type:'应用使用授权', authMode:'手动', scope:'BI应用', allocSize:'', unit:'', duration:356, basePkg:'', targetType:'机构', price:2999 },
           ],
           pkgForm: { code:'', name:'', type:'', price:null, scope:'', allocSize:'', unit:'', duration:'', basePkg:[], targetType:'', authMode:'自动' },
           pkgEditId: null,
@@ -3133,6 +3148,7 @@
           serviceView: 'list',
           currentAppDetail: null,
           appDetailTab: 'intro',
+          detailPkgIdx: 0,
           detailLiked: false,
           detailFaved: false,
           rateOpenAppId: null,
@@ -3162,15 +3178,15 @@
               { initial:'校', name:'校园OA协同', paid:false, desc:'校园OA协同办公平台，流程审批、公文流转、任务协作一站式。', users:'960在用', score:'5', likes:512, favorites:198, views:7640, tags:[{label:'生态应用',type:'info'},{label:'本机构应用',type:'success'}], gradient:'linear-gradient(135deg,#4fd1c5 0%,#319795 100%)' },
             ]},
             { name:'教务管理', desc:'排课、考勤、教务等教务工具', color:'#38a169', bg:'#ecfaf1', apps:[
-              { initial:'教', name:'辰知教务', paid:true, price:'¥199/年', trial:true, packages:['基础版','标准版','旗舰版'], desc:'辰知教务SaaS管理系统，支持教务排课与日常教学管理。', users:'2885在用', score:'5', likes:1530, favorites:720, views:28900, tags:[{label:'生态应用',type:'info'},{label:'本机构应用',type:'success'}], gradient:'linear-gradient(135deg,#48bb78 0%,#38a169 100%)' },
-              { initial:'排', name:'智能排课系统', paid:true, price:'¥299/年', trial:false, packages:['标准版','专业版'], desc:'智能排课引擎，自动规避冲突，支持走班与合班排课。', users:'2010在用', score:'5', likes:968, favorites:430, views:15600, tags:[{label:'生态应用',type:'info'},{label:'本机构应用',type:'success'}], gradient:'linear-gradient(135deg,#68d391 0%,#48bb78 100%)' },
+              { initial:'教', name:'辰知教务', paid:true, price:'¥199/年', trial:true, packages:[{name:'基础版',price:99,unit:'/年'},{name:'标准版',price:199,unit:'/年'},{name:'旗舰版',price:399,unit:'/年'}], desc:'辰知教务SaaS管理系统，支持教务排课与日常教学管理。', users:'2885在用', score:'5', likes:1530, favorites:720, views:28900, tags:[{label:'生态应用',type:'info'},{label:'本机构应用',type:'success'}], gradient:'linear-gradient(135deg,#48bb78 0%,#38a169 100%)' },
+              { initial:'排', name:'智能排课系统', paid:true, price:'¥299/年', trial:false, packages:[{name:'标准版',price:199,unit:'/年'},{name:'专业版',price:299,unit:'/年'}], desc:'智能排课引擎，自动规避冲突，支持走班与合班排课。', users:'2010在用', score:'5', likes:968, favorites:430, views:15600, tags:[{label:'生态应用',type:'info'},{label:'本机构应用',type:'success'}], gradient:'linear-gradient(135deg,#68d391 0%,#48bb78 100%)' },
               { initial:'考', name:'考务管理', paid:false, desc:'考务全流程管理，从报名、编排到成绩录入与分析。', users:'1340在用', score:'5', likes:624, favorites:256, views:9820, tags:[{label:'生态应用',type:'info'},{label:'本机构应用',type:'success'}], gradient:'linear-gradient(135deg,#9ae6b4 0%,#68d391 100%)' },
             ]},
             { name:'智慧教育', desc:'AI课堂、学情、智能教学工具', color:'#805ad5', bg:'#f3edff', apps:[
-              { initial:'AI', name:'AI作文批改', paid:true, price:'¥399/年', trial:true, packages:['个人版','学校版','区域版'], desc:'AI驱动的作文批改与评价引擎，智能分析作文，多维分析，为教师减负。', users:'9540在用', score:'5', likes:3210, favorites:1580, views:58200, tags:[{label:'生态应用',type:'info'},{label:'本机构应用',type:'success'}], gradient:'linear-gradient(135deg,#9f7aea 0%,#805ad5 100%)' },
-              { initial:'九', name:'九章爱学', paid:true, price:'¥259/年', trial:true, packages:['基础版','进阶版'], desc:'九章爱学，提供24小时智能陪伴与课程答疑以及个性化练习服务。', users:'1420在用', score:'5', likes:1180, favorites:540, views:19400, tags:[{label:'生态应用',type:'info'},{label:'本机构应用',type:'success'}], gradient:'linear-gradient(135deg,#667eea 0%,#5a67d8 100%)' },
-              { initial:'玄', name:'玄华慧', paid:true, price:'¥599/年', trial:true, packages:['标准版','专业版','旗舰版'], desc:'核心AI智慧教育产品，AI课件开发，AI赋能个性化学习与评测。', users:'3000在用', score:'5', likes:2040, favorites:980, views:33600, tags:[{label:'生态应用',type:'info'},{label:'本机构应用',type:'success'}], gradient:'linear-gradient(135deg,#f687b3 0%,#ed64a6 100%)' },
-              { initial:'智', name:'智慧课堂', paid:true, price:'¥459/年', trial:false, packages:['标准版','旗舰版'], desc:'智慧课堂互动系统，实时反馈与学情采集，提升课堂效率。', users:'2680在用', score:'5', likes:1760, favorites:820, views:31200, tags:[{label:'生态应用',type:'info'},{label:'本机构应用',type:'success'}], gradient:'linear-gradient(135deg,#a78bfa 0%,#7c3aed 100%)' },
+              { initial:'AI', name:'AI作文批改', paid:true, price:'¥399/年', trial:true, packages:[{name:'个人版',price:199,unit:'/年'},{name:'学校版',price:399,unit:'/年'},{name:'区域版',price:999,unit:'/年'}], desc:'AI驱动的作文批改与评价引擎，智能分析作文，多维分析，为教师减负。', users:'9540在用', score:'5', likes:3210, favorites:1580, views:58200, tags:[{label:'生态应用',type:'info'},{label:'本机构应用',type:'success'}], gradient:'linear-gradient(135deg,#9f7aea 0%,#805ad5 100%)' },
+              { initial:'九', name:'九章爱学', paid:true, price:'¥259/年', trial:true, packages:[{name:'基础版',price:159,unit:'/年'},{name:'进阶版',price:259,unit:'/年'}], desc:'九章爱学，提供24小时智能陪伴与课程答疑以及个性化练习服务。', users:'1420在用', score:'5', likes:1180, favorites:540, views:19400, tags:[{label:'生态应用',type:'info'},{label:'本机构应用',type:'success'}], gradient:'linear-gradient(135deg,#667eea 0%,#5a67d8 100%)' },
+              { initial:'玄', name:'玄华慧', paid:true, price:'¥599/年', trial:true, packages:[{name:'标准版',price:399,unit:'/年'},{name:'专业版',price:599,unit:'/年'},{name:'旗舰版',price:899,unit:'/年'}], desc:'核心AI智慧教育产品，AI课件开发，AI赋能个性化学习与评测。', users:'3000在用', score:'5', likes:2040, favorites:980, views:33600, tags:[{label:'生态应用',type:'info'},{label:'本机构应用',type:'success'}], gradient:'linear-gradient(135deg,#f687b3 0%,#ed64a6 100%)' },
+              { initial:'智', name:'智慧课堂', paid:true, price:'¥459/年', trial:false, packages:[{name:'标准版',price:299,unit:'/年'},{name:'旗舰版',price:459,unit:'/年'}], desc:'智慧课堂互动系统，实时反馈与学情采集，提升课堂效率。', users:'2680在用', score:'5', likes:1760, favorites:820, views:31200, tags:[{label:'生态应用',type:'info'},{label:'本机构应用',type:'success'}], gradient:'linear-gradient(135deg,#a78bfa 0%,#7c3aed 100%)' },
             ]},
           ],
           myAppView: 'home',
@@ -3322,7 +3338,7 @@
           const manual = this.whitelist.filter(x => x.host && x.host.trim()).map(x => x.scheme + '://' + x.host.trim());
           return [...new Set([...this.whitelistAuto, ...manual])].slice(0, 5);
         },
-        currentRoleLabel() { return this.currentRole === 'platform_admin' ? '桂教通超级管理员' : '租户管理员'; },
+        currentRoleLabel() { return this.currentRole === 'platform_admin' ? '桂教通超级管理员' : '机构管理员'; },
         filteredOrgList() {
           const s = this.installFilter.status;
           if (!s) return this.orgList;
@@ -3500,9 +3516,25 @@
           const s = this.payTimeLeft % 60;
           return m + '分' + (s < 10 ? '0' : '') + s + '秒';
         },
+        detailPkgPrice() {
+          const a = this.currentAppDetail;
+          if (!a) return 0;
+          const pkgs = a.packages;
+          const pk = pkgs && pkgs[this.detailPkgIdx];
+          if (pk && typeof pk === 'object' && typeof pk.price === 'number') return pk.price;
+          if (!a.price) return 0;
+          const n = parseFloat(a.price.replace(/[^\d.]/g, ''));
+          return isNaN(n) ? 0 : n;
+        },
         buyUnitPrice() {
           const a = this.currentAppDetail;
-          if (!a || !a.price) return 0;
+          if (!a) return 0;
+          const pkgs = a.packages;
+          if (pkgs && pkgs.length) {
+            const pk = pkgs.find(x => typeof x === 'object' && x.name === this.buyPackage);
+            if (pk && typeof pk.price === 'number') return pk.price;
+          }
+          if (!a.price) return 0;
           const n = parseFloat(a.price.replace(/[^\d.]/g, ''));
           return isNaN(n) ? 0 : n;
         },
@@ -3545,8 +3577,13 @@
         visibleApps(group) { return this.expandedGroups[group.name] ? group.apps : group.apps.slice(0, 3); },
         openMyOrderDetail(o) { this.currentMyOrder = o; this.myOrderView = 'detail'; },
         backMyOrder() { this.myOrderView = 'list'; this.currentMyOrder = null; },
-        openAppDetail(app) { this.currentAppDetail = app; this.appDetailTab = 'intro'; this.detailLiked = !!app.userLiked; this.detailFaved = !!app.userFaved; this.serviceView = 'detail'; },
-        openBuy(app) { this.currentAppDetail = app; this.appDetailTab = 'intro'; this.buyPackage = (app.packages && app.packages[0]) || '标准版'; this.buyQty = 1; this.buyStep = 1; this.invoiceForm = { title: '', taxId: '', address: '', phone: '', bank: '', bankAccount: '', type: '增值税普通发票' }; this.orderCode = ''; this.payTimeLeft = 900; this.payTime = ''; this.cancelPayTimer(); clearTimeout(this.payTimeout); this.serviceView = 'buy'; },
+        openAppDetail(app) { this.currentAppDetail = app; this.appDetailTab = 'intro'; this.detailLiked = !!app.userLiked; this.detailFaved = !!app.userFaved; this.detailPkgIdx = 0; this.serviceView = 'detail'; },
+        openBuy(app, pkgIdx) {
+          const pkg = (app.packages && app.packages[pkgIdx != null ? pkgIdx : 0]) || null;
+          this.currentAppDetail = app; this.appDetailTab = 'intro';
+          this.buyPackage = (pkg && typeof pkg === 'object') ? pkg.name : ((app.packages && app.packages[0]) || '标准版');
+          this.buyQty = 1; this.buyStep = 1; this.invoiceForm = { title: '', taxId: '', address: '', phone: '', bank: '', bankAccount: '', type: '增值税普通发票' }; this.orderCode = ''; this.payTimeLeft = 900; this.payTime = ''; this.cancelPayTimer(); clearTimeout(this.payTimeout); this.serviceView = 'buy';
+        },
         onFreeInstall() { this.$message.success('已开始免费安装：' + this.currentAppDetail.name); },
         onBuyTrial() { this.$message.success('已开通免费试用：' + this.currentAppDetail.name); },
         submitOrder() {
@@ -3721,7 +3758,22 @@
           const label = finalAppType === 'platform' ? '平台应用' : '非平台应用';
           if (this.editAppId) {
             const t = this.appList.find(x => x.id === this.editAppId);
-            if (t) { t.appTypeLabel = label; t.lowcodeAppId = this.lowcodeAppId; }
+            if (t) {
+              t.appTypeLabel = label;
+              t.lowcodeAppId = this.lowcodeAppId;
+              // 机构管理员提交上线申请：生成审核记录，由桂教通超级管理员审核
+              if (this.currentRole === 'tenant_admin') {
+                const rid = 'APP-' + (t.appId || 1000);
+                const exist = this.pendingReviews.find(r => r.id === rid);
+                const rec = {
+                  id: rid, name: t.name, type: '上线', dev: '南宁市教育局',
+                  time: this.nowTime(), cat: t.cat || '教务管理', zone: '—', source: '本机构',
+                  native_type: t.native_type || '自建应用', appTypeLabel: label
+                };
+                if (exist) Object.assign(exist, rec);
+                else this.pendingReviews.unshift(rec);
+              }
+            }
           } else {
             const maxAppId = this.appList.reduce((m, a) => Math.max(m, a.appId || 0), 1000);
             const newAppId = maxAppId + 1;
@@ -3729,7 +3781,11 @@
             const newOpenId = isLowcode ? (this.lowcodeAppId || this.genOpenId()) : this.genOpenId();
             this.appList.unshift({ id: Date.now(), appId: newAppId, lowcodeAppId: this.lowcodeAppId, appOpenId: newOpenId, name:'新建应用', cat: (this.appCategory || []).join('/'), appTypeLabel: label, type:'原生应用', native_type: isLowcode ? '低代码应用' : '自建应用', scope:'学校', level:'所有学段', source:'本机构', status:'offline', listing:'unlisted', logo:'新' });
           }
-          this.$message.success(this.editMode ? '提交成功，需重新上架审核后生效' : '上线申请已提交');
+          if (this.currentRole === 'tenant_admin' && this.editAppId) {
+            this.$message.success(this.editMode ? '提交成功，需重新上架审核后生效' : '上线申请已提交，待桂教通超级管理员审核');
+          } else {
+            this.$message.success(this.editMode ? '提交成功，需重新上架审核后生效' : '上线申请已提交');
+          }
           this.goPage('P01');
         },
         genSyncToken() {
@@ -3786,7 +3842,7 @@
         },
         menuAccessible(idx) {
           const tenantOnly = ['P22','P21','P24','P25'];
-          const platformOnly = ['P18','P19','P20','P26'];
+          const platformOnly = ['P10','P18','P19','P20','P26'];
           if (this.currentRole === 'tenant_admin') return !platformOnly.includes(idx);
           if (this.currentRole === 'platform_admin') return !tenantOnly.includes(idx);
           return true;
@@ -4085,10 +4141,20 @@
           this.tagDetail.page = p;
           this.queryTagOrgs();
         },
+        hasPendingReview(app) {
+          if (!app) return false;
+          const rid = 'APP-' + (app.appId || 1000);
+          return this.pendingReviews.some(r => r.id === rid);
+        },
         today() {
           const d = new Date();
           const p = n => (n < 10 ? '0' : '') + n;
           return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+        },
+        nowTime() {
+          const d = new Date();
+          const p = n => (n < 10 ? '0' : '') + n;
+          return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
         },
         onConfirmShelf() {
           const app = this.currentApp;
@@ -4098,19 +4164,19 @@
           if (this.currentAppIsLowcode) {
             if (this.currentRole === 'tenant_admin') {
               const tenant = '南宁市教育局';
-              // 是否跨机构上架：范围=跨机构范围，自动安装到范围内租户的应用中心
+              // 是否跨机构上架：范围=跨机构范围，自动安装到范围内机构的应用中心
               if (this.shelfConfig.crossTenant === 'yes') {
                 const zoneName = this.shelfConfig.targetTenant || '跨机构范围';
                 this.shelfList.unshift({ initial, name, cat, dev: tenant, zone: zoneName, time: this.today(), status: 'unlisted', source: tenant, appTypeLabel: app.appTypeLabel });
-                this.$message.success('是否跨机构上架成功，已自动安装到范围内租户的应用中心');
+                this.$message.success('是否跨机构上架成功，已自动安装到范围内机构的应用中心');
                 this.goPage('P04');
                 return;
               }
               // 非跨机构：范围选择必填
               if (!this.shelfConfig.scopeType) { this.$message.warning('请选择范围'); return; }
-              const zones = this.shelfConfig.scopeType === 'all' ? ['当前租户及所有下级租户'] : this.shelfConfig.selectedZones;
+              const zones = this.shelfConfig.scopeType === 'all' ? ['当前机构及所有下级机构'] : this.shelfConfig.selectedZones;
               zones.forEach(z => this.shelfList.unshift({ initial, name, cat, dev: tenant, zone: z, time: this.today(), status: 'unlisted', source: tenant, appTypeLabel: app.appTypeLabel }));
-              // 版本号（租户管理员 + 低代码 + 是否跨机构=否，必填）
+              // 版本号（机构管理员 + 低代码 + 是否跨机构=否，必填）
               if (this.currentAppIsLowcode && this.shelfConfig.crossTenant === 'no' && !this.shelfConfig.versionNo) { this.$message.warning('请选择版本号'); return; }
               // 分享范围（多选，非必填）；勾选“其他机构”时需选择机构
               if (this.shelfConfig.shareScope.includes('other') && this.shelfConfig.targetOrgs.length === 0) { this.$message.warning('请选择其他机构'); return; }
@@ -4127,7 +4193,7 @@
             if (this.shelfConfig.crossTenant === 'yes') {
               const zoneName = this.shelfConfig.targetTenant || '跨机构范围';
               this.shelfList.unshift({ initial, name, cat, dev: '自治区教育厅', zone: zoneName, time: this.today(), status: 'unlisted', source: '自治区教育厅', appTypeLabel: app.appTypeLabel });
-              this.$message.success('是否跨机构上架成功，已自动安装到范围内租户的应用中心');
+              this.$message.success('是否跨机构上架成功，已自动安装到范围内机构的应用中心');
               this.goPage('P04');
               return;
             }
@@ -4187,8 +4253,32 @@
         },
         onSubmitReview() {
           if (this.reviewResult==='reject' && !this.reviewComment) { this.$message.warning('驳回时请输入审批意见'); return; }
+          const r = this.currentReview;
+          if (!r) { this.$message.warning('未找到审核记录'); return; }
+          const typeLabel = r.type;
+          const idx = this.pendingReviews.indexOf(r);
+          if (idx > -1) this.pendingReviews.splice(idx, 1);
+          r.result = this.reviewResult==='approve' ? '通过' : '驳回';
+          r.reviewer = '桂教通超级管理员';
+          r.doneTime = this.nowTime();
+          r.reviewComment = this.reviewComment || '';
+          this.doneReviews.unshift(r);
           if (this.reviewResult==='approve') {
-            this.$message.success('审核通过，应用已上线');
+            // 审核通过：应用状态变为已上线，并进入机构管理员的应用上架列表（未上架）
+            const appIdNum = parseInt(String(r.id || '').replace('APP-', ''), 10);
+            if (!isNaN(appIdNum)) {
+              const t = this.appList.find(x => x.appId === appIdNum);
+              if (t) { t.status = 'online'; t.listing = t.listing || 'unlisted'; }
+            }
+            const name = r.name || '新应用';
+            const cat = r.cat || '教务管理';
+            const dev = r.dev || '南宁市教育局';
+            this.shelfList.unshift({
+              initial: name.slice(0, 1), name, cat, dev, zone: '—', time: this.nowTime(),
+              status: 'unlisted', source: dev, type: '原生应用',
+              native_type: r.native_type || '自建应用', appTypeLabel: r.appTypeLabel || '非平台应用'
+            });
+            this.$message.success('审核通过，应用已进入机构管理员上架列表（未上架）');
           } else {
             this.$message.success('已驳回');
           }
@@ -4405,16 +4495,18 @@
           this.pkgEditId = p.code;
           this.goPage('P26e');
         },
-        onTogglePkg(p) {
-          const isDisabling = p.status === 'enabled';
-          this.$confirm(isDisabling?'确认停用该套餐？':'确认启用该套餐？', '提示', { confirmButtonText:'确认', cancelButtonText:'取消', type:'warning' }).then(() => {
-            p.status = isDisabling ? 'disabled' : 'enabled';
-            this.$message.success(isDisabling ? '已停用' : '已启用');
-          }).catch(() => {});
-        },
-        onDeletePkg(i) {
+        onDeletePkg(p) {
+          const usedBy = [];
+          if (this.orderList.some(o => o.pkgName === p.name)) usedBy.push('订单套餐授权记录');
+          if (this.orderReceiveList.some(o => o.pkgName === p.name)) usedBy.push('订单接收记录');
+          if (this.trialList.some(t => ((t.pkgName || '') + (t.trialType || '')).includes(p.name))) usedBy.push('试用套餐记录');
+          if (this.pkgList.some(x => x.code !== p.code && (Array.isArray(x.basePkg) ? x.basePkg.includes(p.name) : x.basePkg === p.name))) usedBy.push('基座套餐关联');
+          if (this.shelfConfig.trialPackage === p.name) usedBy.push('应用上架配置-试用套餐');
+          if ((this.shelfConfig.authPackages || []).includes(p.name)) usedBy.push('应用上架配置-授权套餐');
+          if (usedBy.length) { this.$message.warning('该套餐已被使用（' + usedBy.join('、') + '），不可删除'); return; }
           this.$confirm('数据删除后，无法找回，请确认是否继续删除？', '提示', { confirmButtonText:'确认删除', cancelButtonText:'取消', type:'warning' }).then(() => {
-            this.pkgList.splice(i, 1);
+            const idx = this.pkgList.findIndex(x => x.code === p.code);
+            if (idx >= 0) this.pkgList.splice(idx, 1);
             this.$message.success('已删除');
           }).catch(() => {});
         },
@@ -4429,13 +4521,13 @@
             code:this.pkgForm.code, name:this.pkgForm.name, type:this.pkgForm.type, price:this.pkgForm.price,
             scope:this.pkgForm.scope, allocSize:this.pkgForm.allocSize, unit:this.pkgForm.unit,
             duration:this.pkgForm.duration, basePkg:this.pkgForm.basePkg, targetType:this.pkgForm.targetType,
-            authMode:this.pkgForm.authMode, status:'enabled'
+            authMode:this.pkgForm.authMode
           };
           if (!this.pkgEditId) {
             this.pkgList.push(record);
           } else {
             const idx = this.pkgList.findIndex(p => p.code === this.pkgEditId);
-            if (idx > -1) { record.status = this.pkgList[idx].status; this.pkgList.splice(idx, 1, record); }
+            if (idx > -1) this.pkgList.splice(idx, 1, record);
           }
           this.$message.success('保存成功');
           this.goPage('P26');
