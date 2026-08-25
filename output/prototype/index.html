@@ -265,7 +265,7 @@
     .checkout-price-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eef0f2; font-size: 14px; color: #4e5969; }
     .checkout-price-row.total { border-bottom: none; padding-top: 18px; font-size: 18px; font-weight: 700; color: #ff7d00; }
     .checkout-form { flex: 1.5; min-width: 0; }
-    .checkout-form-title { font-size: 16px; font-weight: 600; color: #1f2329; margin-bottom: 18px; }
+    .checkout-form-title { font-size: 16px; font-weight: 600; color: #1f2329; margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; }
     .checkout-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     .checkout-tip { font-size: 12px; color: #86909c; margin-top: 8px; }
     .checkout-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; padding-top: 24px; border-top: 1px solid #f0f2f5; }
@@ -492,7 +492,7 @@
             <div class="shell-nav-group-title">订单管理</div>
             <el-menu :default-active="activeMenu" @select="onMenuSelect">
               <el-menu-item index="P18">订单套餐授权</el-menu-item>
-              <el-menu-item index="P19">订单接收记录</el-menu-item>
+              <el-menu-item index="P19">订单记录</el-menu-item>
               <el-menu-item index="P20">试用订单记录</el-menu-item>
               <el-menu-item index="P26">应用套餐配置</el-menu-item>
             </el-menu>
@@ -2046,7 +2046,7 @@
                           <div class="checkout-price-row total"><span>实付金额</span><span>¥{{ buyTotalPrice.toFixed(2) }}</span></div>
                         </div>
                         <div class="checkout-form">
-                          <div class="checkout-form-title">发票信息录入</div>
+                          <div class="checkout-form-title"><span>发票信息录入</span><el-button text size="small" @click="openInvoiceHistory"><el-icon style="margin-right:2px;"><Search /></el-icon>历史发票记录</el-button></div>
                           <el-form label-position="top" size="default">
                             <div class="checkout-form-row">
                               <el-form-item label="发票抬头"><el-input v-model="invoiceForm.title" placeholder="个人/学校/公司全称" /></el-form-item>
@@ -2074,6 +2074,35 @@
                         <el-button plain size="default" @click="backToDetail">返回商品详情</el-button>
                         <el-button type="warning" size="default" @click="submitOrder">提交订单，去支付</el-button>
                       </div>
+                      <el-dialog v-model="showInvoiceHistory" title="历史发票记录" width="820px" append-to-body>
+                        <div style="font-size:13px;color:#8a919f;margin-bottom:12px;">选择一条历史发票记录，信息将自动回填到发票信息录入表单</div>
+                        <table class="data-table" style="min-width:760px;">
+                          <thead><tr><th>发票抬头</th><th>纳税人识别号</th><th>发票类型</th><th>企业地址</th><th>联系电话</th><th>开户行</th><th>银行账号</th><th>操作</th></tr></thead>
+                          <tbody>
+                            <tr v-for="(h,hi) in pagedInvoiceHistory" :key="hi">
+                              <td>{{ h.title }}</td>
+                              <td>{{ h.taxId || '—' }}</td>
+                              <td>{{ h.type }}</td>
+                              <td>{{ h.address || '—' }}</td>
+                              <td>{{ h.phone || '—' }}</td>
+                              <td>{{ h.bank || '—' }}</td>
+                              <td>{{ h.bankAccount || '—' }}</td>
+                              <td><el-button text size="small" type="primary" @click="selectInvoiceHistory(h)">使用此记录</el-button></td>
+                            </tr>
+                          </tbody>
+                        </table>
+                        <div style="margin-top:12px;text-align:right;">
+                          <el-pagination
+                            layout="total, prev, pager, next"
+                            :total="invoiceHistory.length"
+                            :page-size="invoiceHistoryPageSize"
+                            :current-page="invoiceHistoryPage"
+                            @current-change="onInvoiceHistoryPageChange"
+                            background
+                            size="small">
+                          </el-pagination>
+                        </div>
+                      </el-dialog>
                     </div>
                   </template>
 
@@ -2430,20 +2459,24 @@
             <!-- ===== P18 订单套餐授权 ===== -->
             <div v-show="currentPage === 'P18'" class="shell-workbench">
               <div class="filter-bar">
-                <span style="font-size:13px;color:var(--shell-text-secondary);white-space:nowrap;">套餐名称:</span>
+                <span style="font-size:13px;color:var(--shell-text-secondary);white-space:nowrap;">订单ID:</span>
+                <input type="text" v-model="orderFilter.id" placeholder="" style="width:160px;height:28px;border:1px solid var(--shell-line);border-radius:4px;padding:0 8px;font-size:13px;outline:none;">
+                <span style="font-size:13px;color:var(--shell-text-secondary);white-space:nowrap;margin-left:4px;">套餐名称:</span>
                 <input type="text" v-model="orderFilter.name" placeholder="" style="width:160px;height:28px;border:1px solid var(--shell-line);border-radius:4px;padding:0 8px;font-size:13px;outline:none;">
-                <span style="font-size:13px;color:var(--shell-text-secondary);white-space:nowrap;margin-left:4px;">授权方式:</span>
-                <el-select v-model="orderFilter.authMode" placeholder="" style="width:120px;" size="small">
+                <span style="font-size:13px;color:var(--shell-text-secondary);white-space:nowrap;margin-left:4px;">套餐类型:</span>
+                <el-select v-model="orderFilter.bizType" placeholder="" style="width:130px;" size="small">
                   <el-option label="全部" value=""></el-option>
-                  <el-option label="自动" value="自动"></el-option>
-                  <el-option label="手动" value="手动"></el-option>
+                  <el-option v-for="t in pkgTypes" :key="t" :label="t" :value="t"></el-option>
                 </el-select>
+                <span style="font-size:13px;color:var(--shell-text-secondary);white-space:nowrap;margin-left:4px;">所属机构:</span>
+                <input type="text" v-model="orderFilter.org" placeholder="" style="width:160px;height:28px;border:1px solid var(--shell-line);border-radius:4px;padding:0 8px;font-size:13px;outline:none;">
                 <el-button type="primary" size="small">搜索</el-button>
-                <el-button size="small" @click="orderFilter={name:'',authMode:''}">重置</el-button>
+                <el-button size="small" @click="orderFilter={id:'',name:'',bizType:'',org:''}">重置</el-button>
+                <el-button type="primary" size="small" icon="Plus" @click="openAddAuth" style="margin-left:auto;">新增授权</el-button>
               </div>
               <div style="overflow-x:auto;">
-                <table class="data-table" style="min-width:1400px;">
-                  <thead><tr><th>订单 ID</th><th>授权方式</th><th>套餐名称</th><th>使用范围</th><th>业务类型</th><th>有效期/天</th><th>分配大小</th><th>所属机构</th><th>购买用户 ID</th><th>到期时间</th><th>订单接收时间</th><th>操作</th></tr></thead>
+                <table class="data-table" style="min-width:1500px;">
+                  <thead><tr><th>订单 ID</th><th>授权方式</th><th>套餐名称</th><th>使用范围</th><th>套餐类型</th><th>有效期/天</th><th>分配大小</th><th>所属机构</th><th>购买用户 ID</th><th>到期时间</th><th>订单接收时间</th><th>授权状态</th><th>授权状态描述</th><th>操作</th></tr></thead>
                   <tbody>
                     <tr v-for="(o,i) in filteredOrderList" :key="i">
                       <td>{{ o.id }}</td>
@@ -2457,6 +2490,8 @@
                       <td>{{ o.userId }}</td>
                       <td>{{ o.expireTime }}</td>
                       <td>{{ o.receiveTime }}</td>
+                      <td><el-tag size="small" :type="o.authStatus==='authorized'?'success':'info'">{{ o.authStatus==='authorized'?'授权成功':'未授权' }}</el-tag></td>
+                      <td><span style="font-size:13px;color:var(--shell-text-secondary);">{{ o.authDesc || '—' }}</span></td>
                       <td style="white-space:nowrap;">
                         <el-button text size="small" v-if="o.authMode==='手动' && o.authStatus!=='authorized'" @click="onAuthorize(o)">授权</el-button>
                         <el-button text size="small" style="color:#f56c6c;" v-if="o.authMode==='手动' && o.authStatus==='authorized'" @click="onCancelAuthorize(o)">取消授权</el-button>
@@ -2465,26 +2500,88 @@
                   </tbody>
                 </table>
               </div>
+
+              <el-dialog v-model="showAddAuth" title="新增授权" width="760px" :close-on-click-modal="false" append-to-body>
+                <el-form label-width="120px" style="padding:0 8px;">
+                  <el-form-item label="订单 ID" required>
+                    <el-input v-model="authForm.id" placeholder="请输入订单 ID" />
+                  </el-form-item>
+                  <el-form-item label="授权方式" required>
+                    <el-radio-group v-model="authForm.authMode">
+                      <el-radio value="自动">自动</el-radio>
+                      <el-radio value="手动">手动</el-radio>
+                    </el-radio-group>
+                  </el-form-item>
+                  <el-form-item label="套餐类型" required>
+                    <el-select v-model="authForm.bizType" placeholder="请选择套餐类型" style="width:100%;" @change="onAuthBizTypeChange">
+                      <el-option v-for="t in pkgTypes" :key="t" :label="t" :value="t"></el-option>
+                    </el-select>
+                  </el-form-item>
+                  <el-form-item label="套餐名称" required>
+                    <el-select v-model="authForm.pkgName" placeholder="请先选择套餐类型" style="width:100%;">
+                      <el-option v-for="p in authPkgOptions" :key="p.name" :label="p.name" :value="p.name"></el-option>
+                    </el-select>
+                  </el-form-item>
+                  <el-form-item label="使用范围">
+                    <el-input v-model="authForm.scope" placeholder="请输入使用范围，如：通用 / 应用：xxx" />
+                  </el-form-item>
+                  <el-form-item label="有效期/天" required>
+                    <el-input-number v-model="authForm.duration" :min="1" :max="99999" style="width:100%;" />
+                  </el-form-item>
+                  <el-form-item label="分配大小">
+                    <el-input v-model="authForm.allocSize" placeholder="如：500 / 100G / 100000" />
+                  </el-form-item>
+                  <el-form-item label="所属机构" required>
+                    <el-input v-model="authForm.org" placeholder="请输入所属机构" />
+                  </el-form-item>
+                  <el-form-item label="购买用户 ID" required>
+                    <el-input v-model="authForm.userId" placeholder="请输入购买用户 ID" />
+                  </el-form-item>
+                  <el-form-item label="到期时间" required>
+                    <el-date-picker v-model="authForm.expireTime" type="datetime" placeholder="请选择到期时间" style="width:100%;" value-format="YYYY-MM-DD HH:mm" />
+                  </el-form-item>
+                  <el-form-item label="订单接收时间" required>
+                    <el-date-picker v-model="authForm.receiveTime" type="datetime" placeholder="请选择订单接收时间" style="width:100%;" value-format="YYYY-MM-DD HH:mm" />
+                  </el-form-item>
+                  <el-form-item label="授权状态" required>
+                    <el-select v-model="authForm.authStatus" placeholder="请选择" style="width:100%;">
+                      <el-option label="未授权" value="pending"></el-option>
+                      <el-option label="授权成功" value="authorized"></el-option>
+                    </el-select>
+                  </el-form-item>
+                  <el-form-item label="授权状态描述">
+                    <el-input v-model="authForm.authDesc" type="textarea" :rows="2" placeholder="请输入授权状态描述" />
+                  </el-form-item>
+                </el-form>
+                <template #footer>
+                  <el-button @click="showAddAuth=false">取消</el-button>
+                  <el-button type="primary" @click="onAddAuth">确定</el-button>
+                </template>
+              </el-dialog>
             </div>
 
-            <!-- ===== P19 订单接收记录 ===== -->
+            <!-- ===== P19 订单记录 ===== -->
             <div v-show="currentPage === 'P19'" class="shell-workbench">
               <div class="filter-bar">
-                <span style="font-size:13px;color:var(--shell-text-secondary);white-space:nowrap;">套餐名称:</span>
-                <input type="text" v-model="orderReceiveFilter" placeholder="" style="width:160px;height:28px;border:1px solid var(--shell-line);border-radius:4px;padding:0 8px;font-size:13px;outline:none;">
-                <span style="font-size:13px;color:var(--shell-text-secondary);white-space:nowrap;margin-left:4px;">订单状态:</span>
-                <el-select v-model="orderReceiveStatusFilter" placeholder="" style="width:130px;" size="small">
+                <span style="font-size:13px;color:var(--shell-text-secondary);white-space:nowrap;">订单 ID:</span>
+                <input type="text" v-model="orderReceiveFilter.id" placeholder="" style="width:140px;height:28px;border:1px solid var(--shell-line);border-radius:4px;padding:0 8px;font-size:13px;outline:none;">
+                <span style="font-size:13px;color:var(--shell-text-secondary);white-space:nowrap;margin-left:4px;">套餐名称:</span>
+                <input type="text" v-model="orderReceiveFilter.name" placeholder="" style="width:160px;height:28px;border:1px solid var(--shell-line);border-radius:4px;padding:0 8px;font-size:13px;outline:none;">
+                <span style="font-size:13px;color:var(--shell-text-secondary);white-space:nowrap;margin-left:4px;">购买用户 ID:</span>
+                <input type="text" v-model="orderReceiveFilter.userId" placeholder="" style="width:140px;height:28px;border:1px solid var(--shell-line);border-radius:4px;padding:0 8px;font-size:13px;outline:none;">
+                <span style="font-size:13px;color:var(--shell-text-secondary);white-space:nowrap;margin-left:4px;">支付状态:</span>
+                <el-select v-model="orderReceiveFilter.status" placeholder="" style="width:130px;" size="small">
                   <el-option label="全部" value=""></el-option>
                   <el-option label="待支付" value="待支付"></el-option>
                   <el-option label="已支付" value="已支付"></el-option>
                   <el-option label="已取消" value="已取消"></el-option>
                 </el-select>
                 <el-button type="primary" size="small">搜索</el-button>
-                <el-button size="small" @click="orderReceiveFilter='';orderReceiveStatusFilter=''">重置</el-button>
+                <el-button size="small" @click="orderReceiveFilter={id:'',name:'',userId:'',status:''}">重置</el-button>
               </div>
               <div style="overflow-x:auto;">
-                <table class="data-table" style="min-width:1300px;">
-                  <thead><tr><th>订单 ID</th><th>套餐名称</th><th>购买用户 ID</th><th>购买用户名称</th><th>购买所属机构</th><th>订单状态</th><th>购买类型</th><th>订单接收时间</th><th>授权状态</th><th>授权状态描述</th><th>操作</th></tr></thead>
+                <table class="data-table" style="min-width:1150px;">
+                  <thead><tr><th>订单 ID</th><th>套餐名称</th><th>购买用户 ID</th><th>购买用户名称</th><th>购买所属机构</th><th>订单状态</th><th>购买类型</th><th>订单接收时间</th><th>操作</th></tr></thead>
                   <tbody>
                     <tr v-for="(r,i) in filteredOrderReceiveList" :key="i">
                       <td>{{ r.id }}</td>
@@ -2495,8 +2592,6 @@
                       <td><el-tag size="small" :type="r.status==='已支付'?'success':r.status==='待支付'?'warning':'danger'">{{ r.status }}</el-tag></td>
                       <td>{{ r.buyType }}</td>
                       <td>{{ r.receiveTime }}</td>
-                      <td><el-tag size="small" :type="r.authStatus==='授权成功'?'success':'info'">{{ r.authStatus }}</el-tag></td>
-                      <td><span style="font-size:13px;color:var(--shell-text-secondary);">{{ r.authDesc || '—' }}</span></td>
                       <td><el-button text size="small" @click="onViewOrderReceive(r)">查看</el-button></td>
                     </tr>
                   </tbody>
@@ -2563,7 +2658,7 @@
               </div>
               <div style="overflow-x:auto;">
                 <table class="data-table" style="min-width:1300px;">
-                  <thead><tr><th>试用机构名称</th><th>用户姓名</th><th>手机号码</th><th>试用类型</th><th>试用期限</th><th>开通时间</th><th>到期时间</th><th>延期说明</th><th>状态</th><th>操作</th></tr></thead>
+                  <thead><tr><th>试用机构名称</th><th>用户姓名</th><th>手机号码</th><th>试用套餐</th><th>试用期限</th><th>开通时间</th><th>到期时间</th><th>延期说明</th><th>状态</th><th>操作</th></tr></thead>
                   <tbody>
                     <tr v-for="(t,i) in filteredTrialList" :key="i">
                       <td>{{ t.org }}</td><td>{{ t.userName }}</td><td>{{ t.phone }}</td>
@@ -2585,7 +2680,7 @@
                 <div v-if="currentTrialIdx > -1" style="padding:0 8px;">
                   <el-form label-width="120px">
                     <el-form-item label="用户名称"><el-input :model-value="trialList[currentTrialIdx].userName" disabled></el-input></el-form-item>
-                    <el-form-item label="试用类型"><el-input :model-value="trialList[currentTrialIdx].trialType" disabled></el-input></el-form-item>
+                    <el-form-item label="试用套餐"><el-input :model-value="trialList[currentTrialIdx].trialType" disabled></el-input></el-form-item>
                     <el-form-item label="开通时间"><el-input :model-value="trialList[currentTrialIdx].startTime" disabled></el-input></el-form-item>
                     <el-form-item label="到期时间"><el-input :model-value="trialList[currentTrialIdx].endTime" disabled></el-input></el-form-item>
                     <el-form-item label="试用期限"><el-input :model-value="trialList[currentTrialIdx].duration + '天'" disabled></el-input></el-form-item>
@@ -2686,7 +2781,7 @@
                     <el-form-item label="价格(元)" :required="true" style="width:50%;padding:0 8px;">
                       <el-input-number v-model="pkgForm.price" :min="0" :precision="2" :step="10" style="width:100%;" />
                     </el-form-item>
-                    <el-form-item label="适用范围" :required="true" style="width:50%;padding:0 8px;">
+                    <el-form-item label="适用范围" style="width:50%;padding:0 8px;">
                       <el-input v-model="pkgForm.scope" placeholder="请输入适用范围；套餐类型为应用使用授权、应用试用授权时填写应用ID" />
                     </el-form-item>
                     <el-form-item label="分配大小" :required="['短信充值','存储容量充值','TOKEN充值'].includes(pkgForm.type)" style="width:50%;padding:0 8px;">
@@ -2976,9 +3071,11 @@
           statsTimeDesc: '今日 2026-07-20 00:00 ~ 当前时间',
           pkgTypes: ['短信充值','存储容量充值','TOKEN充值','基座套餐','应用使用授权','应用试用授权'],
           pkgFilter: { name:'', code:'', type:'' },
-          orderFilter: { name:'', authMode:'' },
-          orderReceiveFilter: '',
+          orderFilter: { id:'', name:'', bizType:'', org:'' },
+          orderReceiveFilter: { id:'', name:'', userId:'', status:'' },
           orderReceiveStatusFilter: '',
+          showAddAuth: false,
+          authForm: { id:'', authMode:'手动', pkgName:'', scope:'', bizType:'', duration:365, allocSize:'', org:'', userId:'', expireTime:'', receiveTime:'', authStatus:'pending', authDesc:'' },
           trialFilter: { org:'', user:'', status:'', duration:'' },
           trialList: [
             { org:'南宁市教育局', userName:'张明', phone:'138****1234', trialType:'课堂互动助手专业版', duration:30, startTime:'2026-06-20', endTime:'2026-07-20', extendDesc:'', status:'使用中' },
@@ -2999,16 +3096,16 @@
           extendDesc: '',
           trialExtendHistory: [],
           orderReceiveList: [
-            { id:'ORD-20260701-001', pkgName:'短信500条', userId:'user_001', userName:'张明', org:'南宁市教育局', status:'已支付', buyType:'机构', receiveTime:'2026-07-01 10:30', authStatus:'授权成功', authDesc:'已自动授权', appName:'课堂互动助手', price:50, qty:1, payAmount:50, total:50, invoiceType:'增值税普通发票', taxId:'91450100XXXX', invoiceTitle:'南宁市教育局', invoiceContent:'短信服务费', companyName:'南宁市教育局', email:'admin@nnedu.cn' },
-            { id:'ORD-20260702-002', pkgName:'课堂助手专业版', userId:'user_002', userName:'李芳', org:'南宁市教育局', status:'已支付', buyType:'个人', receiveTime:'2026-07-02 14:20', authStatus:'未授权', authDesc:'等待手动授权', appName:'课堂互动助手', price:2999, qty:1, payAmount:2999, total:2999, invoiceType:'—', taxId:'—', invoiceTitle:'李芳', invoiceContent:'软件服务费', companyName:'—', email:'lifang@example.com' },
-            { id:'ORD-20260703-003', pkgName:'存储100G', userId:'user_003', userName:'王强', org:'自治区教育厅', status:'待支付', buyType:'机构', receiveTime:'—', authStatus:'未授权', authDesc:'待付款', appName:'存储服务', price:99, qty:2, payAmount:198, total:198, invoiceType:'增值税专用发票', taxId:'91450101XXXX', invoiceTitle:'自治区教育厅', invoiceContent:'存储服务费', companyName:'自治区教育厅', email:'finance@gxedu.cn' },
-            { id:'ORD-20260704-004', pkgName:'教育综合套餐', userId:'user_004', userName:'刘芳', org:'南宁市教育局', status:'已支付', buyType:'机构', receiveTime:'2026-07-04 16:00', authStatus:'未授权', authDesc:'等待手动授权', appName:'基座服务', price:8999, qty:1, payAmount:8999, total:8999, invoiceType:'增值税普通发票', taxId:'91450100XXXX', invoiceTitle:'南宁市教育局', invoiceContent:'综合服务套餐', companyName:'南宁市教育局', email:'admin@nnedu.cn' },
-            { id:'ORD-20260705-005', pkgName:'TOKEN 10万', userId:'user_005', userName:'赵刚', org:'自治区教育厅', status:'已支付', buyType:'个人', receiveTime:'2026-07-05 11:40', authStatus:'授权成功', authDesc:'已自动授权', appName:'AI服务', price:200, qty:3, payAmount:600, total:600, invoiceType:'—', taxId:'—', invoiceTitle:'赵刚', invoiceContent:'Token充值', companyName:'—', email:'zhaogang@example.com' },
-            { id:'ORD-20260706-006', pkgName:'基座标准套餐', userId:'user_006', userName:'周华', org:'南宁市教育局', status:'已取消', buyType:'机构', receiveTime:'—', authStatus:'未授权', authDesc:'订单已取消', appName:'基座服务', price:5999, qty:1, payAmount:0, total:0, invoiceType:'—', taxId:'—', invoiceTitle:'—', invoiceContent:'—', companyName:'—', email:'—' },
-            { id:'ORD-20260707-007', pkgName:'校园通年度版', userId:'user_007', userName:'吴红', org:'南宁市教育局', status:'已支付', buyType:'机构', receiveTime:'2026-07-07 13:10', authStatus:'未授权', authDesc:'等待手动授权', appName:'校园通', price:1999, qty:1, payAmount:1999, total:1999, invoiceType:'增值税普通发票', taxId:'91450100XXXX', invoiceTitle:'南宁市教育局', invoiceContent:'校园通年度服务费', companyName:'南宁市教育局', email:'admin@nnedu.cn' },
-            { id:'ORD-20260708-008', pkgName:'AI增强套餐', userId:'user_008', userName:'郑伟', org:'自治区教育厅', status:'已支付', buyType:'个人', receiveTime:'2026-07-08 15:30', authStatus:'未授权', authDesc:'等待手动授权', appName:'AI增强服务', price:3999, qty:1, payAmount:3999, total:3999, invoiceType:'—', taxId:'—', invoiceTitle:'郑伟', invoiceContent:'AI增强服务费', companyName:'—', email:'zhengwei@example.com' },
-            { id:'ORD-20260709-009', pkgName:'短信1000条', userId:'user_009', userName:'黄强', org:'自治区教育厅', status:'已支付', buyType:'机构', receiveTime:'2026-07-09 09:00', authStatus:'授权成功', authDesc:'已自动授权', appName:'短信服务', price:90, qty:2, payAmount:180, total:180, invoiceType:'增值税专用发票', taxId:'91450101XXXX', invoiceTitle:'自治区教育厅', invoiceContent:'短信服务费', companyName:'自治区教育厅', email:'finance@gxedu.cn' },
-            { id:'ORD-20260710-010', pkgName:'存储500G', userId:'user_010', userName:'杨明', org:'南宁市教育局', status:'已支付', buyType:'个人', receiveTime:'2026-07-10 10:20', authStatus:'未授权', authDesc:'等待手动授权', appName:'存储服务', price:399, qty:1, payAmount:399, total:399, invoiceType:'—', taxId:'—', invoiceTitle:'杨明', invoiceContent:'存储扩容服务', companyName:'—', email:'yangming@example.com' },
+            { id:'ORD-20260701-001', pkgName:'短信500条', userId:'user_001', userName:'张明', org:'南宁市教育局', status:'已支付', buyType:'机构', receiveTime:'2026-07-01 10:30', appName:'课堂互动助手', price:50, qty:1, payAmount:50, total:50, invoiceType:'增值税普通发票', taxId:'91450100XXXX', invoiceTitle:'南宁市教育局', invoiceContent:'短信服务费', companyName:'南宁市教育局', email:'admin@nnedu.cn' },
+            { id:'ORD-20260702-002', pkgName:'课堂助手专业版', userId:'user_002', userName:'李芳', org:'南宁市教育局', status:'已支付', buyType:'个人', receiveTime:'2026-07-02 14:20', appName:'课堂互动助手', price:2999, qty:1, payAmount:2999, total:2999, invoiceType:'—', taxId:'—', invoiceTitle:'李芳', invoiceContent:'软件服务费', companyName:'—', email:'lifang@example.com' },
+            { id:'ORD-20260703-003', pkgName:'存储100G', userId:'user_003', userName:'王强', org:'自治区教育厅', status:'待支付', buyType:'机构', receiveTime:'—', appName:'存储服务', price:99, qty:2, payAmount:198, total:198, invoiceType:'增值税专用发票', taxId:'91450101XXXX', invoiceTitle:'自治区教育厅', invoiceContent:'存储服务费', companyName:'自治区教育厅', email:'finance@gxedu.cn' },
+            { id:'ORD-20260704-004', pkgName:'教育综合套餐', userId:'user_004', userName:'刘芳', org:'南宁市教育局', status:'已支付', buyType:'机构', receiveTime:'2026-07-04 16:00', appName:'基座服务', price:8999, qty:1, payAmount:8999, total:8999, invoiceType:'增值税普通发票', taxId:'91450100XXXX', invoiceTitle:'南宁市教育局', invoiceContent:'综合服务套餐', companyName:'南宁市教育局', email:'admin@nnedu.cn' },
+            { id:'ORD-20260705-005', pkgName:'TOKEN 10万', userId:'user_005', userName:'赵刚', org:'自治区教育厅', status:'已支付', buyType:'个人', receiveTime:'2026-07-05 11:40', appName:'AI服务', price:200, qty:3, payAmount:600, total:600, invoiceType:'—', taxId:'—', invoiceTitle:'赵刚', invoiceContent:'Token充值', companyName:'—', email:'zhaogang@example.com' },
+            { id:'ORD-20260706-006', pkgName:'基座标准套餐', userId:'user_006', userName:'周华', org:'南宁市教育局', status:'已取消', buyType:'机构', receiveTime:'—', appName:'基座服务', price:5999, qty:1, payAmount:0, total:0, invoiceType:'—', taxId:'—', invoiceTitle:'—', invoiceContent:'—', companyName:'—', email:'—' },
+            { id:'ORD-20260707-007', pkgName:'校园通年度版', userId:'user_007', userName:'吴红', org:'南宁市教育局', status:'已支付', buyType:'机构', receiveTime:'2026-07-07 13:10', appName:'校园通', price:1999, qty:1, payAmount:1999, total:1999, invoiceType:'增值税普通发票', taxId:'91450100XXXX', invoiceTitle:'南宁市教育局', invoiceContent:'校园通年度服务费', companyName:'南宁市教育局', email:'admin@nnedu.cn' },
+            { id:'ORD-20260708-008', pkgName:'AI增强套餐', userId:'user_008', userName:'郑伟', org:'自治区教育厅', status:'已支付', buyType:'个人', receiveTime:'2026-07-08 15:30', appName:'AI增强服务', price:3999, qty:1, payAmount:3999, total:3999, invoiceType:'—', taxId:'—', invoiceTitle:'郑伟', invoiceContent:'AI增强服务费', companyName:'—', email:'zhengwei@example.com' },
+            { id:'ORD-20260709-009', pkgName:'短信1000条', userId:'user_009', userName:'黄强', org:'自治区教育厅', status:'已支付', buyType:'机构', receiveTime:'2026-07-09 09:00', appName:'短信服务', price:90, qty:2, payAmount:180, total:180, invoiceType:'增值税专用发票', taxId:'91450101XXXX', invoiceTitle:'自治区教育厅', invoiceContent:'短信服务费', companyName:'自治区教育厅', email:'finance@gxedu.cn' },
+            { id:'ORD-20260710-010', pkgName:'存储500G', userId:'user_010', userName:'杨明', org:'南宁市教育局', status:'已支付', buyType:'个人', receiveTime:'2026-07-10 10:20', appName:'存储服务', price:399, qty:1, payAmount:399, total:399, invoiceType:'—', taxId:'—', invoiceTitle:'杨明', invoiceContent:'存储扩容服务', companyName:'—', email:'yangming@example.com' },
           ],
           showOrderReceiveDetail: false,
           currentOrderReceive: null,
@@ -3023,16 +3120,16 @@
             { id:'O2026061920645123456', status:'待支付', time:'2026-06-19 09:30:00', product:'课堂互动助手 专业版', appName:'课堂互动助手', combo:'专业版', price:2999.00, qty:1, total:2999.00, buyType:'机构', payMethod:'—', payStatus:'未付款', remark:'无', invoiceType:'增值税专用发票', taxId:'91450101XXXX9999', invoiceTitle:'南宁市教育局', invoiceContent:'软件服务费', companyName:'南宁市教育局', email:'finance@nnedu.cn', icon:'课' },
           ],
           orderList: [
-            { id:'ORD-20260701-001', authMode:'自动', pkgName:'短信500条', scope:'通用', bizType:'短信充值', duration:365, allocSize:'500', org:'南宁市教育局', userId:'user_001', expireTime:'2027-07-01', receiveTime:'2026-07-01 10:30', authStatus:'authorized' },
-            { id:'ORD-20260702-002', authMode:'手动', pkgName:'课堂助手专业版', scope:'应用：课堂互动助手', bizType:'应用使用授权', duration:365, allocSize:'', org:'南宁市教育局', userId:'user_002', expireTime:'2027-07-02', receiveTime:'2026-07-02 14:20', authStatus:'pending' },
-            { id:'ORD-20260703-003', authMode:'自动', pkgName:'存储100G', scope:'通用', bizType:'存储容量充值', duration:365, allocSize:'100', org:'自治区教育厅', userId:'user_003', expireTime:'2027-07-03', receiveTime:'2026-07-03 09:15', authStatus:'authorized' },
-            { id:'ORD-20260704-004', authMode:'手动', pkgName:'教育综合套餐', scope:'自定义：EDU-COMBO', bizType:'基座套餐', duration:365, allocSize:'', org:'南宁市教育局', userId:'user_004', expireTime:'2027-07-04', receiveTime:'2026-07-04 16:00', authStatus:'pending' },
-            { id:'ORD-20260705-005', authMode:'手动', pkgName:'TOKEN 10万', scope:'通用', bizType:'TOKEN充值', duration:180, allocSize:'100000', org:'自治区教育厅', userId:'user_005', expireTime:'2027-01-01', receiveTime:'2026-07-05 11:40', authStatus:'authorized' },
-            { id:'ORD-20260706-006', authMode:'自动', pkgName:'基座标准套餐', scope:'通用', bizType:'基座套餐', duration:365, allocSize:'', org:'南宁市教育局', userId:'user_006', expireTime:'2027-07-06', receiveTime:'2026-07-06 08:50', authStatus:'authorized' },
-            { id:'ORD-20260707-007', authMode:'手动', pkgName:'校园通年度版', scope:'应用：校园通', bizType:'应用使用授权', duration:365, allocSize:'', org:'自治区教育厅', userId:'user_007', expireTime:'2027-07-07', receiveTime:'2026-07-07 13:10', authStatus:'pending' },
-            { id:'ORD-20260708-008', authMode:'手动', pkgName:'AI增强套餐', scope:'自定义：AI-PLUS', bizType:'TOKEN充值', duration:180, allocSize:'', org:'南宁市教育局', userId:'user_008', expireTime:'2027-01-08', receiveTime:'2026-07-08 15:30', authStatus:'pending' },
-            { id:'ORD-20260709-009', authMode:'自动', pkgName:'短信1000条', scope:'通用', bizType:'短信充值', duration:365, allocSize:'1000', org:'南宁市教育局', userId:'user_009', expireTime:'2027-07-09', receiveTime:'2026-07-09 09:00', authStatus:'authorized' },
-            { id:'ORD-20260710-010', authMode:'手动', pkgName:'存储500G', scope:'通用', bizType:'存储容量充值', duration:365, allocSize:'500', org:'自治区教育厅', userId:'user_010', expireTime:'2027-07-10', receiveTime:'2026-07-10 10:20', authStatus:'pending' },
+            { id:'ORD-20260701-001', authMode:'自动', pkgName:'短信500条', scope:'通用', bizType:'短信充值', duration:365, allocSize:'500', org:'南宁市教育局', userId:'user_001', expireTime:'2027-07-01', receiveTime:'2026-07-01 10:30', authStatus:'authorized', authDesc:'已自动授权' },
+            { id:'ORD-20260702-002', authMode:'手动', pkgName:'课堂助手专业版', scope:'应用：课堂互动助手', bizType:'应用使用授权', duration:365, allocSize:'', org:'南宁市教育局', userId:'user_002', expireTime:'2027-07-02', receiveTime:'2026-07-02 14:20', authStatus:'pending', authDesc:'等待手动授权' },
+            { id:'ORD-20260703-003', authMode:'自动', pkgName:'存储100G', scope:'通用', bizType:'存储容量充值', duration:365, allocSize:'100', org:'自治区教育厅', userId:'user_003', expireTime:'2027-07-03', receiveTime:'2026-07-03 09:15', authStatus:'authorized', authDesc:'已自动授权' },
+            { id:'ORD-20260704-004', authMode:'手动', pkgName:'教育综合套餐', scope:'自定义：EDU-COMBO', bizType:'基座套餐', duration:365, allocSize:'', org:'南宁市教育局', userId:'user_004', expireTime:'2027-07-04', receiveTime:'2026-07-04 16:00', authStatus:'pending', authDesc:'等待手动授权' },
+            { id:'ORD-20260705-005', authMode:'手动', pkgName:'TOKEN 10万', scope:'通用', bizType:'TOKEN充值', duration:180, allocSize:'100000', org:'自治区教育厅', userId:'user_005', expireTime:'2027-01-01', receiveTime:'2026-07-05 11:40', authStatus:'authorized', authDesc:'已手动授权' },
+            { id:'ORD-20260706-006', authMode:'自动', pkgName:'基座标准套餐', scope:'通用', bizType:'基座套餐', duration:365, allocSize:'', org:'南宁市教育局', userId:'user_006', expireTime:'2027-07-06', receiveTime:'2026-07-06 08:50', authStatus:'authorized', authDesc:'已自动授权' },
+            { id:'ORD-20260707-007', authMode:'手动', pkgName:'校园通年度版', scope:'应用：校园通', bizType:'应用使用授权', duration:365, allocSize:'', org:'自治区教育厅', userId:'user_007', expireTime:'2027-07-07', receiveTime:'2026-07-07 13:10', authStatus:'pending', authDesc:'等待手动授权' },
+            { id:'ORD-20260708-008', authMode:'手动', pkgName:'AI增强套餐', scope:'自定义：AI-PLUS', bizType:'TOKEN充值', duration:180, allocSize:'', org:'南宁市教育局', userId:'user_008', expireTime:'2027-01-08', receiveTime:'2026-07-08 15:30', authStatus:'pending', authDesc:'等待手动授权' },
+            { id:'ORD-20260709-009', authMode:'自动', pkgName:'短信1000条', scope:'通用', bizType:'短信充值', duration:365, allocSize:'1000', org:'南宁市教育局', userId:'user_009', expireTime:'2027-07-09', receiveTime:'2026-07-09 09:00', authStatus:'authorized', authDesc:'已自动授权' },
+            { id:'ORD-20260710-010', authMode:'手动', pkgName:'存储500G', scope:'通用', bizType:'存储容量充值', duration:365, allocSize:'500', org:'自治区教育厅', userId:'user_010', expireTime:'2027-07-10', receiveTime:'2026-07-10 10:20', authStatus:'pending', authDesc:'等待手动授权' },
           ],
           pkgList: [
             { code:'SMS_100_10000', name:'短信服务-100元/1W条', type:'短信充值', authMode:'自动', scope:'', allocSize:'10000', unit:'条', duration:'', basePkg:'', targetType:'机构', price:100 },
@@ -3160,6 +3257,21 @@
           buyQty: 1,
           buyStep: 1,
           invoiceForm: { title: '', taxId: '', address: '', phone: '', bank: '', bankAccount: '', type: '增值税普通发票' },
+          showInvoiceHistory: false,
+          invoiceHistoryPage: 1,
+          invoiceHistoryPageSize: 5,
+          invoiceHistory: [
+            { title:'南宁市教育局', taxId:'91450100XXXX8888', address:'南宁市青秀区嘉宾路8号', phone:'0771-5888888', bank:'中国工商银行南宁分行', bankAccount:'2102 1000 1234 5678', type:'增值税普通发票' },
+            { title:'南宁市第一中学', taxId:'91450100XXXX6666', address:'南宁市青秀区七星路1号', phone:'0771-5666666', bank:'中国建设银行南宁分行', bankAccount:'4500 1620 6688 0011', type:'增值税专用发票' },
+            { title:'广西教育装备行业协会', taxId:'91450000XXXX3333', address:'南宁市青秀区民族大道120号', phone:'0771-5333333', bank:'广西北部湾银行南宁分行', bankAccount:'6800 2233 4455 6677', type:'增值税普通发票' },
+            { title:'柳州市第二中学', taxId:'91450200XXXX2222', address:'柳州市城中区解放路10号', phone:'0772-5222222', bank:'中国农业银行柳州分行', bankAccount:'2010 0020 0030 0040', type:'增值税专用发票' },
+            { title:'桂林市育才小学', taxId:'91450300XXXX5555', address:'桂林市七星区育才路5号', phone:'0773-5555555', bank:'中国银行桂林分行', bankAccount:'6222 0010 0011 2233', type:'增值税普通发票' },
+            { title:'梧州市第三中学', taxId:'91450400XXXX7777', address:'梧州市万秀区西堤一路3号', phone:'0774-5777777', bank:'交通银行梧州分行', bankAccount:'6222 6001 0002 3456', type:'增值税专用发票' },
+            { title:'北海市实验小学', taxId:'91450500XXXX9999', address:'北海市海城区北部湾东路2号', phone:'0779-5999999', bank:'中国邮政储蓄银行北海分行', bankAccount:'6210 9800 0003 4567', type:'增值税普通发票' },
+            { title:'钦州市第一中学', taxId:'91450700XXXX1111', address:'钦州市钦南区永福西大街18号', phone:'0777-5111111', bank:'广西北部湾银行钦州分行', bankAccount:'6800 3322 1144 5566', type:'增值税专用发票' },
+            { title:'玉林市高级中学', taxId:'91450900XXXX4444', address:'玉林市玉州区人民东路116号', phone:'0775-5444444', bank:'中国建设银行玉林分行', bankAccount:'4500 1660 7799 0022', type:'增值税普通发票' },
+            { title:'张明', taxId:'', address:'', phone:'138****1234', bank:'', bankAccount:'', type:'增值税普通发票' },
+          ],
           payTimeLeft: 900,
           orderCode: '',
           payTime: '',
@@ -3461,9 +3573,11 @@
         },
         filteredOrderList() {
           return this.orderList.filter(o => {
+            const idMatch = !this.orderFilter.id || o.id.includes(this.orderFilter.id);
             const nameMatch = !this.orderFilter.name || o.pkgName.includes(this.orderFilter.name);
-            const authMatch = !this.orderFilter.authMode || o.authMode === this.orderFilter.authMode;
-            return nameMatch && authMatch;
+            const bizMatch = !this.orderFilter.bizType || o.bizType === this.orderFilter.bizType;
+            const orgMatch = !this.orderFilter.org || o.org.includes(this.orderFilter.org);
+            return idMatch && nameMatch && bizMatch && orgMatch;
           });
         },
         filteredMyOrders() {
@@ -3480,10 +3594,20 @@
         },
         filteredOrderReceiveList() {
           return this.orderReceiveList.filter(r => {
-            const nameMatch = !this.orderReceiveFilter || r.pkgName.includes(this.orderReceiveFilter);
-            const statusMatch = !this.orderReceiveStatusFilter || r.status === this.orderReceiveStatusFilter;
-            return nameMatch && statusMatch;
+            const idMatch = !this.orderReceiveFilter.id || r.id.includes(this.orderReceiveFilter.id);
+            const nameMatch = !this.orderReceiveFilter.name || r.pkgName.includes(this.orderReceiveFilter.name);
+            const userMatch = !this.orderReceiveFilter.userId || (r.userId || '').includes(this.orderReceiveFilter.userId);
+            const statusMatch = !this.orderReceiveFilter.status || r.status === this.orderReceiveFilter.status;
+            return idMatch && nameMatch && userMatch && statusMatch;
           });
+        },
+        pagedInvoiceHistory() {
+          const start = (this.invoiceHistoryPage - 1) * this.invoiceHistoryPageSize;
+          return this.invoiceHistory.slice(start, start + this.invoiceHistoryPageSize);
+        },
+        authPkgOptions() {
+          if (!this.authForm.bizType) return [];
+          return this.pkgList.filter(p => p.type === this.authForm.bizType);
         },
         filteredServiceGroups() {
           if (this.currentServiceFilter === '全部') return this.serviceGroups;
@@ -3586,6 +3710,18 @@
         },
         onFreeInstall() { this.$message.success('已开始免费安装：' + this.currentAppDetail.name); },
         onBuyTrial() { this.$message.success('已开通免费试用：' + this.currentAppDetail.name); },
+        openInvoiceHistory() {
+          this.invoiceHistoryPage = 1;
+          this.showInvoiceHistory = true;
+        },
+        onInvoiceHistoryPageChange(p) {
+          this.invoiceHistoryPage = p;
+        },
+        selectInvoiceHistory(h) {
+          this.invoiceForm = { title: h.title, taxId: h.taxId, address: h.address, phone: h.phone, bank: h.bank, bankAccount: h.bankAccount, type: h.type };
+          this.showInvoiceHistory = false;
+          this.$message.success('已回填历史发票记录');
+        },
         submitOrder() {
           const now = new Date();
           this.orderCode = 'GD' + now.getFullYear() + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0') + String(Math.floor(Math.random()*9000)+1000);
@@ -4472,12 +4608,32 @@
         onAuthorize(o) {
           this.$confirm('确认授权【' + o.pkgName + '】吗？', '提示', { confirmButtonText:'确认', cancelButtonText:'取消', type:'info' }).then(() => {
             o.authStatus = 'authorized';
+            o.authDesc = '已手动授权';
             this.$message.success('授权成功');
           }).catch(() => {});
+        },
+        openAddAuth() {
+          this.authForm = { id:'', authMode:'手动', pkgName:'', scope:'', bizType:'', duration:365, allocSize:'', org:'', userId:'', expireTime:'', receiveTime:'', authStatus:'pending', authDesc:'' };
+          this.showAddAuth = true;
+        },
+        onAuthBizTypeChange() {
+          this.authForm.pkgName = '';
+        },
+        onAddAuth() {
+          const f = this.authForm;
+          if (!f.id || !f.pkgName || !f.bizType || !f.duration || !f.org || !f.userId || !f.expireTime || !f.receiveTime || !f.authStatus) { this.$message.warning('请填写必填项'); return; }
+          this.orderList.unshift({
+            id: f.id, authMode: f.authMode, pkgName: f.pkgName, scope: f.scope, bizType: f.bizType,
+            duration: f.duration, allocSize: f.allocSize, org: f.org, userId: f.userId,
+            expireTime: f.expireTime, receiveTime: f.receiveTime, authStatus: f.authStatus, authDesc: f.authDesc
+          });
+          this.$message.success('新增授权成功');
+          this.showAddAuth = false;
         },
         onCancelAuthorize(o) {
           this.$confirm('确认取消授权套餐：' + o.pkgName + '吗？取消后购买该套餐的用户将不可使用。', '提示', { confirmButtonText:'确认取消', cancelButtonText:'取消', type:'warning' }).then(() => {
             o.authStatus = 'pending';
+            o.authDesc = '等待手动授权';
             this.$message.success('已取消授权');
           }).catch(() => {});
         },
@@ -4498,7 +4654,7 @@
         onDeletePkg(p) {
           const usedBy = [];
           if (this.orderList.some(o => o.pkgName === p.name)) usedBy.push('订单套餐授权记录');
-          if (this.orderReceiveList.some(o => o.pkgName === p.name)) usedBy.push('订单接收记录');
+          if (this.orderReceiveList.some(o => o.pkgName === p.name)) usedBy.push('订单记录');
           if (this.trialList.some(t => ((t.pkgName || '') + (t.trialType || '')).includes(p.name))) usedBy.push('试用套餐记录');
           if (this.pkgList.some(x => x.code !== p.code && (Array.isArray(x.basePkg) ? x.basePkg.includes(p.name) : x.basePkg === p.name))) usedBy.push('基座套餐关联');
           if (this.shelfConfig.trialPackage === p.name) usedBy.push('应用上架配置-试用套餐');
