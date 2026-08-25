@@ -472,7 +472,7 @@
               <el-menu-item index="P06" v-if="currentRole==='platform_admin'">全平台应用</el-menu-item>
               <el-menu-item index="P07">上架范围管理</el-menu-item>
               <el-menu-item index="P09">应用分类管理</el-menu-item>
-              <el-menu-item index="P10" v-if="currentRole==='platform_admin'">应用审核管理</el-menu-item>
+              <el-menu-item index="P10" v-if="currentRole==='platform_admin'">应用审批管理</el-menu-item>
               <el-menu-item index="P12">标签管理</el-menu-item>
             </el-menu>
           </div>
@@ -528,7 +528,7 @@
                 <span style="font-size:13px;color:var(--shell-text-secondary);white-space:nowrap;margin-left:4px;">分类:</span>
                 <el-select placeholder="" style="width:140px;" size="small"><el-option label="全部" value=""></el-option><el-option label="教学管理" value="教学管理"></el-option><el-option label="教务管理" value="教务管理"></el-option><el-option label="校园办公" value="校园办公"></el-option></el-select>
                 <span style="font-size:13px;color:var(--shell-text-secondary);white-space:nowrap;margin-left:4px;">状态:</span>
-                <el-select placeholder="" style="width:120px;" size="small"><el-option label="全部" value=""></el-option><el-option label="已上线" value="online"></el-option><el-option label="待审核" value="reviewing"></el-option><el-option label="未上线" value="offline"></el-option></el-select>
+                <el-select placeholder="" style="width:120px;" size="small"><el-option label="全部" value=""></el-option><el-option label="已上线" value="online"></el-option><el-option label="待审批" value="reviewing"></el-option><el-option label="未上线" value="offline"></el-option></el-select>
                 <el-button type="primary" size="small">搜索</el-button>
                 <el-button size="small">重置</el-button>
                 <!-- <span style="flex:1"></span> -->
@@ -547,9 +547,9 @@
                     <td>{{ app.type }}{{ app.native_type ? ' / ' + app.native_type : '' }}</td>
                     <td>{{ app.scope }}</td>
                     <td>{{ app.level }}</td>
-                    <td><el-tag size="small" :type="app.status==='online'?'success':(hasPendingReview(app)?'warning':'info')">{{ app.status==='online'?'已上线':(hasPendingReview(app)?'待审核':'未上线') }}</el-tag></td>
+                    <td><el-tag size="small" :type="app.status==='online'?'success':(hasPendingReview(app)?'warning':'info')">{{ app.status==='online'?'已上线':(hasPendingReview(app)?'待审批':'未上线') }}</el-tag></td>
                     <td>
-                      <el-button text size="small" :disabled="hasPendingReview(app)" @click="onManageApp(app)">管理</el-button>
+                      <el-button text size="small" @click="onManageApp(app)">管理</el-button>
                       <el-button text size="small" v-if="app.status==='offline' && !hasPendingReview(app)" @click="onOnlineApp(app)">上线</el-button>
                       <el-button text size="small" v-if="app.status==='online' && app.listing==='unlisted'" @click="onOfflineApp(app)">下线</el-button>
                     </td>
@@ -682,6 +682,11 @@
                         <el-checkbox value="school_staff">学校教职工</el-checkbox>
                         <el-checkbox value="parent">家长</el-checkbox>
                         <el-checkbox value="graduate">毕业生</el-checkbox>
+                        <el-checkbox value="retired_staff">退休教职工</el-checkbox>
+                        <el-checkbox value="tenant_admin">机构管理员</el-checkbox>
+                        <el-checkbox value="temp_member">临时成员</el-checkbox>
+                        <el-checkbox value="public_account">公共账号</el-checkbox>
+                        <el-checkbox value="developer">开发者</el-checkbox>
                       </el-checkbox-group>
                     </el-form-item>
                     <el-form-item label="移动端地址" required v-show="openWay.includes('mini_standalone')" style="width:50%;padding:0 8px;">
@@ -703,6 +708,11 @@
                         <el-checkbox value="school_staff">学校教职工</el-checkbox>
                         <el-checkbox value="parent">家长</el-checkbox>
                         <el-checkbox value="graduate">毕业生</el-checkbox>
+                        <el-checkbox value="retired_staff">退休教职工</el-checkbox>
+                        <el-checkbox value="tenant_admin">机构管理员</el-checkbox>
+                        <el-checkbox value="temp_member">临时成员</el-checkbox>
+                        <el-checkbox value="public_account">公共账号</el-checkbox>
+                        <el-checkbox value="developer">开发者</el-checkbox>
                       </el-checkbox-group>
                     </el-form-item>
                     <el-form-item label="PC 端地址" required v-show="openWay.includes('pcweb')" style="width:50%;padding:0 8px;">
@@ -721,6 +731,11 @@
                         <el-checkbox value="school_staff">学校教职工</el-checkbox>
                         <el-checkbox value="parent">家长</el-checkbox>
                         <el-checkbox value="graduate">毕业生</el-checkbox>
+                        <el-checkbox value="retired_staff">退休教职工</el-checkbox>
+                        <el-checkbox value="tenant_admin">机构管理员</el-checkbox>
+                        <el-checkbox value="temp_member">临时成员</el-checkbox>
+                        <el-checkbox value="public_account">公共账号</el-checkbox>
+                        <el-checkbox value="developer">开发者</el-checkbox>
                       </el-checkbox-group>
                     </el-form-item>
                     <el-form-item label="H5 地址" required v-show="openWay.includes('h5')" style="width:50%;padding:0 8px;">
@@ -775,11 +790,11 @@
                   <div style="flex:1;">
                     <div style="font-size:16px;font-weight:700;margin-bottom:8px;">{{ currentApp.name }} · {{ currentApp.cat }}</div>
                     <div style="font-size:13px;color:var(--shell-text-secondary);margin-bottom:4px;"><b>SuiteId：</b>sys_app_7f8e3a2b</div>
-                    <div style="font-size:13px;color:var(--shell-text-secondary);display:flex;align-items:center;gap:8px;"><b>SuiteKey：</b>sk_3a8f2c9e1b7d4f6a <el-button text size="small" style="color:var(--shell-primary);" @click="showSuiteKeyDialog=true">更新</el-button></div>
+                    <div style="font-size:13px;color:var(--shell-text-secondary);display:flex;align-items:center;gap:8px;"><b>SuiteKey：</b>sk_3a8f2c9e1b7d4f6a <el-button text size="small" style="color:var(--shell-primary);" @click="onCopySuiteKey">复制</el-button></div>
                   </div>
                 </div>
                 <div style="margin-bottom:12px;">
-                  <span style="font-weight:600;font-size:14px;" v-if="detailMode==='manage'">基本信息（修改的信息需要重新上架审核后生效）</span>
+                  <span style="font-weight:600;font-size:14px;" v-if="detailMode==='manage'">基本信息（修改的信息需要重新上架审批后生效）</span>
                   <span style="font-weight:600;font-size:14px;" v-if="detailMode==='online'">应用信息确认</span>
                   <el-button text size="small" style="color:var(--shell-primary);margin-left:12px;" @click="onEditApp" v-if="detailMode==='manage'">修改</el-button>
                 </div>
@@ -809,7 +824,6 @@
                   <el-form-item label="推送地址" v-show="appDataSync === 'yes'" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ pushUrl || '-' }}</span></el-form-item>
                   <el-form-item label="TOKEN" v-show="appDataSync === 'yes'" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ syncToken || '-' }}</span></el-form-item>
                   <el-form-item label="EncodingAesKey" v-show="appDataSync === 'yes'" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ syncAesKey || '-' }}</span></el-form-item>
-                  <el-form-item label="应用来源" style="width:50%;padding:0 8px;"><span style="line-height:32px;">省、自治区、直辖区级</span></el-form-item>
                   <el-form-item label="移动端角色" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教育局职工、学生、学校教职工</span></el-form-item>
                   <el-form-item label="移动端地址" style="width:50%;padding:0 8px;"><span style="line-height:32px;">https://app.example.com/m</span></el-form-item>
                   <el-form-item label="微信 appid" style="width:50%;padding:0 8px;"><span style="line-height:32px;">wx_7f8e3a2b</span></el-form-item>
@@ -885,12 +899,6 @@
                           </el-select>
                         </el-form-item>
                       </template>
-                      <el-form-item label="版本号" :required="shelfConfig.crossTenant==='no'" v-if="currentAppIsLowcode" style="width:50%;padding:0 8px;">
-                        <el-select v-model="shelfConfig.versionNo" filterable remote :remote-method="onVersionRemoteSearch" @visible-change="(v)=>{ if(v) onVersionRemoteSearch('') }" placeholder="根据低代码应用ID自动获取版本列表" style="width:100%;">
-                          <el-option v-for="v in versionOptions" :key="v.value" :label="v.label" :value="v.value"></el-option>
-                        </el-select>
-                        <div v-if="versionSearched && versionOptions.length===0" style="font-size:12px;color:#f56c6c;margin-top:4px;">未获取到版本号，请先将应用上架到低代码应用市场</div>
-                      </el-form-item>
                     </div>
                   </el-form>
 
@@ -933,19 +941,19 @@
                 <span style="font-size:13px;color:var(--shell-text-secondary);white-space:nowrap;margin-left:4px;">分类:</span>
                 <el-select placeholder="" style="width:130px;" size="small"><el-option label="全部" value=""></el-option></el-select>
                 <span style="font-size:13px;color:var(--shell-text-secondary);white-space:nowrap;margin-left:4px;">上架范围:</span>
-                <el-select placeholder="" style="width:150px;" size="small"><el-option label="全部" value=""></el-option><el-option label="南宁市教育范围" value="nanning"></el-option><el-option label="自治区直属范围" value="zizhi"></el-option></el-select>
+                <el-select placeholder="" style="width:150px;" size="small"><el-option label="全部" value=""></el-option><el-option label="南宁市教育局" value="nanning"></el-option><el-option label="广西壮族自治区教育厅" value="zizhi"></el-option></el-select>
                 <el-button type="primary" size="small">搜索</el-button>
                 <el-button size="small">重置</el-button>
               </div>
               <table class="data-table">
-                <thead><tr><th>Logo</th><th>应用名称</th><th>分类</th><th>开发者</th><th>应用来源</th><th>应用属性</th><th v-if="currentRole==='platform_admin'">应用类型</th><th>上架范围</th><th>创建时间</th><th>状态</th><th>操作</th></tr></thead>
+                <thead><tr><th>Logo</th><th>应用名称</th><th>分类</th><th>开发者</th><th>应用属性</th><th v-if="currentRole==='platform_admin'">应用类型</th><th>上架范围</th><th>创建时间</th><th>状态</th><th>操作</th></tr></thead>
                 <tbody>
                   <tr v-for="(a,i) in shelfList" :key="i">
                     <td><span style="display:inline-flex;width:28px;height:28px;border-radius:6px;background:#e8f0fe;align-items:center;justify-content:center;font-size:12px;color:#2f7df6;">{{ a.initial }}</span></td>
-                    <td>{{ a.name }}</td><td>{{ a.cat }}</td><td>{{ a.dev }}</td><td>{{ a.source }}</td>
+                    <td>{{ a.name }}</td><td>{{ a.cat }}</td><td>{{ a.dev }}</td>
                     <td>{{ a.type }}{{ a.native_type ? ' / ' + a.native_type : '' }}</td>
                     <td v-if="currentRole==='platform_admin'">{{ a.appTypeLabel || '—' }}</td>
-                    <td><a style="color:var(--shell-primary);cursor:pointer;text-decoration:none;" @click="onZoneClick(a)">{{ a.zone }}</a></td>
+                    <td><template v-for="(z,zi) in a.zoneList"><a style="color:var(--shell-primary);cursor:pointer;text-decoration:none;" @click="onZoneClick(a, z)">{{ z }}</a><span v-if="zi < a.zoneList.length - 1">, </span></template></td>
                     <td>{{ a.time }}</td>
                     <td><el-tag size="small" :type="a.status==='listed'?'success':(a.status==='dismissed'?'danger':'info')">{{ a.status==='listed'?'已上架':(a.status==='dismissed'?'已下架':'未上架') }}</el-tag></td>
                     <td>
@@ -1071,10 +1079,11 @@
 
             <!-- ===== P04b 应用安装列表页 ===== -->
             <div v-show="currentPage === 'P04b'" class="shell-workbench">
+              <div v-if="currentZoneName" style="font-size:14px;font-weight:600;margin-bottom:12px;">当前上架范围：{{ currentZoneName }}（共 {{ filteredOrgList.length }} 个机构/学校）</div>
               <div style="background:#f0f7ff;border:1px solid #d7e4ff;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--shell-text-secondary);line-height:1.6;">
                 <b style="color:var(--shell-text);">安装流程说明：</b>
                 <span v-if="!currentAppIsLowcode">应用安装只需安装到应用中心，安装成功后根据上架范围及应用可用学段在我的应用中心展示。</span>
-                <span v-else>安装流程为：需先安装到应用中心，再安装到低代码平台，两步均成功才算安装成功。若应用中心安装失败或低代码平台安装失败，状态均为「安装失败」，可在「安装失败原因」中查看具体信息并重试。</span>
+                <span v-else>需先安装到应用中心，再安装到低代码平台，两步均成功才算安装成功。若应用中心安装失败或低代码平台安装失败，状态均为「安装失败」，可在「安装失败原因」中查看具体信息并重试。</span>
               </div>
               <div class="filter-bar">
                 <span style="font-size:13px;color:var(--shell-text-secondary);white-space:nowrap;">机构名称:</span>
@@ -1138,16 +1147,24 @@
                   <el-form-item label="推送地址" v-show="appDataSync === 'yes'" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ pushUrl || '-' }}</span></el-form-item>
                   <el-form-item label="TOKEN" v-show="appDataSync === 'yes'" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ syncToken || '-' }}</span></el-form-item>
                   <el-form-item label="EncodingAesKey" v-show="appDataSync === 'yes'" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ syncAesKey || '-' }}</span></el-form-item>
-                  <el-form-item label="应用来源" style="width:50%;padding:0 8px;"><span style="line-height:32px;">省、自治区、直辖区级</span></el-form-item>
                 </div>
               </el-card>
 
               <el-card class="shell-block-card" shadow="never" style="margin-top:16px;">
-                <div style="margin-bottom:16px;font-weight:600;font-size:15px;">上架配置</div>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+                  <span style="font-weight:600;font-size:15px;">上架配置</span>
+                  <span v-if="currentRole==='tenant_admin'" style="font-size:12px;color:var(--shell-text-secondary);display:flex;align-items:center;gap:8px;">
+                    当前机构：
+                    <el-radio-group v-model="tenantOrgType" size="small">
+                      <el-radio value="bureau">教育局</el-radio>
+                      <el-radio value="school">学校</el-radio>
+                    </el-radio-group>
+                  </span>
+                </div>
                 <el-form>
                   <div style="display:flex;flex-direction:column;align-items:flex-start;width:100%;">
-                    <!-- 范围选择：桂教通超级管理员（含非低代码与低代码）、机构管理员 时展示 -->
-                    <template v-if="(currentRole==='platform_admin') || (currentRole==='tenant_admin')">
+                    <!-- 范围选择：桂教通超级管理员、非学校的机构管理员 时展示；学校机构不展示（无范围选择） -->
+                    <template v-if="(currentRole==='platform_admin') || (currentRole==='tenant_admin' && tenantOrgType!=='school')">
                       <el-form-item label="范围选择" :required="currentRole==='tenant_admin'" style="width:50%;padding:0 8px;">
                         <el-radio-group v-model="shelfConfig.scopeType">
                           <el-radio value="all" v-if="!(currentAppIsLowcode && currentRole==='platform_admin' && shelfConfig.crossTenant==='yes')">全平台</el-radio>
@@ -1155,20 +1172,20 @@
                         </el-radio-group>
                       </el-form-item>
                       <el-form-item v-if="shelfConfig.scopeType==='all'" style="width:50%;padding:0 8px;font-size:12px;color:var(--shell-text-secondary);">
-                        <span v-if="currentRole==='platform_admin'">全平台指的是上架到当前机构所有下属机构和学校</span>
-                        <span v-else>上架到当前机构及所有下级机构，并自动安装到应用中心</span>
+                        <span v-if="currentRole==='platform_admin'">全平台指的是所有机构和学校</span>
+                        <span v-else>上架到当前机构及所有下级机构</span>
                       </el-form-item>
                       <el-form-item v-if="shelfConfig.scopeType==='zone'" style="width:50%;padding:0 8px;">
                         <el-select v-model="shelfConfig.selectedZones" multiple filterable placeholder="搜索并选择范围（数据来源：本机构上架范围管理）" style="width:100%;">
-                          <el-option label="南宁默认范围" value="z-nn-default"></el-option>
-                          <el-option label="柳州默认范围" value="z-lz-default"></el-option>
-                          <el-option label="桂林默认范围" value="z-gl-default"></el-option>
+                          <el-option label="南宁市教育局" value="南宁市教育局"></el-option>
+                          <el-option label="柳州市教育局" value="柳州市教育局"></el-option>
+                          <el-option label="桂林市教育局" value="桂林市教育局"></el-option>
                         </el-select>
                       </el-form-item>
                     </template>
                     <!-- 机构管理员：分享范围 + 其他机构 -->
                     <template v-if="currentRole==='tenant_admin'">
-                      <el-form-item label="分享范围" style="width:50%;padding:0 8px;">
+                      <el-form-item label="分享范围" :required="tenantOrgType==='school'" style="width:50%;padding:0 8px;">
                         <el-checkbox-group v-model="shelfConfig.shareScope">
                           <el-checkbox value="guide">桂教通平台</el-checkbox>
                           <el-checkbox value="other">其他机构</el-checkbox>
@@ -1439,7 +1456,7 @@
               </div>
             </div>
 
-            <!-- ===== P10 应用审核管理 ===== -->
+            <!-- ===== P10 应用审批管理 ===== -->
             <div v-show="currentPage === 'P10'" class="shell-workbench">
               <div class="tab-bar">
                 <span class="tab-item" :class="{'is-active':reviewTab==='pending'}" style="cursor:pointer;" @click="reviewTab='pending'">待审批</span>
@@ -1448,19 +1465,24 @@
               <div class="filter-bar">
                 <span style="font-size:13px;color:var(--shell-text-secondary);white-space:nowrap;">应用名称:</span>
                 <input type="text" v-model="reviewFilter" placeholder="" style="width:160px;height:28px;border:1px solid var(--shell-line);border-radius:4px;padding:0 8px;font-size:13px;outline:none;">
+                <span style="font-size:13px;color:var(--shell-text-secondary);white-space:nowrap;">应用分类:</span>
+                <el-cascader size="small" v-model="reviewCatFilter" :options="catCascaderOptions" :props="{ expandTrigger:'hover', emitPath:true }" clearable placeholder="请选择" style="width:180px;"></el-cascader>
+                <span style="font-size:13px;color:var(--shell-text-secondary);white-space:nowrap;">应用ID:</span>
+                <input type="text" v-model="reviewIdFilter" placeholder="" style="width:140px;height:28px;border:1px solid var(--shell-line);border-radius:4px;padding:0 8px;font-size:13px;outline:none;">
                 <el-button type="primary" size="small" @click="onReviewSearch">搜索</el-button>
-                <el-button size="small" @click="reviewFilter=''">重置</el-button>
+                <el-button size="small" @click="onReviewReset">重置</el-button>
               </div>
+              <div class="list-hint" style="font-size:12px;color:var(--shell-text-secondary);margin:6px 0 0;">列表复用「应用申请管理」字段（不含操作列），类型标签标识待办类型：上线 / 修改。</div>
               <table class="data-table">
-                <thead><tr><th>应用 ID</th><th>应用名称</th><th>应用类型</th><th>开发者名称</th><th>申请时间</th><th v-if="reviewTab==='done'">审核时间</th><th v-if="reviewTab==='done'">审核结果</th><th v-if="reviewTab==='done'">审核人</th><th>操作</th></tr></thead>
+                <thead><tr><th>Logo</th><th>应用名称</th><th>应用ID</th><th>应用分类</th><th>应用属性</th><th>开发者名称</th><th>申请时间</th><th>类型</th><th v-if="reviewTab==='done'">审批时间</th><th v-if="reviewTab==='done'">审批结果</th><th v-if="reviewTab==='done'">审批人</th><th>操作</th></tr></thead>
                 <tbody>
                   <tr v-for="(r,i) in filteredReviews" :key="i">
-                    <td>{{ r.id }}</td><td>{{ r.name }}</td><td>{{ r.type }}</td><td>{{ r.dev }}</td><td>{{ r.time }}</td>
+                    <td><span class="app-logo-mini">{{ r.logo }}</span></td><td>{{ r.name }}</td><td>{{ r.id }}</td><td>{{ r.cat }}</td><td>{{ r.attr }}</td><td>{{ r.dev }}</td><td>{{ r.time }}</td><td><el-tag size="small" :type="r.typeTag==='修改'?'warning':'primary'">{{ r.typeTag }}</el-tag></td>
                     <td v-if="reviewTab==='done'">{{ r.doneTime }}</td>
                     <td v-if="reviewTab==='done'"><el-tag size="small" :type="r.result==='通过'?'success':'danger'">{{ r.result }}</el-tag></td>
                     <td v-if="reviewTab==='done'">{{ r.reviewer }}</td>
                     <td>
-                      <el-button text size="small" v-if="reviewTab==='pending'" @click="onReviewApprove(r)">审核</el-button>
+                      <el-button text size="small" v-if="reviewTab==='pending'" @click="onReviewApprove(r)">审批</el-button>
                       <el-button text size="small" @click="onReviewView(r)">查看</el-button>
                     </td>
                   </tr>
@@ -1469,7 +1491,7 @@
               <div class="pagination-bar">共 {{ filteredReviews.length }} 条 第 1/1 页</div>
             </div>
 
-            <!-- ===== P11 应用审核操作页（审批模式） ===== -->
+            <!-- ===== P11 应用审批操作页（审批模式） ===== -->
             <div v-show="currentPage === 'P11'" class="shell-workbench" v-if="currentReview">
               <el-card class="shell-block-card" shadow="never">
                 <div style="margin-bottom:16px;font-weight:600;font-size:15px;">应用信息</div>
@@ -1503,7 +1525,6 @@
                     </div>
                   </el-form-item>
                   <el-form-item label="应用属性" style="width:50%;padding:0 8px;"><span style="line-height:32px;">原生应用</span></el-form-item>
-                  <el-form-item label="应用来源" style="width:50%;padding:0 8px;"><span style="line-height:32px;">省、自治区、直辖区级</span></el-form-item>
                   <el-form-item label="移动端角色" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教育局职工、学生、学校教职工</span></el-form-item>
                   <el-form-item label="移动端地址" style="width:50%;padding:0 8px;"><span style="line-height:32px;">https://app.example.com/m</span></el-form-item>
                   <el-form-item label="微信 appid" style="width:50%;padding:0 8px;"><span style="line-height:32px;">wx_7f8e3a2b</span></el-form-item>
@@ -1543,7 +1564,7 @@
               </el-card>
             </div>
 
-            <!-- ===== 审核详情查看模式（从 P10 查看按钮进入） ===== -->
+            <!-- ===== 审批详情查看模式（从 P10 查看按钮进入） ===== -->
             <div v-show="currentPage === 'P11v'" class="shell-workbench" v-if="currentReview">
               <el-card class="shell-block-card" shadow="never">
                 <div style="margin-bottom:16px;font-weight:600;font-size:15px;">应用信息</div>
@@ -1577,7 +1598,6 @@
                     </div>
                   </el-form-item>
                   <el-form-item label="应用属性" style="width:50%;padding:0 8px;"><span style="line-height:32px;">原生应用</span></el-form-item>
-                  <el-form-item label="应用来源" style="width:50%;padding:0 8px;"><span style="line-height:32px;">省、自治区、直辖区级</span></el-form-item>
                   <el-form-item label="移动端角色" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教育局职工、学生、学校教职工</span></el-form-item>
                   <el-form-item label="移动端地址" style="width:50%;padding:0 8px;"><span style="line-height:32px;">https://app.example.com/m</span></el-form-item>
                   <el-form-item label="微信 appid" style="width:50%;padding:0 8px;"><span style="line-height:32px;">wx_7f8e3a2b</span></el-form-item>
@@ -1598,12 +1618,14 @@
               <el-card class="shell-block-card" shadow="never" style="margin-top:16px;">
                 <div style="margin-bottom:12px;font-weight:600;font-size:14px;">审批信息</div>
                 <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--shell-text);padding:0 8px;">
+                  <div><b>申请类型：</b><el-tag size="small" :type="currentReview.typeTag==='修改'?'warning':'primary'">{{ currentReview.typeTag || '上线' }}</el-tag></div>
                   <div><b>申请时间：</b>{{ currentReview.time }}</div>
                   <div><b>申请人：</b>{{ currentReview.dev }}</div>
                   <div><b>审批人：</b>{{ currentReview.reviewer || '---' }}</div>
                   <div><b>审批时间：</b>{{ currentReview.doneTime || '---' }}</div>
                   <div><b>审批结果：</b><el-tag size="small" v-if="currentReview.result" :type="currentReview.result==='通过'?'success':'danger'">{{ currentReview.result }}</el-tag><span v-else>---</span></div>
                   <div><b>审批意见：</b>{{ currentReview.reviewComment || '---' }}</div>
+                  <div style="color:var(--shell-text-secondary);margin-top:4px;">说明：编辑已上架应用（重新上架审核）期间，对外仍展示修改前旧值；审批通过后新值生效。</div>
                 </div>
                 <div style="display:flex;justify-content:center;margin-top:24px;padding-top:16px;border-top:1px solid var(--shell-line);">
                   <el-button @click="goPage('P10')">返回</el-button>
@@ -1883,7 +1905,7 @@
                 <el-carousel height="240px" :autoplay="true" :interval="4000" indicator-position="outside" class="service-carousel">
                   <el-carousel-item>
                     <div class="service-hero">
-                      <div class="service-hero-title">桂教通超市</div>
+                      <div class="service-hero-title">桂教通服务中心</div>
                       <div class="service-hero-desc">全链路智慧教育服务生态，覆盖备课、授课、作业、学情、升学全场景</div>
                       <el-button type="primary" class="service-hero-btn" size="default">立即进入</el-button>
                     </div>
@@ -2824,16 +2846,6 @@
       </el-container>
     </el-container>
 
-    <el-dialog v-model="showSuiteKeyDialog" title="提示" width="420px" :close-on-click-modal="false">
-      <div style="font-size:14px;line-height:1.6;color:var(--shell-text);">
-        <p>更新后，原 SecretKey 会在 2 天后失效，请尽快完成相应调整，保证应用的正常使用，是否确定现在更新？</p>
-      </div>
-      <template #footer>
-        <el-button @click="showSuiteKeyDialog=false">取消</el-button>
-        <el-button type="primary" @click="onUpdateSuiteKey">确定</el-button>
-      </template>
-    </el-dialog>
-
     <el-dialog v-model="showImportDialog" title="批量导入机构" width="480px" :close-on-click-modal="false">
       <div style="margin-bottom:16px;">
         <p style="font-size:14px;margin-bottom:12px;">请下载模板后按照模板格式填写机构信息，再上传 Excel 文件。</p>
@@ -2921,11 +2933,7 @@
           pushUrl: '',
           syncToken: '',
           syncAesKey: '',
-          appCategoryOptions: [
-            { value:'教学管理', label:'教学管理', children:[{value:'课堂工具',label:'课堂工具'},{value:'作业管理',label:'作业管理'}] },
-            { value:'教务管理', label:'教务管理', children:[{value:'排课管理',label:'排课管理'},{value:'考务管理',label:'考务管理'}] },
-            { value:'校园办公', label:'校园办公', children:[{value:'家校互动',label:'家校互动'},{value:'通知公告',label:'通知公告'}] },
-          ],
+
           openWay: ['pcweb','h5'],
           mobileUrlScheme: 'https',
           mobileUrlHost: '',
@@ -2960,16 +2968,16 @@
             { name:'校园管理范围', id:'ZN-010', scopeType:'自定义', summary:'校园管理类应用', time:'2026-07-18', creator:'吴红', status:'enabled' },
           ],
           defaultZones: [
-            { name:'系统默认范围', id:'ZN-D000', time:'2026-06-01' },
-            { name:'南宁市直范围', id:'ZN-D001', time:'2026-06-01' },
-            { name:'青秀区默认范围', id:'ZN-D002', time:'2026-06-02' },
-            { name:'兴宁区默认范围', id:'ZN-D003', time:'2026-06-02' },
-            { name:'江南区默认范围', id:'ZN-D004', time:'2026-06-03' },
-            { name:'西乡塘默认范围', id:'ZN-D005', time:'2026-06-03' },
-            { name:'良庆区默认范围', id:'ZN-D006', time:'2026-06-04' },
-            { name:'邕宁区默认范围', id:'ZN-D007', time:'2026-06-04' },
-            { name:'武鸣区默认范围', id:'ZN-D008', time:'2026-06-05' },
-            { name:'横州市默认范围', id:'ZN-D009', time:'2026-06-05' },
+            { name:'广西壮族自治区教育厅', id:'ZN-D000', time:'2026-06-01' },
+            { name:'南宁市教育局', id:'ZN-D001', time:'2026-06-01' },
+            { name:'南宁市青秀区教育局', id:'ZN-D002', time:'2026-06-02' },
+            { name:'南宁市兴宁区教育局', id:'ZN-D003', time:'2026-06-02' },
+            { name:'南宁市江南区教育局', id:'ZN-D004', time:'2026-06-03' },
+            { name:'南宁市西乡塘区教育局', id:'ZN-D005', time:'2026-06-03' },
+            { name:'南宁市良庆区教育局', id:'ZN-D006', time:'2026-06-04' },
+            { name:'南宁市邕宁区教育局', id:'ZN-D007', time:'2026-06-04' },
+            { name:'南宁市武鸣区教育局', id:'ZN-D008', time:'2026-06-05' },
+            { name:'横州市教育局', id:'ZN-D009', time:'2026-06-05' },
           ],
           zoneEditId: null,
           zoneForm: {
@@ -3147,9 +3155,10 @@
           showDialog: false,
           showImportDialog: false,
           importFileList: [],
-          showSuiteKeyDialog: false,
           showPromiseDialog: false,
           reviewFilter: '',
+          reviewCatFilter: [],
+          reviewIdFilter: '',
           currentReview: null,
           reviewResult: 'approve',
           reviewComment: '',
@@ -3168,16 +3177,16 @@
             { id:10, appId:1010, appOpenId:'sb_dianzibanpa1', name:'电子班牌', cat:'教学管理', appTypeLabel:'平台应用', type:'原生应用', native_type:'自建应用', scope:'学校', level:'所有学段', source:'本机构', status:'online', listing:'listed', logo:'电' },
           ],
           shelfList: [
-            { initial:'课', name:'课堂互动助手', cat:'教学管理', dev:'南宁市教育局', zone:'南宁市教育范围', time:'2026-07-10', status:'unlisted', source:'南宁市教育局', type:'原生应用', native_type:'低代码应用', appTypeLabel:'平台应用' },
-            { initial:'校', name:'校园通', cat:'校园办公', dev:'南宁市教育局', zone:'自治区直属范围', time:'2026-07-12', status:'listed', source:'南宁市教育局', type:'生态应用', native_type:'', appTypeLabel:'非平台应用' },
-            { initial:'英', name:'英语听说训练', cat:'教学管理', dev:'南宁市教育局', zone:'—', time:'2026-07-14', status:'unlisted', source:'南宁市教育局', type:'原生应用', native_type:'自建应用', appTypeLabel:'非平台应用' },
-            { initial:'图', name:'图书管理', cat:'教务管理', dev:'南宁市教育局', zone:'南宁市教育范围', time:'2026-07-15', status:'unlisted', source:'南宁市教育局', type:'生态应用', native_type:'', appTypeLabel:'非平台应用' },
-            { initial:'排', name:'排课系统', cat:'教学管理', dev:'南宁市教育局', zone:'自治区直属范围', time:'2026-07-16', status:'listed', source:'南宁市教育局', type:'原生应用', native_type:'低代码应用', appTypeLabel:'平台应用' },
-            { initial:'成', name:'成绩分析', cat:'教务管理', dev:'南宁市教育局', zone:'南宁市教育范围', time:'2026-07-17', status:'listed', source:'南宁市教育局', type:'原生应用', native_type:'自建应用', appTypeLabel:'非平台应用' },
-            { initial:'OA', name:'校园OA', cat:'校园办公', dev:'南宁市教育局', zone:'—', time:'2026-07-18', status:'unlisted', source:'南宁市教育局', type:'生态应用', native_type:'', appTypeLabel:'非平台应用' },
-            { initial:'家', name:'家校互动', cat:'校园办公', dev:'南宁市教育局', zone:'南宁市教育范围', time:'2026-07-19', status:'unlisted', source:'南宁市教育局', type:'原生应用', native_type:'自建应用', appTypeLabel:'非平台应用' },
-            { initial:'选', name:'选课系统', cat:'教务管理', dev:'自治区教育厅', zone:'自治区直属范围', time:'2026-07-20', status:'listed', source:'南宁市教育局', type:'生态应用', native_type:'', appTypeLabel:'非平台应用' },
-            { initial:'电', name:'电子班牌', cat:'教学管理', dev:'自治区教育厅', zone:'自治区直属范围', time:'2026-07-21', status:'listed', source:'南宁市教育局', type:'原生应用', native_type:'自建应用', appTypeLabel:'非平台应用' },
+            { initial:'课', name:'课堂互动助手', cat:'教学管理', dev:'南宁市教育局', zoneList:['南宁市教育局'], time:'2026-07-10', status:'unlisted', source:'南宁市教育局', type:'原生应用', native_type:'低代码应用', appTypeLabel:'平台应用' },
+            { initial:'校', name:'校园通', cat:'校园办公', dev:'南宁市教育局', zoneList:['广西壮族自治区教育厅'], time:'2026-07-12', status:'listed', source:'南宁市教育局', type:'生态应用', native_type:'', appTypeLabel:'非平台应用' },
+            { initial:'英', name:'英语听说训练', cat:'教学管理', dev:'南宁市教育局', zoneList:['—'], time:'2026-07-14', status:'unlisted', source:'南宁市教育局', type:'原生应用', native_type:'自建应用', appTypeLabel:'非平台应用' },
+            { initial:'图', name:'图书管理', cat:'教务管理', dev:'南宁市教育局', zoneList:['南宁市教育局'], time:'2026-07-15', status:'unlisted', source:'南宁市教育局', type:'生态应用', native_type:'', appTypeLabel:'非平台应用' },
+            { initial:'排', name:'排课系统', cat:'教学管理', dev:'南宁市教育局', zoneList:['广西壮族自治区教育厅'], time:'2026-07-16', status:'listed', source:'南宁市教育局', type:'原生应用', native_type:'低代码应用', appTypeLabel:'平台应用' },
+            { initial:'成', name:'成绩分析', cat:'教务管理', dev:'南宁市教育局', zoneList:['南宁市教育局'], time:'2026-07-17', status:'listed', source:'南宁市教育局', type:'原生应用', native_type:'自建应用', appTypeLabel:'非平台应用' },
+            { initial:'OA', name:'校园OA', cat:'校园办公', dev:'南宁市教育局', zoneList:['—'], time:'2026-07-18', status:'unlisted', source:'南宁市教育局', type:'生态应用', native_type:'', appTypeLabel:'非平台应用' },
+            { initial:'家', name:'家校互动', cat:'校园办公', dev:'南宁市教育局', zoneList:['南宁市教育局'], time:'2026-07-19', status:'unlisted', source:'南宁市教育局', type:'原生应用', native_type:'自建应用', appTypeLabel:'非平台应用' },
+            { initial:'选', name:'选课系统', cat:'教务管理', dev:'自治区教育厅', zoneList:['广西壮族自治区教育厅'], time:'2026-07-20', status:'listed', source:'南宁市教育局', type:'生态应用', native_type:'', appTypeLabel:'非平台应用' },
+            { initial:'电', name:'电子班牌', cat:'教学管理', dev:'自治区教育厅', zoneList:['广西壮族自治区教育厅'], time:'2026-07-21', status:'listed', source:'南宁市教育局', type:'原生应用', native_type:'自建应用', appTypeLabel:'非平台应用' },
           ],
           // 应用分享管理：当前机构分享给其他机构 / 桂教通平台的应用（shareScope 记录上架时的分享范围）
           shareList: [
@@ -3202,28 +3211,28 @@
             { logo:'图', name:'图书管理',     appId:'2007', appOpenId:'eco_tushu_manage01', tenantName:'北海市教育局',   cat:'教务管理', appTypeLabel:'非平台应用', type:'生态应用', native_type:'',           scope:'学校、上级单位', level:'所有学段' },
           ],
           pendingReviews: [
-            { id:'APP-001', name:'图书管理', type:'生态应用', dev:'李芳', time:'2026-07-16 09:30' },
-            { id:'APP-002', name:'排课系统', type:'原生应用', dev:'王强', time:'2026-07-16 14:20' },
-            { id:'APP-003', name:'成绩分析', type:'原生应用', dev:'刘芳', time:'2026-07-17 08:10' },
-            { id:'APP-004', name:'家校互动', type:'原生应用', dev:'陈丽', time:'2026-07-17 10:30' },
-            { id:'APP-005', name:'校园OA', type:'生态应用', dev:'杨明', time:'2026-07-17 14:00' },
-            { id:'APP-006', name:'选课系统', type:'生态应用', dev:'赵刚', time:'2026-07-18 09:00' },
-            { id:'APP-007', name:'电子班牌', type:'原生应用', dev:'周华', time:'2026-07-18 11:20' },
-            { id:'APP-008', name:'在线考试', type:'原生应用', dev:'吴红', time:'2026-07-18 15:40' },
-            { id:'APP-009', name:'智慧课堂', type:'生态应用', dev:'郑伟', time:'2026-07-19 09:10' },
-            { id:'APP-010', name:'教师档案', type:'原生应用', dev:'黄强', time:'2026-07-19 13:30' },
+            { id:'APP-001', name:'图书管理', type:'生态应用', dev:'李芳', time:'2026-07-16 09:30', logo:'图', cat:'教务管理', attr:'非平台应用', typeTag:'上线' },
+            { id:'APP-002', name:'排课系统', type:'原生应用', dev:'王强', time:'2026-07-16 14:20', logo:'排', cat:'教学管理/排课管理', attr:'平台应用', typeTag:'上线' },
+            { id:'APP-003', name:'成绩分析', type:'原生应用', dev:'刘芳', time:'2026-07-17 08:10', logo:'成', cat:'教务管理', attr:'非平台应用', typeTag:'上线' },
+            { id:'APP-004', name:'家校互动', type:'原生应用', dev:'陈丽', time:'2026-07-17 10:30', logo:'家', cat:'校园办公/家校互动', attr:'平台应用', typeTag:'修改' },
+            { id:'APP-005', name:'校园OA', type:'生态应用', dev:'杨明', time:'2026-07-17 14:00', logo:'OA', cat:'校园办公', attr:'非平台应用', typeTag:'上线' },
+            { id:'APP-006', name:'选课系统', type:'生态应用', dev:'赵刚', time:'2026-07-18 09:00', logo:'选', cat:'教务管理', attr:'非平台应用', typeTag:'上线' },
+            { id:'APP-007', name:'电子班牌', type:'原生应用', dev:'周华', time:'2026-07-18 11:20', logo:'电', cat:'校园办公', attr:'平台应用', typeTag:'修改' },
+            { id:'APP-008', name:'在线考试', type:'原生应用', dev:'吴红', time:'2026-07-18 15:40', logo:'考', cat:'教学管理', attr:'平台应用', typeTag:'上线' },
+            { id:'APP-009', name:'智慧课堂', type:'生态应用', dev:'郑伟', time:'2026-07-19 09:10', logo:'智', cat:'教学管理/课堂工具', attr:'非平台应用', typeTag:'上线' },
+            { id:'APP-010', name:'教师档案', type:'原生应用', dev:'黄强', time:'2026-07-19 13:30', logo:'教', cat:'教学管理/教师档案', attr:'平台应用', typeTag:'上线' },
           ],
           doneReviews: [
-            { id:'APP-010', name:'课堂互动助手', type:'原生应用', dev:'张明', time:'2026-07-15 10:00', doneTime:'2026-07-16 11:30', result:'通过', reviewer:'赵审核' },
-            { id:'APP-011', name:'校园通', type:'生态应用', dev:'张明', time:'2026-07-14 15:00', doneTime:'2026-07-15 09:00', result:'驳回', reviewer:'赵审核' },
-            { id:'APP-012', name:'英语听说', type:'原生应用', dev:'李芳', time:'2026-07-13 08:30', doneTime:'2026-07-14 10:00', result:'通过', reviewer:'钱审核' },
-            { id:'APP-013', name:'图书管理', type:'生态应用', dev:'王强', time:'2026-07-12 14:00', doneTime:'2026-07-13 16:00', result:'通过', reviewer:'孙审核' },
-            { id:'APP-014', name:'选课系统', type:'生态应用', dev:'刘芳', time:'2026-07-11 09:00', doneTime:'2026-07-12 11:30', result:'驳回', reviewer:'钱审核' },
-            { id:'APP-015', name:'排课系统', type:'原生应用', dev:'王强', time:'2026-07-10 10:00', doneTime:'2026-07-11 15:00', result:'通过', reviewer:'赵审核' },
-            { id:'APP-016', name:'成绩分析', type:'原生应用', dev:'刘芳', time:'2026-07-09 13:00', doneTime:'2026-07-10 09:30', result:'通过', reviewer:'孙审核' },
-            { id:'APP-017', name:'校园OA', type:'生态应用', dev:'杨明', time:'2026-07-08 11:00', doneTime:'2026-07-09 14:00', result:'驳回', reviewer:'赵审核' },
-            { id:'APP-018', name:'家校互动', type:'原生应用', dev:'陈丽', time:'2026-07-07 15:00', doneTime:'2026-07-08 10:30', result:'通过', reviewer:'钱审核' },
-            { id:'APP-019', name:'电子班牌', type:'原生应用', dev:'周华', time:'2026-07-06 08:00', doneTime:'2026-07-07 16:00', result:'通过', reviewer:'孙审核' },
+            { id:'APP-010', name:'课堂互动助手', type:'原生应用', dev:'张明', time:'2026-07-15 10:00', doneTime:'2026-07-16 11:30', result:'通过', reviewer:'赵审批', logo:'课', cat:'教学管理/课堂工具', attr:'平台应用', typeTag:'上线' },
+            { id:'APP-011', name:'校园通', type:'生态应用', dev:'张明', time:'2026-07-14 15:00', doneTime:'2026-07-15 09:00', result:'驳回', reviewer:'赵审批', logo:'校', cat:'校园办公', attr:'非平台应用', typeTag:'上线' },
+            { id:'APP-012', name:'英语听说', type:'原生应用', dev:'李芳', time:'2026-07-13 08:30', doneTime:'2026-07-14 10:00', result:'通过', reviewer:'钱审批', logo:'英', cat:'教学管理', attr:'非平台应用', typeTag:'上线' },
+            { id:'APP-013', name:'图书管理', type:'生态应用', dev:'王强', time:'2026-07-12 14:00', doneTime:'2026-07-13 16:00', result:'通过', reviewer:'孙审批', logo:'图', cat:'教务管理', attr:'非平台应用', typeTag:'修改' },
+            { id:'APP-014', name:'选课系统', type:'生态应用', dev:'刘芳', time:'2026-07-11 09:00', doneTime:'2026-07-12 11:30', result:'驳回', reviewer:'钱审批', logo:'选', cat:'教务管理', attr:'非平台应用', typeTag:'上线' },
+            { id:'APP-015', name:'排课系统', type:'原生应用', dev:'王强', time:'2026-07-10 10:00', doneTime:'2026-07-11 15:00', result:'通过', reviewer:'赵审批', logo:'排', cat:'教学管理/排课管理', attr:'平台应用', typeTag:'上线' },
+            { id:'APP-016', name:'成绩分析', type:'原生应用', dev:'刘芳', time:'2026-07-09 13:00', doneTime:'2026-07-10 09:30', result:'通过', reviewer:'孙审批', logo:'成', cat:'教务管理', attr:'非平台应用', typeTag:'上线' },
+            { id:'APP-017', name:'校园OA', type:'生态应用', dev:'杨明', time:'2026-07-08 11:00', doneTime:'2026-07-09 14:00', result:'驳回', reviewer:'赵审批', logo:'OA', cat:'校园办公', attr:'非平台应用', typeTag:'上线' },
+            { id:'APP-018', name:'家校互动', type:'原生应用', dev:'陈丽', time:'2026-07-07 15:00', doneTime:'2026-07-08 10:30', result:'通过', reviewer:'钱审批', logo:'家', cat:'校园办公/家校互动', attr:'平台应用', typeTag:'修改' },
+            { id:'APP-019', name:'电子班牌', type:'原生应用', dev:'周华', time:'2026-07-06 08:00', doneTime:'2026-07-07 16:00', result:'通过', reviewer:'孙审批' },
           ],
           mallApps: [
             { initial:'课', name:'课堂互动助手', desc:'课堂互动教学辅助工具，支持多端协同。', paid:false },
@@ -3316,14 +3325,14 @@
           currentCustomCat: '全部应用',
           unitAppCount: 12,
           installedApps: [
-            { id:'i1', initial:'宿', name:'宿舍管理', org:'后勤处', source:'教育服务超市', time:'2026-07-20', desc:'学生宿舍分配、查寝与报修管理', color:'#ef4444', gradient:'linear-gradient(135deg,#f87171,#ef4444)', paid:false, users:'892在用', score:'5', likes:342, favorites:128, views:5420, tags:[{label:'生态应用',type:'info'}] },
-            { id:'i2', initial:'维', name:'维修报修', org:'后勤处', source:'教育服务超市', time:'2026-07-19', desc:'校园设施设备在线报修与派单', color:'#ef4444', gradient:'linear-gradient(135deg,#fb923c,#f97316)', paid:false, users:'1205在用', score:'5', likes:516, favorites:204, views:7860, tags:[{label:'生态应用',type:'info'}] },
-            { id:'i3', initial:'物', name:'物资申领', org:'后勤处', source:'教育服务超市', time:'2026-07-18', desc:'办公及教学物资申请与审批', color:'#ef4444', gradient:'linear-gradient(135deg,#fbbf24,#f59e0b)', paid:false, users:'560在用', score:'5', likes:188, favorites:76, views:3240, tags:[{label:'生态应用',type:'info'}] },
+            { id:'i1', initial:'宿', name:'宿舍管理', org:'后勤处', source:'教育服务中心', time:'2026-07-20', desc:'学生宿舍分配、查寝与报修管理', color:'#ef4444', gradient:'linear-gradient(135deg,#f87171,#ef4444)', paid:false, users:'892在用', score:'5', likes:342, favorites:128, views:5420, tags:[{label:'生态应用',type:'info'}] },
+            { id:'i2', initial:'维', name:'维修报修', org:'后勤处', source:'教育服务中心', time:'2026-07-19', desc:'校园设施设备在线报修与派单', color:'#ef4444', gradient:'linear-gradient(135deg,#fb923c,#f97316)', paid:false, users:'1205在用', score:'5', likes:516, favorites:204, views:7860, tags:[{label:'生态应用',type:'info'}] },
+            { id:'i3', initial:'物', name:'物资申领', org:'后勤处', source:'教育服务中心', time:'2026-07-18', desc:'办公及教学物资申请与审批', color:'#ef4444', gradient:'linear-gradient(135deg,#fbbf24,#f59e0b)', paid:false, users:'560在用', score:'5', likes:188, favorites:76, views:3240, tags:[{label:'生态应用',type:'info'}] },
             { id:'i4', initial:'教', name:'教研活动', org:'教务处', source:'本机构', time:'2026-07-17', desc:'教研计划、活动记录与成果管理', color:'#10b981', gradient:'linear-gradient(135deg,#34d399,#10b981)', paid:false, users:'430在用', score:'5', likes:156, favorites:62, views:2680, tags:[], cat:'教学类' },
             { id:'i5', initial:'考', name:'考务管理', org:'教务处', source:'本机构', time:'2026-07-16', desc:'考试安排、考场编排与成绩录入', color:'#10b981', gradient:'linear-gradient(135deg,#2dd4bf,#14b8a6)', paid:false, users:'680在用', score:'5', likes:210, favorites:94, views:4120, tags:[], cat:'教学类' },
             { id:'i6', initial:'课', name:'课程管理', org:'教务处', source:'本机构', time:'2026-07-15', desc:'课程设置、课表查询与调课申请', color:'#10b981', gradient:'linear-gradient(135deg,#60a5fa,#3b82f6)', paid:false, users:'950在用', score:'5', likes:328, favorites:145, views:5890, tags:[], cat:'教学类' },
-            { id:'i7', initial:'团', name:'社团活动', org:'学生处', source:'教育服务超市', time:'2026-07-14', desc:'学生社团报名、活动与考勤', color:'#8b5cf6', gradient:'linear-gradient(135deg,#a78bfa,#8b5cf6)', paid:false, users:'320在用', score:'5', likes:98, favorites:40, views:1860, tags:[{label:'生态应用',type:'info'}] },
-            { id:'i8', initial:'资', name:'资助管理', org:'学生处', source:'本机构', time:'2026-07-13', desc:'贫困生资助申请、审核与公示', color:'#8b5cf6', gradient:'linear-gradient(135deg,#c084fc,#a855f7)', paid:false, users:'210在用', score:'5', likes:86, favorites:32, views:1420, tags:[], cat:'行政类' },
+            { id:'i7', initial:'团', name:'社团活动', org:'学生处', source:'教育服务中心', time:'2026-07-14', desc:'学生社团报名、活动与考勤', color:'#8b5cf6', gradient:'linear-gradient(135deg,#a78bfa,#8b5cf6)', paid:false, users:'320在用', score:'5', likes:98, favorites:40, views:1860, tags:[{label:'生态应用',type:'info'}] },
+            { id:'i8', initial:'资', name:'资助管理', org:'学生处', source:'本机构', time:'2026-07-13', desc:'贫困生资助申请、审批与公示', color:'#8b5cf6', gradient:'linear-gradient(135deg,#c084fc,#a855f7)', paid:false, users:'210在用', score:'5', likes:86, favorites:32, views:1420, tags:[], cat:'行政类' },
             { id:'i9', initial:'科', name:'科研申报', org:'科研处', source:'本机构', time:'2026-07-12', desc:'科研项目申报、评审与过程管理', color:'#f59e0b', gradient:'linear-gradient(135deg,#fbbf24,#f59e0b)', paid:false, users:'175在用', score:'5', likes:64, favorites:28, views:1180, tags:[], cat:'科研类' },
             { id:'i10', initial:'文', name:'文献管理', org:'科研处', source:'本机构', time:'2026-07-11', desc:'科研文献检索、收藏与引用', color:'#f59e0b', gradient:'linear-gradient(135deg,#fcd34d,#f59e0b)', paid:false, users:'260在用', score:'5', likes:92, favorites:38, views:1620, tags:[], cat:'科研类' },
             { id:'i11', initial:'公', name:'公文流转', org:'校办', source:'本机构', time:'2026-07-10', desc:'校内公文拟稿、签批与归档', color:'#2f7df6', gradient:'linear-gradient(135deg,#60a5fa,#3b82f6)', paid:false, users:'510在用', score:'5', likes:176, favorites:72, views:3460, tags:[], cat:'行政类' },
@@ -3377,6 +3386,7 @@
           shareApp: { name:'', link:'' },
           videoList: [],
           currentZoneName: '',
+          currentShelfRecord: null,
           installFilter: { name: '', id: '', status: '' },
           orgList: [
             { name:'南宁市第一中学', id:'ORG-001', type:'学校', city:'南宁市', installStatus:'installed', failReason:'' },
@@ -3397,6 +3407,8 @@
             { name:'北海市第二中学', id:'ORG-BH-003' },
             { name:'钦州市第三中学', id:'ORG-QZ-004' },
           ],
+          // 机构管理员当前机构类型：bureau=教育局（默认，展示范围选择）、school=学校（不展示范围选择，仅分享范围，必填）
+          tenantOrgType: 'bureau',
           shelfConfig: {
             crossTenant: 'no',
             crossLevel: '',
@@ -3415,8 +3427,6 @@
           tenantPickerVisible: false,
           tenantPickerOptions: [],
           pickerTemp: '',
-          versionOptions: [],
-          versionSearched: false,
           orgOptions: [],
           orgSearching: false,
         }
@@ -3428,7 +3438,7 @@
           return this.currentPage;
         },
         pageTitle() {
-          const t = { P01:'应用申请管理', P02:'应用申请编辑', P02b:'应用详情', P04:'应用上架管理', P04b:'应用安装列表', P05:'应用上架配置', P06:'全平台应用', P07:'上架范围管理', P07a:'范围机构列表', P08:'上架范围编辑', P09:'应用分类管理', P10:'应用审核列表', P11:'应用审核操作', P11v:'审核详情', P12:'标签管理', P12a:'标签机构列表', P12e:'标签编辑', P13:'应用配置管理', P15:'全局应用管理', P17:'应用统计看板', P18:'订单套餐授权', P21:'教育服务中心', P22:'教育服务中心', P24:'我的应用中心', P25:'我的订单', P26:'应用套餐配置', P26e:'套餐编辑' };
+          const t = { P01:'应用申请管理', P02:'应用申请编辑', P02b:'应用详情', P04:'应用上架管理', P04b:'应用安装列表', P05:'应用上架配置', P06:'全平台应用', P07:'上架范围管理', P07a:'范围机构列表', P08:'上架范围编辑', P09:'应用分类管理', P10:'应用审批列表', P11:'应用审批操作', P11v:'审批详情', P12:'标签管理', P12a:'标签机构列表', P12e:'标签编辑', P13:'应用配置管理', P15:'全局应用管理', P17:'应用统计看板', P18:'订单套餐授权', P19:'订单记录', P20:'试用订单记录', P21:'教育服务中心', P22:'教育服务中心', P24:'我的应用中心', P25:'我的订单', P26:'应用套餐配置', P26e:'套餐编辑' };
           return t[this.currentPage] || '应用中心';
         },
         currentModule() {
@@ -3520,10 +3530,35 @@
         childrenOf(parentId) {
           return this.categoryList.filter(c => c.parentId===parentId);
         },
+        // 新增应用选择所属分类：仅展示启用分类（已停用分类不展示）
+        appCategoryOptions() {
+          return this.categoryList.filter(c => !c.parentId && c.status==='enabled').map(c => {
+            const children = this.categoryList.filter(x => x.parentId===c.id && x.status==='enabled');
+            const node = { value:c.name, label:c.name };
+            if (children.length) node.children = children.map(x => ({ value:x.name, label:x.name }));
+            return node;
+          });
+        },
+        // 分类筛选（如审批列表、应用列表筛选项）：已停用分类在已使用场景中仍可选，展示全部一级分类
+        catCascaderOptions() {
+          return this.categoryList.filter(c => !c.parentId).map(c => {
+            const children = this.categoryList.filter(x => x.parentId===c.id);
+            const node = { value:c.name, label:c.name };
+            if (children.length) node.children = children.map(x => ({ value:x.name, label:x.name }));
+            return node;
+          });
+        },
         filteredReviews() {
           const f = (this.reviewFilter || '').toLowerCase();
+          const idF = (this.reviewIdFilter || '').toLowerCase();
+          const catF = Array.isArray(this.reviewCatFilter) ? this.reviewCatFilter : [];
+          const catPath = catF.join('/');
           const list = this.reviewTab==='pending' ? this.pendingReviews : this.doneReviews;
-          return list.filter(r => !f || r.name.toLowerCase().includes(f));
+          return list.filter(r =>
+            (!f || r.name.toLowerCase().includes(f)) &&
+            (!idF || String(r.id).toLowerCase().includes(idF)) &&
+            (!catPath || r.cat === catPath || r.cat.startsWith(catPath + '/'))
+          );
         },
         filteredPkgList() {
           return this.pkgList.filter(p => {
@@ -3534,7 +3569,7 @@
           });
         },
         myApps() {
-          return this.installedApps.filter(a => a.source === '教育服务超市');
+          return this.installedApps.filter(a => a.source === '教育服务中心');
         },
         installedOrgs() {
           const set = new Set(['全部']);
@@ -3548,7 +3583,7 @@
         homeInstalledApps() { return this.filteredInstalledApps.slice(0, 10); },
         selfbuiltCombined() {
           const myIds = new Set(this.myApps.map(a => a.id));
-          const lowcode = this.installedApps.filter(a => a.source !== '教育服务超市' && !myIds.has(a.id));
+          const lowcode = this.installedApps.filter(a => a.source !== '教育服务中心' && !myIds.has(a.id));
           return lowcode.concat(this.selfbuiltApps);
         },
         filteredSelfbuiltApps() {
@@ -3897,7 +3932,7 @@
             if (t) {
               t.appTypeLabel = label;
               t.lowcodeAppId = this.lowcodeAppId;
-              // 机构管理员提交上线申请：生成审核记录，由桂教通超级管理员审核
+              // 机构管理员提交上线申请：生成审批记录，由桂教通超级管理员审批
               if (this.currentRole === 'tenant_admin') {
                 const rid = 'APP-' + (t.appId || 1000);
                 const exist = this.pendingReviews.find(r => r.id === rid);
@@ -3917,10 +3952,12 @@
             const newOpenId = isLowcode ? (this.lowcodeAppId || this.genOpenId()) : this.genOpenId();
             this.appList.unshift({ id: Date.now(), appId: newAppId, lowcodeAppId: this.lowcodeAppId, appOpenId: newOpenId, name:'新建应用', cat: (this.appCategory || []).join('/'), appTypeLabel: label, type:'原生应用', native_type: isLowcode ? '低代码应用' : '自建应用', scope:'学校', level:'所有学段', source:'本机构', status:'offline', listing:'unlisted', logo:'新' });
           }
-          if (this.currentRole === 'tenant_admin' && this.editAppId) {
-            this.$message.success(this.editMode ? '提交成功，需重新上架审核后生效' : '上线申请已提交，待桂教通超级管理员审核');
+          if (!this.editAppId) {
+            this.$message.success('应用创建成功');
+          } else if (this.currentRole === 'tenant_admin') {
+            this.$message.success(this.editMode ? '提交成功，需重新上架审批后生效' : '上线申请已提交，待桂教通超级管理员审批');
           } else {
-            this.$message.success(this.editMode ? '提交成功，需重新上架审核后生效' : '上线申请已提交');
+            this.$message.success(this.editMode ? '提交成功，需重新上架审批后生效' : '上线申请已提交');
           }
           this.goPage('P01');
         },
@@ -3986,13 +4023,32 @@
         onCancelEdit() {
           this.goPage('P01');
         },
-        onUpdateSuiteKey() {
-          this.showSuiteKeyDialog = false;
-          this.$message.success('SuiteKey 已更新');
+        onCopySuiteKey() {
+          const val = 'sk_3a8f2c9e1b7d4f6a';
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(val).then(
+              () => this.$message.success('SuiteKey 已复制'),
+              () => this.fallbackCopy(val)
+            );
+          } else {
+            this.fallbackCopy(val);
+          }
+        },
+        fallbackCopy(val) {
+          const ta = document.createElement('textarea');
+          ta.value = val;
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          document.body.appendChild(ta);
+          ta.select();
+          try { document.execCommand('copy'); this.$message.success('SuiteKey 已复制'); }
+          catch (e) { this.$message.error('复制失败，请手动复制'); }
+          document.body.removeChild(ta);
         },
         onShelfApp(a) {
           const found = this.appList.find(app => app.name === a.name);
           this.editAppId = found ? found.id : null;
+          this.currentShelfRecord = a;
           this.shelfConfig = {
             crossTenant: 'no', crossLevel: '', targetTenant: '',
             scopeType: 'all', selectedZones: [], shareScope: [], versionNo: '', targetOrgs: [],
@@ -4049,11 +4105,15 @@
               app.shareScope = (app.shareScope || []).filter(s => s !== 'other');
             }
           }
-          // 同步停止对应机构的应用上架管理界面：若应用已上架，则自动下架
+          // 停止分享：将对应机构应用上架管理列表中的该应用下架（已上架改为已下架，未上架保持），已安装应用不卸载
           const shelfItem = this.shelfList.find(s => s.name === app.name);
-          if (shelfItem && shelfItem.status === 'listed') {
-            shelfItem.status = 'dismissed';
-            this.$message.success(`已停止分享，并自动下架【${app.name}】`);
+          if (shelfItem) {
+            if (shelfItem.status === 'listed') {
+              shelfItem.status = 'dismissed';
+              this.$message.success(`已停止分享，【${app.name}】在对应机构已下架（已安装应用不卸载）`);
+            } else {
+              this.$message.success(`已停止分享，【${app.name}】在对应机构保持未上架`);
+            }
           } else {
             this.$message.success(`已停止分享【${app.name}】`);
           }
@@ -4101,15 +4161,6 @@
           if (!val) return;
           this.shelfConfig.targetTenant = val;
           this.tenantPickerVisible = false;
-        },
-        onVersionRemoteSearch(query) {
-          this.versionSearched = true;
-          // 版本号来源：根据当前低代码应用ID获取对应版本列表
-          const appId = this.currentApp && this.currentApp.lowcodeAppId ? this.currentApp.lowcodeAppId : '';
-          if (!appId) { this.versionOptions = []; return; }
-          const all = ['v1.0.0', 'v1.1.0', 'v2.0.0', 'v2.1.0', 'v3.0.0'];
-          const q = (query || '').trim().toLowerCase();
-          this.versionOptions = all.filter(v => v.toLowerCase().includes(q)).map(v => ({ label: appId + ' · ' + v, value: v }));
         },
         onOrgRemoteSearch(query) {
           // 其他机构：输入机构名称模糊筛选，最多返回 50 条，结果可多选
@@ -4293,61 +4344,53 @@
           return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
         },
         onConfirmShelf() {
-          const app = this.currentApp;
-          const name = app && app.name, cat = app && app.cat;
-          const initial = (name || '应用').slice(0, 1);
-          // 低代码应用
-          if (this.currentAppIsLowcode) {
-            if (this.currentRole === 'tenant_admin') {
-              const tenant = '南宁市教育局';
-              // 是否跨机构上架：范围=跨机构范围，自动安装到范围内机构的应用中心
-              if (this.shelfConfig.crossTenant === 'yes') {
-                const zoneName = this.shelfConfig.targetTenant || '跨机构范围';
-                this.shelfList.unshift({ initial, name, cat, dev: tenant, zone: zoneName, time: this.today(), status: 'unlisted', source: tenant, appTypeLabel: app.appTypeLabel });
-                this.$message.success('是否跨机构上架成功，已自动安装到范围内机构的应用中心');
-                this.goPage('P04');
-                return;
-              }
-              // 非跨机构：范围选择必填
-              if (!this.shelfConfig.scopeType) { this.$message.warning('请选择范围'); return; }
-              const zones = this.shelfConfig.scopeType === 'all' ? ['当前机构及所有下级机构'] : this.shelfConfig.selectedZones;
-              zones.forEach(z => this.shelfList.unshift({ initial, name, cat, dev: tenant, zone: z, time: this.today(), status: 'unlisted', source: tenant, appTypeLabel: app.appTypeLabel }));
-              // 版本号（机构管理员 + 低代码 + 是否跨机构=否，必填）
-              if (this.currentAppIsLowcode && this.shelfConfig.crossTenant === 'no' && !this.shelfConfig.versionNo) { this.$message.warning('请选择版本号'); return; }
-              // 分享范围（多选，非必填）；勾选“其他机构”时需选择机构
-              if (this.shelfConfig.shareScope.includes('other') && this.shelfConfig.targetOrgs.length === 0) { this.$message.warning('请选择其他机构'); return; }
-              this.shelfConfig.shareScope.forEach(s => {
-                const orgText = s === 'other' && this.shelfConfig.targetOrgs.length ? '（' + this.shelfConfig.targetOrgs.join('、') + '）' : '';
-                const label = (s === 'guide' ? '桂教通平台' : '其他机构' + orgText) + (this.shelfConfig.versionNo ? '（' + this.shelfConfig.versionNo + '）' : '');
-                this.shelfList.unshift({ initial, name, cat, dev: tenant, zone: label, time: this.today(), status: 'unlisted', source: tenant, appTypeLabel: app.appTypeLabel });
-              });
-              this.$message.success('上架成功');
-              this.goPage('P04');
-              return;
-            }
-            // 桂教通超级管理员
-            if (this.shelfConfig.crossTenant === 'yes') {
-              const zoneName = this.shelfConfig.targetTenant || '跨机构范围';
-              this.shelfList.unshift({ initial, name, cat, dev: '自治区教育厅', zone: zoneName, time: this.today(), status: 'unlisted', source: '自治区教育厅', appTypeLabel: app.appTypeLabel });
-              this.$message.success('是否跨机构上架成功，已自动安装到范围内机构的应用中心');
-              this.goPage('P04');
-              return;
-            }
-            if (!this.shelfConfig.scopeType) { this.$message.warning('请选择范围'); return; }
-            const zones = this.shelfConfig.scopeType === 'all' ? ['全平台'] : this.shelfConfig.selectedZones;
-            zones.forEach(z => this.shelfList.unshift({ initial, name, cat, dev: '自治区教育厅', zone: z, time: this.today(), status: 'unlisted', source: '自治区教育厅', appTypeLabel: app.appTypeLabel }));
-            this.$message.success('上架成功');
+          const a = this.currentShelfRecord;
+          if (!a) { this.$message.warning('未找到待上架记录'); return; }
+          const isPlatform = this.currentRole === 'platform_admin';
+          // 跨机构上架：更新原记录的 上架范围，不新增记录
+          if (this.shelfConfig.crossTenant === 'yes') {
+            const zoneName = this.shelfConfig.targetTenant || '跨机构范围';
+            a.zoneList = [zoneName];
+            a.status = 'listed';
+            this.$message.success('跨机构上架成功，已自动安装到范围内机构的应用中心');
             this.goPage('P04');
             return;
           }
-          // 非低代码应用
+          // 学校机构：无范围选择，仅分享范围（必填）；记录在桂教通超管/对应机构的应用上架管理界面新增（未上架）
+          if (this.currentRole === 'tenant_admin' && this.tenantOrgType === 'school') {
+            if (this.shelfConfig.shareScope.length === 0) { this.$message.warning('请至少选择一个分享范围'); return; }
+            if (this.shelfConfig.shareScope.includes('other') && this.shelfConfig.targetOrgs.length === 0) { this.$message.warning('请选择其他机构'); return; }
+            const targets = [];
+            if (this.shelfConfig.shareScope.includes('guide')) targets.push('桂教通平台');
+            if (this.shelfConfig.shareScope.includes('other')) targets.push(...this.shelfConfig.targetOrgs);
+            a.zoneList = targets;
+            a.status = 'unlisted';
+            this.$message.success('已上架，将在桂教通超管及对应机构的应用上架管理界面新增未上架记录');
+            this.goPage('P04');
+            return;
+          }
+          // 范围选择必填
+          if (!this.shelfConfig.scopeType) { this.$message.warning('请选择范围'); return; }
+          const zones = this.shelfConfig.scopeType === 'all'
+            ? [isPlatform ? '全平台' : '当前机构及所有下级机构']
+            : this.shelfConfig.selectedZones.slice();
+          // 分享范围（机构管理员，非必填）；勾选“其他机构”时需选择机构
+          if (this.shelfConfig.shareScope.includes('other') && this.shelfConfig.targetOrgs.length === 0) { this.$message.warning('请选择其他机构'); return; }
+          const shareLabels = [];
+          if (this.shelfConfig.shareScope.includes('guide')) shareLabels.push('桂教通平台');
+          if (this.shelfConfig.shareScope.includes('other')) {
+            shareLabels.push(this.shelfConfig.targetOrgs.length ? '其他机构（' + this.shelfConfig.targetOrgs.join('、') + '）' : '其他机构');
+          }
+          // 更新原记录的 上架范围（仅保留范围选择内容，不含分享范围；应用属性等其余字段保持不变），状态置为已上架
+          a.zoneList = zones;
+          a.status = 'listed';
           this.$message.success('上架成功');
           this.goPage('P04');
         },
-        onZoneClick(a) {
+        onZoneClick(a, z) {
           const found = this.appList.find(app => app.name === a.name);
           this.editAppId = found ? found.id : null;
-          this.currentZoneName = a.zone;
+          this.currentZoneName = z;
           this.goPage('P04b');
         },
         onInstallOrg(org) {
@@ -4377,6 +4420,11 @@
           }).catch(() => {});
         },
         onReviewSearch() {},
+        onReviewReset() {
+          this.reviewFilter = '';
+          this.reviewCatFilter = [];
+          this.reviewIdFilter = '';
+        },
         onReviewApprove(r) {
           this.currentReview = r;
           this.reviewResult = 'approve';
@@ -4390,7 +4438,7 @@
         onSubmitReview() {
           if (this.reviewResult==='reject' && !this.reviewComment) { this.$message.warning('驳回时请输入审批意见'); return; }
           const r = this.currentReview;
-          if (!r) { this.$message.warning('未找到审核记录'); return; }
+          if (!r) { this.$message.warning('未找到审批记录'); return; }
           const typeLabel = r.type;
           const idx = this.pendingReviews.indexOf(r);
           if (idx > -1) this.pendingReviews.splice(idx, 1);
@@ -4400,7 +4448,7 @@
           r.reviewComment = this.reviewComment || '';
           this.doneReviews.unshift(r);
           if (this.reviewResult==='approve') {
-            // 审核通过：应用状态变为已上线，并进入机构管理员的应用上架列表（未上架）
+            // 审批通过：应用状态变为已上线，并进入机构管理员的应用上架列表（未上架）
             const appIdNum = parseInt(String(r.id || '').replace('APP-', ''), 10);
             if (!isNaN(appIdNum)) {
               const t = this.appList.find(x => x.appId === appIdNum);
@@ -4414,7 +4462,7 @@
               status: 'unlisted', source: dev, type: '原生应用',
               native_type: r.native_type || '自建应用', appTypeLabel: r.appTypeLabel || '非平台应用'
             });
-            this.$message.success('审核通过，应用已进入机构管理员上架列表（未上架）');
+            this.$message.success('审批通过，应用已进入机构管理员上架列表（未上架）');
           } else {
             this.$message.success('已驳回');
           }
@@ -4457,6 +4505,10 @@
           }).catch(() => {});
         },
         onDeleteCat(cat) {
+          // 删除限制：存在下级分类不可删除；已被应用使用不可删除
+          if (this.childrenOf(cat.id).length > 0) { this.$message.warning('存在下级分类，不可删除'); return; }
+          const used = this.appList.some(a => a.cat && a.cat.split('/').includes(cat.name)) || this.shelfList.some(s => s.cat === cat.name);
+          if (used) { this.$message.warning('该分类已被应用使用，不可删除'); return; }
           this.$confirm('数据删除后，无法找回，请确认是否继续删除？', '提示', { confirmButtonText:'确认删除', cancelButtonText:'取消', type:'warning' }).then(() => {
             const idx = this.categoryList.indexOf(cat);
             if (idx > -1) this.categoryList.splice(idx, 1);
