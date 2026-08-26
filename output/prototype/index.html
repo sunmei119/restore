@@ -442,7 +442,7 @@
           <span class="shell-brand-mark">SPM</span>
           <div class="shell-brand-text">
             <div class="shell-brand-title">应用中心重构</div>
-            <div class="shell-brand-subtitle">多租户应用全生命周期管理平台</div>
+            <div class="shell-brand-subtitle">多机构应用全生命周期管理平台</div>
           </div>
         </div>
         <!-- <div class="shell-header-center">{{ currentModule }}</div> -->
@@ -859,9 +859,9 @@
                           <el-radio value="district">区县</el-radio>
                         </el-radio-group>
                       </el-form-item>
-                      <el-form-item label="所属租户" required v-if="currentAppIsLowcode && currentRole==='platform_admin' && shelfConfig.crossTenant==='yes'" style="width:50%;padding:0 8px;">
+                      <el-form-item label="所属机构" required v-if="currentAppIsLowcode && currentRole==='platform_admin' && shelfConfig.crossTenant==='yes'" style="width:50%;padding:0 8px;">
                         <div style="display:flex;align-items:center;gap:8px;width:100%;">
-                          <el-select v-model="shelfConfig.targetTenant" filterable placeholder="搜索并选择租户" style="flex:1;">
+                          <el-select v-model="shelfConfig.targetTenant" filterable placeholder="搜索并选择机构" style="flex:1;">
                             <el-option label="南宁市教育局" value="t-nnedu"></el-option>
                             <el-option label="柳州市教育局" value="t-lzedu"></el-option>
                             <el-option label="桂林市教育局" value="t-gledu"></el-option>
@@ -1028,7 +1028,7 @@
             <!-- ===== P06 全平台应用页（仅超管） ===== -->
             <div v-show="currentPage === 'P06'" class="shell-workbench">
               <div style="background:#f0f7ff;border:1px solid #d7e4ff;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:13px;color:var(--shell-text-secondary);line-height:1.6;">
-                <b style="color:var(--shell-text);">全平台应用治理：</b>展示全平台所有租户已上架的应用（<code>listing_status = listed</code>），支持跨机构强制下架。强制下架后对应租户在应用上架管理页看到该应用状态回落为「未上架」，已安装的应用不会被卸载。
+                <b style="color:var(--shell-text);">全平台应用治理：</b>展示全平台所有机构已上架的应用（<code>listing_status = listed</code>），支持跨机构强制下架。强制下架后对应机构在应用上架管理页看到该应用状态回落为「已下架」，分享到的其他机构对应状态也改为已下架，已安装的应用不卸载。
               </div>
               <div class="filter-bar">
                 <span style="font-size:13px;color:var(--shell-text-secondary);white-space:nowrap;">应用名称:</span>
@@ -1048,7 +1048,7 @@
               <table class="data-table">
                 <thead>
                   <tr>
-                    <th>Logo</th><th>应用名称</th><th>应用ID</th><th>应用openId</th><th>上架租户</th>
+                    <th>Logo</th><th>应用名称</th><th>应用ID</th><th>应用openId</th><th>上架机构</th>
                     <th>应用分类</th><th v-if="currentRole==='platform_admin'">应用类型</th><th>应用属性</th><th>适用机构</th><th>学段</th><th>状态</th><th>操作</th>
                   </tr>
                 </thead>
@@ -1161,6 +1161,12 @@
                     </el-radio-group>
                   </span>
                 </div>
+                <div v-if="currentRole==='tenant_admin' && tenantOrgType==='school'" style="margin-bottom:16px;padding:10px 12px;background:#f6f9ff;border:1px solid #dbe7ff;border-radius:8px;font-size:13px;color:var(--shell-primary);">
+                  学校管理员上架：不展示范围选择，默认上架范围即本校。
+                </div>
+                <div v-if="currentShelfRecord && currentShelfRecord.sharedFrom" style="margin-bottom:16px;padding:10px 12px;background:#fff7e6;border:1px solid #ffe7ba;border-radius:8px;font-size:13px;color:#ad6800;">
+                  该应用由【{{ currentShelfRecord.sharedFrom }}】分享过来，上架时不展示分享范围，被分享过来的应用不可再被分享给其他机构。
+                </div>
                 <el-form>
                   <div style="display:flex;flex-direction:column;align-items:flex-start;width:100%;">
                     <!-- 范围选择：桂教通超级管理员、非学校的机构管理员 时展示；学校机构不展示（无范围选择） -->
@@ -1183,8 +1189,11 @@
                         </el-select>
                       </el-form-item>
                     </template>
-                    <!-- 机构管理员：分享范围 + 其他机构 -->
-                    <template v-if="currentRole==='tenant_admin'">
+                    <div style="width:100%;margin-bottom:16px;padding:10px 12px;background:#f6f9ff;border:1px solid #dbe7ff;border-radius:8px;font-size:12px;color:var(--shell-primary);">
+                      上架范围为动态引用：机构/标签/范围增删后，已上架应用的上架范围自动同步更新；仅范围外机构不可见该应用，已安装应用不卸载，无需重新上架、无需重新审核。
+                    </div>
+                    <!-- 机构管理员：分享范围 + 其他机构（分享来源应用不展示分享范围） -->
+                    <template v-if="currentRole==='tenant_admin' && !(currentShelfRecord && currentShelfRecord.sharedFrom)">
                       <el-form-item label="分享范围" :required="tenantOrgType==='school'" style="width:50%;padding:0 8px;">
                         <el-checkbox-group v-model="shelfConfig.shareScope">
                           <el-checkbox value="guide">桂教通平台</el-checkbox>
@@ -1247,7 +1256,7 @@
                       <td><el-tag size="small" :type="z.status==='enabled'?'success':'danger'">{{ z.status==='enabled'?'启用':'停用' }}</el-tag></td>
                       <td>
                         <el-button text size="small" @click="onEditZone(z)">编辑</el-button>
-                        <el-button text size="small" style="color:#f56c6c;" v-if="z.status==='disabled'" @click="onDeleteZone(i)">删除</el-button>
+                        <el-button text size="small" style="color:#f56c6c;" v-if="z.status==='disabled' && !z.referenced" @click="onDeleteZone(i)">删除</el-button>
                         <el-button text size="small" v-if="z.status!=='disabled'" style="margin-left:4px;" @click="onToggleZone(i)">停用</el-button>
                         <el-button text size="small" v-else style="margin-left:4px;" @click="onToggleZone(i)">启用</el-button>
                       </td>
@@ -1296,7 +1305,10 @@
                   </el-form-item>
                   <el-button type="primary" size="small" @click="onSearchZoneDetail">查询</el-button>
                   <el-button size="small" @click="onResetZoneDetail">重置</el-button>
-                  <el-button size="small" type="success" @click="onSyncZoneOrgs">同步范围机构</el-button>
+                  <el-button size="small" type="primary" @click="onSyncZoneOrgs">同步范围机构</el-button>
+                </div>
+                <div style="margin-bottom:12px;padding:8px 12px;background:#f6f9ff;border:1px solid #dbe7ff;border-radius:6px;font-size:12px;color:var(--shell-primary);">
+                  范围机构列表为动态解析结果：机构新增/删除后，通过「同步范围机构」自动补齐/移除，使用该范围的应用上架范围同步更新。
                 </div>
                 <table class="data-table">
                   <thead><tr><th>机构名称</th><th>机构 ID</th><th>机构类型</th></tr></thead>
@@ -1659,7 +1671,8 @@
                     <td><el-tag size="small" type="info">{{ tag.zoneCount }}</el-tag></td>
                     <td>
                       <el-button text size="small" @click="onEditTag(tag)">修改</el-button>
-                      <el-button text size="small" style="color:#f56c6c;" @click="onDeleteTag(i)">删除</el-button>
+                      <el-button v-if="!tag.zoneCount" text size="small" style="color:#f56c6c;" @click="onDeleteTag(i)">删除</el-button>
+                      <span v-else title="被范围引用，不可删除" style="color:var(--shell-text-secondary);font-size:12px;cursor:not-allowed;">删除</span>
                     </td>
                   </tr>
                 </tbody>
@@ -1696,6 +1709,10 @@
                   </el-form-item>
                   <el-button type="primary" size="small" @click="onSearchTagDetail">查询</el-button>
                   <el-button size="small" @click="onResetTagDetail">重置</el-button>
+                  <el-button size="small" type="primary" @click="onSyncTagOrgs">同步标签机构</el-button>
+                </div>
+                <div style="margin-bottom:12px;padding:8px 12px;background:#f6f9ff;border:1px solid #dbe7ff;border-radius:6px;font-size:12px;color:var(--shell-primary);">
+                  标签机构列表为动态解析结果：机构新增/删除后，通过「同步标签机构」自动补齐/移除，引用该标签的范围及应用上架范围自动同步更新。
                 </div>
                 <table class="data-table">
                   <thead><tr><th>机构名称</th><th>机构 ID</th><th>机构类型</th></tr></thead>
@@ -1781,11 +1798,15 @@
                 <span style="flex:1"></span><el-button size="small" @click="onExportStats">导出</el-button>
               </div>
 
+              <div style="margin-bottom:14px;padding:10px 12px;background:#f6f9ff;border:1px solid #dbe7ff;border-radius:8px;font-size:12px;color:var(--shell-primary);">
+                统计口径：{{ currentRole==='platform_admin' ? '桂教通超级管理员 · 全平台数据（含平台应用和平台管理的机构应用，独立机构应用不计入）' : '机构管理员 · 本机构数据（本机构创建/管理的应用及本机构范围内使用数据，导出仅限本机构范围）' }}
+              </div>
+
               <div class="stat-cards">
-                <div class="stat-card"><div class="num">268</div><div class="label">应用安装数<span style="font-size:11px;color:#a1a7b3;display:block;margin-top:2px;">累计至当前</span></div></div>
-                <div class="stat-card"><div class="num">56</div><div class="label">平台应用数<span style="font-size:11px;color:#a1a7b3;display:block;margin-top:2px;">累计至当前</span></div></div>
-                <div class="stat-card"><div class="num">34</div><div class="label">活跃应用数</div></div>
-                <div class="stat-card"><div class="num">1,280</div><div class="label">应用使用人数</div></div>
+                <div class="stat-card"><div class="num">{{ currentRole==='platform_admin' ? '268' : '86' }}</div><div class="label">应用安装数<span style="font-size:11px;color:#a1a7b3;display:block;margin-top:2px;">累计至当前</span></div></div>
+                <div class="stat-card"><div class="num">{{ currentRole==='platform_admin' ? '56' : '12' }}</div><div class="label">{{ currentRole==='platform_admin' ? '平台应用数' : '本机构应用数' }}<span style="font-size:11px;color:#a1a7b3;display:block;margin-top:2px;">累计至当前</span></div></div>
+                <div class="stat-card"><div class="num">{{ currentRole==='platform_admin' ? '34' : '12' }}</div><div class="label">活跃应用数</div></div>
+                <div class="stat-card"><div class="num">{{ currentRole==='platform_admin' ? '1,280' : '540' }}</div><div class="label">应用使用人数</div></div>
               </div>
 
               <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;">
@@ -1813,7 +1834,7 @@
                   </svg>
                 </div>
                 <div class="page-card">
-                  <div class="page-section-title">平台分类统计</div>
+                  <div class="page-section-title">{{ currentRole==='platform_admin' ? '平台分类统计' : '本机构应用分类统计' }}</div>
                   <div style="display:flex;align-items:center;gap:16px;padding:8px 0;">
                     <svg viewBox="0 0 200 200" style="width:140px;height:140px;flex-shrink:0;">
                       <circle cx="100" cy="100" r="80" fill="none" stroke="#eef2f7" stroke-width="32" />
@@ -1822,7 +1843,7 @@
                       <circle cx="100" cy="100" r="80" fill="none" stroke="#f5a623" stroke-width="32" stroke-dasharray="76 578" stroke-dashoffset="-252" transform="rotate(-90 100 100)" />
                       <circle cx="100" cy="100" r="80" fill="none" stroke="#52c41a" stroke-width="32" stroke-dasharray="50 604" stroke-dashoffset="-328" transform="rotate(-90 100 100)" />
                       <circle cx="100" cy="100" r="80" fill="none" stroke="#f56c6c" stroke-width="32" stroke-dasharray="25 629" stroke-dashoffset="-378" transform="rotate(-90 100 100)" />
-                      <text x="100" y="95" text-anchor="middle" font-size="28" font-weight="700" fill="#1f2329">56</text>
+                      <text x="100" y="95" text-anchor="middle" font-size="28" font-weight="700" fill="#1f2329">{{ currentRole==='platform_admin' ? '56' : '12' }}</text>
                       <text x="100" y="118" text-anchor="middle" font-size="12" fill="#86909c">应用总数</text>
                     </svg>
                     <div style="flex:1;display:flex;flex-direction:column;gap:8px;font-size:12px;">
@@ -1841,7 +1862,7 @@
                       <circle cx="100" cy="100" r="80" fill="none" stroke="#eef2f7" stroke-width="32" />
                       <circle cx="100" cy="100" r="80" fill="none" stroke="#52c41a" stroke-width="32" stroke-dasharray="301 377" stroke-dashoffset="0" transform="rotate(-90 100 100)" />
                       <circle cx="100" cy="100" r="80" fill="none" stroke="#f56c6c" stroke-width="32" stroke-dasharray="126 552" stroke-dashoffset="-301" transform="rotate(-90 100 100)" />
-                      <text x="100" y="95" text-anchor="middle" font-size="28" font-weight="700" fill="#1f2329">34</text>
+                      <text x="100" y="95" text-anchor="middle" font-size="28" font-weight="700" fill="#1f2329">{{ currentRole==='platform_admin' ? '34' : '12' }}</text>
                       <text x="100" y="118" text-anchor="middle" font-size="12" fill="#86909c">应用总数</text>
                     </svg>
                     <div style="flex:1;display:flex;flex-direction:column;gap:12px;font-size:12px;">
@@ -2959,7 +2980,7 @@
             { name:'南宁市教育范围', id:'ZN-001', scopeType:'按教育机构', summary:'南宁市教育局及下属区县', time:'2026-07-01', creator:'张明', status:'enabled' },
             { name:'自治区直属范围', id:'ZN-002', scopeType:'自定义', summary:'自治区直属学校', time:'2026-07-03', creator:'张明', status:'enabled' },
             { name:'青秀区教育范围', id:'ZN-003', scopeType:'按教育机构', summary:'青秀区各中小学', time:'2026-07-05', creator:'李芳', status:'enabled' },
-            { name:'兴宁区教育范围', id:'ZN-004', scopeType:'自定义', summary:'兴宁区直属学校', time:'2026-07-06', creator:'王强', status:'disabled' },
+            { name:'兴宁区教育范围', id:'ZN-004', scopeType:'自定义', summary:'兴宁区直属学校', time:'2026-07-06', creator:'王强', status:'disabled', referenced:true },
             { name:'江南区教育范围', id:'ZN-005', scopeType:'按标签', summary:'江南区各类学校', time:'2026-07-08', creator:'刘芳', status:'enabled' },
             { name:'教学工具范围', id:'ZN-006', scopeType:'自定义', summary:'通用教学工具应用', time:'2026-07-10', creator:'陈丽', status:'enabled' },
             { name:'家校互联范围', id:'ZN-007', scopeType:'自定义', summary:'家校沟通类应用', time:'2026-07-12', creator:'杨明', status:'disabled' },
@@ -3013,6 +3034,7 @@
             page: 1,
             pageSize: 10,
             searched: false,
+            scopeOrgIds: [], // 当前标签实际包含的机构 ID（成员关系，区别于完整机构池 zoneOrgPool）
           },
           // 机构数据池（模拟当前范围覆盖的机构）
           zoneOrgPool: [
@@ -3187,6 +3209,7 @@
             { initial:'家', name:'家校互动', cat:'校园办公', dev:'南宁市教育局', zoneList:['南宁市教育局'], time:'2026-07-19', status:'unlisted', source:'南宁市教育局', type:'原生应用', native_type:'自建应用', appTypeLabel:'非平台应用' },
             { initial:'选', name:'选课系统', cat:'教务管理', dev:'自治区教育厅', zoneList:['广西壮族自治区教育厅'], time:'2026-07-20', status:'listed', source:'南宁市教育局', type:'生态应用', native_type:'', appTypeLabel:'非平台应用' },
             { initial:'电', name:'电子班牌', cat:'教学管理', dev:'自治区教育厅', zoneList:['广西壮族自治区教育厅'], time:'2026-07-21', status:'listed', source:'南宁市教育局', type:'原生应用', native_type:'自建应用', appTypeLabel:'非平台应用' },
+            { initial:'智', name:'智慧课堂', cat:'教学管理', dev:'柳州市高级中学', zoneList:['—'], time:'2026-07-22', status:'unlisted', source:'柳州市高级中学', sharedFrom:'柳州市高级中学', type:'原生应用', native_type:'低代码应用', appTypeLabel:'平台应用' },
           ],
           // 应用分享管理：当前机构分享给其他机构 / 桂教通平台的应用（shareScope 记录上架时的分享范围）
           shareList: [
@@ -3398,7 +3421,7 @@
             { name:'南宁市第五中学', id:'ORG-007', type:'学校', city:'南宁市', installStatus:'uninstalled', failReason:'' },
             { name:'南宁市江南区教育局', id:'ORG-008', type:'教育局机构', city:'南宁市', installStatus:'uninstalled', failReason:'' },
             { name:'南宁市第六中学', id:'ORG-009', type:'学校', city:'南宁市', installStatus:'installed', failReason:'' },
-            { name:'南宁市西乡塘区教育局', id:'ORG-010', type:'教育局机构', city:'南宁市', installStatus:'failed', failReason:'低代码平台安装失败：租户配额已满' },
+            { name:'南宁市西乡塘区教育局', id:'ORG-010', type:'教育局机构', city:'南宁市', installStatus:'failed', failReason:'低代码平台安装失败：机构配额已满' },
           ],
           currentRole: 'tenant_admin',
           tenantOrgs: [
@@ -4132,15 +4155,15 @@
         },
         onForceDelist(a) {
           this.$confirm(
-            `确定要强制下架【${a.name}】吗？下架后该应用在【${a.tenantName}】的上架列表将变为未上架状态，已安装的应用不会被卸载。`,
+            `确定要强制下架【${a.name}】吗？下架后该应用在【${a.tenantName}】的上架列表将变为已下架状态，已安装的应用不卸载。`,
             '强制下架确认',
             { confirmButtonText: '确认强制下架', cancelButtonText: '取消', type: 'warning' }
           ).then(() => {
             const idx = this.platformAppList.indexOf(a);
             if (idx > -1) this.platformAppList.splice(idx, 1);
             const target = this.shelfList.find(s => s.name === a.name);
-            if (target) target.status = 'unlisted';
-            this.$message.success(`已强制下架：${a.name}（对应租户看到状态为"未上架"）`);
+            if (target) target.status = 'dismissed';
+            this.$message.success(`已强制下架：${a.name}（对应机构看到状态为"已下架"）`);
           }).catch(() => {});
         },
         onCrossTenantChange() {
@@ -4213,11 +4236,16 @@
           this.goPage('P08');
         },
         onSaveZone() {
-          const msg = this.zoneEditId ? '范围编辑成功' : '范围创建成功';
+          const msg = this.zoneEditId ? '范围编辑成功，使用该范围的应用上架范围已同步更新' : '范围创建成功';
           this.$message.success(msg);
           this.goPage('P07');
         },
         onDeleteZone(i) {
+          const z = this.customZones[i];
+          if (z.referenced) {
+            this.$message.warning('该范围已被应用的上架范围引用，不可删除');
+            return;
+          }
           this.$confirm('数据删除后，无法找回，请确认是否继续删除？', '提示', { confirmButtonText:'确认删除', cancelButtonText:'取消', type:'warning' }).then(() => {
             this.customZones.splice(i,1);
             this.$message.success('已删除');
@@ -4296,6 +4324,8 @@
           this.tagDetail.name = tag.name;
           this.tagDetail.query = { name: '', type: '', id: '' };
           this.tagDetail.page = 1;
+          // 模拟进入标签时仅包含部分机构（用于演示「同步标签机构」自动补足）
+          this.tagDetail.scopeOrgIds = this.zoneOrgPool.slice(0, 12).map(o => o.id);
           this.queryTagOrgs();
           this.currentPage = 'P12a';
         },
@@ -4305,10 +4335,11 @@
           const type = d.query.type;
           const id = (d.query.id || '').trim().toLowerCase();
           const matched = this.zoneOrgPool.filter(o => {
+            const inScope = d.scopeOrgIds.includes(o.id); // 仅展示当前标签已包含的机构
             const okName = !name || o.name.toLowerCase().includes(name);
             const okType = !type || o.type === type;
             const okId = !id || o.id.toLowerCase().includes(id);
-            return okName && okType && okId;
+            return inScope && okName && okType && okId;
           });
           d.total = matched.length;
           const start = (d.page - 1) * d.pageSize;
@@ -4327,6 +4358,21 @@
         onTagDetailPageChange(p) {
           this.tagDetail.page = p;
           this.queryTagOrgs();
+        },
+        onSyncTagOrgs() {
+          const d = this.tagDetail;
+          // 模拟后端校验：当前标签是否已包含全部机构
+          const allIds = this.zoneOrgPool.map(o => o.id);
+          const missing = allIds.filter(id => !d.scopeOrgIds.includes(id));
+          if (missing.length === 0) {
+            this.$message.success('当前标签机构已完整，无需同步');
+            return;
+          }
+          // 后端自动补足遗漏机构
+          d.scopeOrgIds = allIds.slice();
+          d.page = 1;
+          this.queryTagOrgs();
+          this.$message.success('已同步标签机构，自动补足 ' + missing.length + ' 个机构');
         },
         hasPendingReview(app) {
           if (!app) return false;
@@ -4356,8 +4402,16 @@
             this.goPage('P04');
             return;
           }
-          // 学校机构：无范围选择，仅分享范围（必填）；记录在桂教通超管/对应机构的应用上架管理界面新增（未上架）
+          // 学校机构：无范围选择，默认上架范围即本校；分享范围（必填）仅本机构应用展示，分享来源应用不可再被分享给其他机构
           if (this.currentRole === 'tenant_admin' && this.tenantOrgType === 'school') {
+            // 分享来源应用：无分享范围，默认上架范围即本校
+            if (a.sharedFrom) {
+              a.zoneList = ['本校'];
+              a.status = 'listed';
+              this.$message.success('已上架到本校（分享来源应用不可再被分享给其他机构）');
+              this.goPage('P04');
+              return;
+            }
             if (this.shelfConfig.shareScope.length === 0) { this.$message.warning('请至少选择一个分享范围'); return; }
             if (this.shelfConfig.shareScope.includes('other') && this.shelfConfig.targetOrgs.length === 0) { this.$message.warning('请选择其他机构'); return; }
             const targets = [];
@@ -4538,7 +4592,7 @@
             const tag = this.tagList.find(t => t.id === this.tagEditId);
             if (tag) { tag.name = this.tagForm.name; tag.tagType = this.tagForm.tagType; tag.scope = scope; }
           }
-          this.$message.success('保存成功');
+          this.$message.success(this.tagEditId ? '保存成功，引用该标签的范围及应用上架范围已同步更新' : '保存成功');
           this.goPage('P12');
         },
         onDeleteTag(i) {
