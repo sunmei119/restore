@@ -556,7 +556,7 @@
                   </tr>
                 </tbody>
               </table>
-              <div class="pagination-bar">共 10 条 第 1/1 页<el-button text size="small">上一页</el-button><el-button text size="small">下一页</el-button></div>
+              <div class="pagination-bar">共 11 条 第 1/1 页<el-button text size="small">上一页</el-button><el-button text size="small">下一页</el-button></div>
             </div>
 
             <!-- ===== P02 应用申请编辑页（新增/编辑） ===== -->
@@ -853,21 +853,16 @@
                         </el-radio-group>
                       </el-form-item>
                       <el-form-item label="跨机构层级" required v-if="currentAppIsLowcode && currentRole==='platform_admin' && shelfConfig.crossTenant==='yes'" style="width:50%;padding:0 8px;">
-                        <el-radio-group v-model="shelfConfig.crossLevel">
+                        <el-radio-group v-model="shelfConfig.crossLevel" @change="onCrossLevelChange">
                           <el-radio value="hall">厅</el-radio>
                           <el-radio value="city">市</el-radio>
                           <el-radio value="district">区县</el-radio>
                         </el-radio-group>
                       </el-form-item>
                       <el-form-item label="所属机构" required v-if="currentAppIsLowcode && currentRole==='platform_admin' && shelfConfig.crossTenant==='yes'" style="width:50%;padding:0 8px;">
-                        <div style="display:flex;align-items:center;gap:8px;width:100%;">
-                          <el-select v-model="shelfConfig.targetTenant" filterable placeholder="搜索并选择机构" style="flex:1;">
-                            <el-option label="南宁市教育局" value="t-nnedu"></el-option>
-                            <el-option label="柳州市教育局" value="t-lzedu"></el-option>
-                            <el-option label="桂林市教育局" value="t-gledu"></el-option>
-                          </el-select>
-                          <el-button @click="onOpenTenantPicker">添加</el-button>
-                        </div>
+                        <el-select v-model="shelfConfig.targetTenant" multiple filterable remote :remote-method="onTargetTenantSearch" :loading="targetTenantSearching" placeholder="输入机构名称模糊搜索（最多 50 条，可多选）" style="width:100%;">
+                          <el-option v-for="o in targetTenantOptions" :key="o.value" :label="o.label" :value="o.value"></el-option>
+                        </el-select>
                       </el-form-item>
                       <template v-if="!currentAppIsLowcode">
                         <el-form-item label="收费方式" required style="width:50%;padding:0 8px;">
@@ -906,18 +901,6 @@
                     <el-checkbox v-model="shelfConfig.agreePromise">我已仔细阅读并完全同意<a style="color:var(--shell-primary);cursor:pointer;" @click.stop="showPromiseDialog=true">应用免责声明及上架承诺书</a>，自愿承担一切相关法律责任。</el-checkbox>
                   </div>
 
-                  <el-dialog title="选择机构" v-model="tenantPickerVisible" width="480px">
-                    <div v-if="tenantPickerOptions.length <= 10" style="display:flex;flex-direction:column;gap:8px;">
-                      <div v-for="o in tenantPickerOptions" :key="o" @click="onPickTenant(o)" style="padding:10px 12px;border:1px solid var(--shell-line);border-radius:6px;cursor:pointer;font-size:13px;" onmouseover="this.style.borderColor='#2f7df6'" onmouseout="this.style.borderColor='var(--shell-line)'">{{ o }}</div>
-                    </div>
-                    <el-select v-else v-model="pickerTemp" filterable placeholder="请选择机构（共 {{ tenantPickerOptions.length }} 个）" style="width:100%;">
-                      <el-option v-for="o in tenantPickerOptions" :key="o" :label="o" :value="o"></el-option>
-                    </el-select>
-                    <template #footer>
-                      <el-button v-if="tenantPickerOptions.length > 10" type="primary" @click="onPickTenant(pickerTemp)">确定</el-button>
-                      <el-button @click="tenantPickerVisible=false">关闭</el-button>
-                    </template>
-                  </el-dialog>
                 </div>
 
                 <div style="display:flex;gap:16px;justify-content:center;margin-top:24px;padding-top:16px;border-top:1px solid var(--shell-line);">
@@ -963,7 +946,7 @@
                   </tr>
                 </tbody>
               </table>
-              <div class="pagination-bar">共 10 条 第 1/1 页</div>
+              <div class="pagination-bar">共 12 条 第 1/1 页</div>
                 </el-tab-pane>
 
                 <!-- Tab 2：应用分享管理（当前机构分享给其他机构 / 桂教通平台的应用） -->
@@ -1179,7 +1162,7 @@
                       </el-form-item>
                       <el-form-item v-if="shelfConfig.scopeType==='all'" style="width:50%;padding:0 8px;font-size:12px;color:var(--shell-text-secondary);">
                         <span v-if="currentRole==='platform_admin'">全平台指的是所有机构和学校</span>
-                        <span v-else>上架到当前机构及所有下级机构</span>
+                        <span v-else>上架到当前机构及所有下级机构，并自动安装到应用中心</span>
                       </el-form-item>
                       <el-form-item v-if="shelfConfig.scopeType==='zone'" style="width:50%;padding:0 8px;">
                         <el-select v-model="shelfConfig.selectedZones" multiple filterable placeholder="搜索并选择范围（数据来源：本机构上架范围管理）" style="width:100%;">
@@ -1189,9 +1172,7 @@
                         </el-select>
                       </el-form-item>
                     </template>
-                    <div style="width:100%;margin-bottom:16px;padding:10px 12px;background:#f6f9ff;border:1px solid #dbe7ff;border-radius:8px;font-size:12px;color:var(--shell-primary);">
-                      上架范围为动态引用：机构/标签/范围增删后，已上架应用的上架范围自动同步更新；仅范围外机构不可见该应用，已安装应用不卸载，无需重新上架、无需重新审核。
-                    </div>
+      
                     <!-- 机构管理员：分享范围 + 其他机构（分享来源应用不展示分享范围） -->
                     <template v-if="currentRole==='tenant_admin' && !(currentShelfRecord && currentShelfRecord.sharedFrom)">
                       <el-form-item label="分享范围" :required="tenantOrgType==='school'" style="width:50%;padding:0 8px;">
@@ -1212,12 +1193,12 @@
                 </el-form>
 
                 <div style="margin-top:16px;padding:16px;background:#fafcff;border-radius:8px;border:1px solid #eef2f7;">
-                  我已仔细阅读并完全同意<a style="color:var(--shell-primary);cursor:pointer;" @click.stop="showPromiseDialog=true">应用免责声明及上架承诺书</a>，自愿承担一切相关法律责任。
+                  <el-checkbox v-model="shelfConfig.agreePromise">我已仔细阅读并完全同意<a style="color:var(--shell-primary);cursor:pointer;" @click.stop="showPromiseDialog=true">应用免责声明及上架承诺书</a>，自愿承担一切相关法律责任。</el-checkbox>
                 </div>
 
                 <div style="display:flex;gap:16px;justify-content:center;margin-top:24px;padding-top:16px;border-top:1px solid var(--shell-line);">
                   <el-button @click="goPage('P04')">取消</el-button>
-                  <el-button type="primary" @click="onConfirmShelf">确认上架</el-button>
+                  <el-button type="primary" :disabled="!shelfConfig.agreePromise" @click="onConfirmShelf">确认上架</el-button>
                 </div>
               </el-card>
             </div>
@@ -1795,16 +1776,11 @@
                   <el-radio-button value="year">本年</el-radio-button>
                 </el-radio-group>
                 <span style="font-size:12px;color:var(--shell-text-secondary);margin-left:12px;" v-if="statsTimeDesc">{{ statsTimeDesc }}</span>
-                <span style="flex:1"></span><el-button size="small" @click="onExportStats">导出</el-button>
+                <span style="flex:1"></span><el-button size="small" @click="onRefreshStats">刷新</el-button><el-button size="small" @click="onExportStats">导出</el-button>
               </div>
-
-              <div style="margin-bottom:14px;padding:10px 12px;background:#f6f9ff;border:1px solid #dbe7ff;border-radius:8px;font-size:12px;color:var(--shell-primary);">
-                统计口径：{{ currentRole==='platform_admin' ? '桂教通超级管理员 · 全平台数据（含平台应用和平台管理的机构应用，独立机构应用不计入）' : '机构管理员 · 本机构数据（本机构创建/管理的应用及本机构范围内使用数据，导出仅限本机构范围）' }}
-              </div>
-
               <div class="stat-cards">
                 <div class="stat-card"><div class="num">{{ currentRole==='platform_admin' ? '268' : '86' }}</div><div class="label">应用安装数<span style="font-size:11px;color:#a1a7b3;display:block;margin-top:2px;">累计至当前</span></div></div>
-                <div class="stat-card"><div class="num">{{ currentRole==='platform_admin' ? '56' : '12' }}</div><div class="label">{{ currentRole==='platform_admin' ? '平台应用数' : '本机构应用数' }}<span style="font-size:11px;color:#a1a7b3;display:block;margin-top:2px;">累计至当前</span></div></div>
+                <div class="stat-card"><div class="num">{{ currentRole==='platform_admin' ? '56' : '12' }}</div><div class="label">{{ currentRole==='platform_admin' ? '平台应用数' : '机构应用数' }}<span style="font-size:11px;color:#a1a7b3;display:block;margin-top:2px;">累计至当前</span></div></div>
                 <div class="stat-card"><div class="num">{{ currentRole==='platform_admin' ? '34' : '12' }}</div><div class="label">活跃应用数</div></div>
                 <div class="stat-card"><div class="num">{{ currentRole==='platform_admin' ? '1,280' : '540' }}</div><div class="label">应用使用人数</div></div>
               </div>
@@ -2016,7 +1992,6 @@
 
                 <!-- 详情视图 -->
                 <template v-else-if="serviceView === 'detail'">
-                  <div class="app-detail-back" @click="serviceView='list'"><el-icon><ArrowLeft /></el-icon> 返回教育服务中心</div>
                   <div class="app-detail-head">
                     <div class="app-detail-logo" :style="{ background: currentAppDetail.gradient }">{{ currentAppDetail.initial }}</div>
                     <div class="app-detail-info">
@@ -2172,6 +2147,7 @@
                           </div>
                           <div class="checkout-qr-desc">请使用微信扫描上方二维码完成付款</div>
                           <div class="checkout-qr-timer">二维码有效期：{{ payTimeLeftText }}</div>
+                          <div style="margin-top:8px;font-size:12px;color:var(--shell-text-secondary);line-height:1.6;">支付结果同步：手机支付完成后惠缴费将回调平台确认，本页面每 3 秒自动查询一次支付状态，支付成功即自动提示「支付成功」，无需手动刷新。</div>
                           <div class="checkout-pay-actions">
                             <el-button plain size="default" @click="cancelOrder">取消订单</el-button>
                             <el-button type="success" size="default" @click="refreshQr">刷新二维码</el-button>
@@ -2453,6 +2429,7 @@
                         <div class="my-order-product">{{ o.product }}</div>
                         <div class="my-order-price">¥{{ o.price.toFixed(2) }} × {{ o.qty }}</div>
                       </div>
+                      <el-button v-if="canPayOrder(o)" type="warning" class="my-order-detail-btn" @click="payMyOrder(o)">支付</el-button>
                       <el-button type="primary" class="my-order-detail-btn" @click="openMyOrderDetail(o)">订单详情</el-button>
                     </div>
                   </div>
@@ -2461,8 +2438,10 @@
 
               <!-- 订单详情 -->
               <div v-if="myOrderView === 'detail'" class="my-order-detail">
-                <el-button type="primary" class="my-order-back" @click="backMyOrder">&lt;&lt; 返回订单列表</el-button>
                 <div class="my-order-detail-title">订单详细信息</div>
+                <div v-if="canPayOrder(currentMyOrder)" style="display:flex;justify-content:flex-end;margin:-4px 0 12px;">
+                  <el-button type="warning" @click="payMyOrder(currentMyOrder)">支付</el-button>
+                </div>
                 <div class="my-order-section">
                   <div class="my-order-section-title">订单信息</div>
                   <div class="my-order-section-body my-order-info-grid">
@@ -2474,16 +2453,15 @@
                   </div>
                 </div>
                 <div class="my-order-section">
-                  <div class="my-order-section-title">商品套餐</div>
-                  <el-table :data="[currentMyOrder]" class="my-order-table" border>
-                    <el-table-column prop="appName" label="应用名称" />
-                    <el-table-column prop="combo" label="套餐名称" />
-                    <el-table-column label="价格"><template #default="scope">¥{{ scope.row.price.toFixed(2) }}</template></el-table-column>
-                    <el-table-column prop="buyType" label="购买类型" />
-                    <el-table-column prop="qty" label="数量" />
-                    <el-table-column label="实付金额"><template #default="scope">¥{{ scope.row.total.toFixed(2) }}</template></el-table-column>
-                    <el-table-column label="总计"><template #default="scope">¥{{ scope.row.total.toFixed(2) }}</template></el-table-column>
-                  </el-table>
+                  <div class="my-order-section-title">商品信息</div>
+                  <div class="my-order-section-body my-order-invoice">
+                    <div class="my-order-field"><span class="label">应用名称：</span><span class="value">{{ currentMyOrder.appName }}</span></div>
+                    <div class="my-order-field"><span class="label">套餐名称：</span><span class="value">{{ currentMyOrder.combo }}</span></div>
+                    <div class="my-order-field"><span class="label">价格：</span><span class="value">¥{{ currentMyOrder.price.toFixed(2) }}</span></div>
+                    <div class="my-order-field"><span class="label">购买类型：</span><span class="value">{{ currentMyOrder.buyType }}</span></div>
+                    <div class="my-order-field"><span class="label">数量：</span><span class="value">{{ currentMyOrder.qty }}</span></div>
+                    <div class="my-order-field"><span class="label">实付金额：</span><span class="value">¥{{ currentMyOrder.total.toFixed(2) }}</span></div>
+                  </div>
                 </div>
                 <div class="my-order-section">
                   <div class="my-order-section-title">发票信息</div>
@@ -2506,7 +2484,7 @@
                 <input type="text" v-model="orderFilter.id" placeholder="" style="width:160px;height:28px;border:1px solid var(--shell-line);border-radius:4px;padding:0 8px;font-size:13px;outline:none;">
                 <span style="font-size:13px;color:var(--shell-text-secondary);white-space:nowrap;margin-left:4px;">套餐名称:</span>
                 <input type="text" v-model="orderFilter.name" placeholder="" style="width:160px;height:28px;border:1px solid var(--shell-line);border-radius:4px;padding:0 8px;font-size:13px;outline:none;">
-                <span style="font-size:13px;color:var(--shell-text-secondary);white-space:nowrap;margin-left:4px;">套餐类型:</span>
+                <span style="font-size:13px;color:var(--shell-text-secondary);white-space:nowrap;margin-left:4px;">业务套餐:</span>
                 <el-select v-model="orderFilter.bizType" placeholder="" style="width:130px;" size="small">
                   <el-option label="全部" value=""></el-option>
                   <el-option v-for="t in pkgTypes" :key="t" :label="t" :value="t"></el-option>
@@ -2519,7 +2497,7 @@
               </div>
               <div style="overflow-x:auto;">
                 <table class="data-table" style="min-width:1500px;">
-                  <thead><tr><th>订单 ID</th><th>授权方式</th><th>套餐名称</th><th>使用范围</th><th>套餐类型</th><th>有效期/天</th><th>分配大小</th><th>所属机构</th><th>购买用户 ID</th><th>到期时间</th><th>订单接收时间</th><th>授权状态</th><th>授权状态描述</th><th>操作</th></tr></thead>
+                  <thead><tr><th>订单 ID</th><th>授权方式</th><th>套餐名称</th><th>使用范围</th><th>业务套餐</th><th>有效期/天</th><th>分配大小</th><th>所属机构</th><th>购买用户 ID</th><th>到期时间</th><th>订单接收时间</th><th>授权状态</th><th>授权状态描述</th><th>操作</th></tr></thead>
                   <tbody>
                     <tr v-for="(o,i) in filteredOrderList" :key="i">
                       <td>{{ o.id }}</td>
@@ -2533,11 +2511,12 @@
                       <td>{{ o.userId }}</td>
                       <td>{{ o.expireTime }}</td>
                       <td>{{ o.receiveTime }}</td>
-                      <td><el-tag size="small" :type="o.authStatus==='authorized'?'success':'info'">{{ o.authStatus==='authorized'?'授权成功':'未授权' }}</el-tag></td>
+                      <td><el-tag size="small" :type="o.authStatus==='authorized'?'success':(o.authStatus==='failed'?'danger':'info')">{{ o.authStatus==='authorized'?'授权成功':(o.authStatus==='failed'?'授权失败':'未授权') }}</el-tag></td>
                       <td><span style="font-size:13px;color:var(--shell-text-secondary);">{{ o.authDesc || '—' }}</span></td>
                       <td style="white-space:nowrap;">
                         <el-button text size="small" v-if="o.authMode==='手动' && o.authStatus!=='authorized'" @click="onAuthorize(o)">授权</el-button>
                         <el-button text size="small" style="color:#f56c6c;" v-if="o.authMode==='手动' && o.authStatus==='authorized'" @click="onCancelAuthorize(o)">取消授权</el-button>
+                        <el-button text size="small" style="color:#409eff;" v-if="o.authMode==='自动' && o.authStatus==='failed'" @click="onManualAuthorize(o)">手动授权</el-button>
                       </td>
                     </tr>
                   </tbody>
@@ -2555,13 +2534,13 @@
                       <el-radio value="手动">手动</el-radio>
                     </el-radio-group>
                   </el-form-item>
-                  <el-form-item label="套餐类型" required>
-                    <el-select v-model="authForm.bizType" placeholder="请选择套餐类型" style="width:100%;" @change="onAuthBizTypeChange">
+                  <el-form-item label="业务套餐" required>
+                    <el-select v-model="authForm.bizType" placeholder="请选择业务套餐" style="width:100%;" @change="onAuthBizTypeChange">
                       <el-option v-for="t in pkgTypes" :key="t" :label="t" :value="t"></el-option>
                     </el-select>
                   </el-form-item>
                   <el-form-item label="套餐名称" required>
-                    <el-select v-model="authForm.pkgName" placeholder="请先选择套餐类型" style="width:100%;">
+                    <el-select v-model="authForm.pkgName" placeholder="请先选择业务套餐" style="width:100%;">
                       <el-option v-for="p in authPkgOptions" :key="p.name" :label="p.name" :value="p.name"></el-option>
                     </el-select>
                   </el-form-item>
@@ -2590,6 +2569,7 @@
                     <el-select v-model="authForm.authStatus" placeholder="请选择" style="width:100%;">
                       <el-option label="未授权" value="pending"></el-option>
                       <el-option label="授权成功" value="authorized"></el-option>
+                      <el-option label="授权失败" value="failed"></el-option>
                     </el-select>
                   </el-form-item>
                   <el-form-item label="授权状态描述">
@@ -2768,7 +2748,7 @@
                 <input type="text" v-model="pkgFilter.name" placeholder="" style="width:140px;height:28px;border:1px solid var(--shell-line);border-radius:4px;padding:0 8px;font-size:13px;outline:none;">
                 <span style="font-size:13px;color:var(--shell-text-secondary);white-space:nowrap;margin-left:4px;">套餐编码:</span>
                 <input type="text" v-model="pkgFilter.code" placeholder="" style="width:140px;height:28px;border:1px solid var(--shell-line);border-radius:4px;padding:0 8px;font-size:13px;outline:none;">
-                <span style="font-size:13px;color:var(--shell-text-secondary);white-space:nowrap;margin-left:4px;">套餐类型:</span>
+                <span style="font-size:13px;color:var(--shell-text-secondary);white-space:nowrap;margin-left:4px;">业务套餐:</span>
                 <el-select v-model="pkgFilter.type" placeholder="" style="width:150px;" size="small">
                   <el-option label="全部" value=""></el-option>
                   <el-option v-for="t in pkgTypes" :key="t" :label="t" :value="t"></el-option>
@@ -2780,7 +2760,7 @@
               </div>
               <div style="overflow-x:auto;">
                 <table class="data-table" style="min-width:1400px;">
-                  <thead><tr><th>序号</th><th>套餐类型</th><th>套餐编码</th><th>套餐名称</th><th>价格</th><th>适用应用范围</th><th>分配大小</th><th>计量单位</th><th>有效期(天)</th><th>基座套餐关联</th><th>是否手动开通业务</th><th>操作</th></tr></thead>
+                  <thead><tr><th>序号</th><th>业务套餐</th><th>套餐编码</th><th>套餐名称</th><th>价格</th><th>适用应用范围</th><th>分配大小</th><th>计量单位</th><th>有效期(天)</th><th>基座套餐关联</th><th>是否手动开通业务</th><th>操作</th></tr></thead>
                   <tbody>
                     <tr v-for="(p,i) in filteredPkgList" :key="i">
                       <td>{{ i + 1 }}</td>
@@ -2808,9 +2788,12 @@
             <div v-show="currentPage === 'P26e'" class="shell-workbench">
               <el-card class="shell-block-card" shadow="never">
                 <div style="margin-bottom:16px;font-weight:600;font-size:15px;">{{ pkgEditId ? '编辑套餐' : '新建套餐' }}</div>
+                <div v-if="pkgEditId" style="margin-bottom:14px;padding:10px 12px;background:#f6f9ff;border:1px solid #dbe7ff;border-radius:8px;font-size:12px;color:var(--shell-text-secondary);">
+                  编辑仅影响新购：套餐被引用（订单套餐授权/订单记录/试用套餐记录/其他套餐基座关联/应用上架配置引用）时仍可编辑，保存后仅对之后新产生的订单/授权/试用按新配置生效；历史订单沿用下单时的套餐快照（下单时套餐名称、价格、分配大小、计量单位、有效期已快照至订单），不受后续编辑影响。
+                </div>
                 <el-form>
                   <div style="display:flex;flex-direction:column;align-items:flex-start;width:100%;">
-                    <el-form-item label="套餐类型" :required="true" style="width:50%;padding:0 8px;">
+                    <el-form-item label="业务套餐" :required="true" style="width:50%;padding:0 8px;">
                       <el-select v-model="pkgForm.type" placeholder="请选择（数据字典）" style="width:100%;">
                         <el-option v-for="t in pkgTypes" :key="t" :label="t" :value="t"></el-option>
                       </el-select>
@@ -2825,7 +2808,7 @@
                       <el-input-number v-model="pkgForm.price" :min="0" :precision="2" :step="10" style="width:100%;" />
                     </el-form-item>
                     <el-form-item label="适用范围" style="width:50%;padding:0 8px;">
-                      <el-input v-model="pkgForm.scope" placeholder="请输入适用范围；套餐类型为应用使用授权、应用试用授权时填写应用ID" />
+                      <el-input v-model="pkgForm.scope" placeholder="请输入适用范围；业务套餐为应用使用授权、应用试用授权时填写应用ID" />
                     </el-form-item>
                     <el-form-item label="分配大小" :required="['短信充值','存储容量充值','TOKEN充值'].includes(pkgForm.type)" style="width:50%;padding:0 8px;">
                       <el-input v-model="pkgForm.allocSize" placeholder="如：10000" />
@@ -3143,11 +3126,11 @@
           currentMyOrder: null,
           myOrderSearch: '',
           myOrders: [
-            { id:'O202606172067171707009298433', status:'已关闭', time:'2026-06-17 17:05:17', product:'作业批改服务 一个月体验版', appName:'作业批改服务', combo:'一个月体验版', price:0.01, qty:1, total:0.01, buyType:'个人', payMethod:'—', payStatus:'未付款', remark:'无', invoiceType:'—', taxId:'—', invoiceTitle:'—', invoiceContent:'—', companyName:'—', email:'—', icon:'作' },
-            { id:'O202606172067168039660879873', status:'已关闭', time:'2026-06-17 16:50:42', product:'作业批改服务 一个月体验版', appName:'作业批改服务', combo:'一个月体验版', price:0.01, qty:1, total:0.01, buyType:'个人', payMethod:'—', payStatus:'未付款', remark:'无', invoiceType:'—', taxId:'—', invoiceTitle:'—', invoiceContent:'—', companyName:'—', email:'—', icon:'作' },
-            { id:'O202606112064957880322682881', status:'已关闭', time:'2026-06-11 14:28:19', product:'作业批改服务 一个月体验版', appName:'作业批改服务', combo:'一个月体验版', price:0.01, qty:1, total:0.01, buyType:'个人', payMethod:'—', payStatus:'未付款', remark:'无', invoiceType:'—', taxId:'—', invoiceTitle:'—', invoiceContent:'—', companyName:'—', email:'—', icon:'作' },
-            { id:'O2026061820635265262', status:'已完成', time:'2026-06-18 10:12:35', product:'作业批改服务 初中版2个学期', appName:'作业批改服务', combo:'初中版2个学期', price:25000.00, qty:1, total:25000.00, buyType:'个人', payMethod:'银行转账', payStatus:'已付款', remark:'无', invoiceType:'增值税普通发票', taxId:'91450100XXXX8888', invoiceTitle:'南宁市第一中学', invoiceContent:'软件服务费', companyName:'南宁市第一中学', email:'finance@nn1z.com', icon:'作' },
-            { id:'O2026061920645123456', status:'待支付', time:'2026-06-19 09:30:00', product:'课堂互动助手 专业版', appName:'课堂互动助手', combo:'专业版', price:2999.00, qty:1, total:2999.00, buyType:'机构', payMethod:'—', payStatus:'未付款', remark:'无', invoiceType:'增值税专用发票', taxId:'91450101XXXX9999', invoiceTitle:'南宁市教育局', invoiceContent:'软件服务费', companyName:'南宁市教育局', email:'finance@nnedu.cn', icon:'课' },
+            { id:'O202606172067171707009298433', status:'已关闭', time:'2026-06-17 17:05:17', product:'作业批改服务 一个月体验版', appName:'作业批改服务', combo:'一个月体验版', price:0.01, qty:1, total:0.01, buyType:'个人', payMethod:'—', payStatus:'未付款', remark:'无', invoiceType:'—', taxId:'—', invoiceTitle:'—', invoiceContent:'—', companyName:'—', email:'—', payDeadline:'2026-06-17 17:35:17', icon:'作' },
+            { id:'O202606172067168039660879873', status:'已关闭', time:'2026-06-17 16:50:42', product:'作业批改服务 一个月体验版', appName:'作业批改服务', combo:'一个月体验版', price:0.01, qty:1, total:0.01, buyType:'个人', payMethod:'—', payStatus:'未付款', remark:'无', invoiceType:'—', taxId:'—', invoiceTitle:'—', invoiceContent:'—', companyName:'—', email:'—', payDeadline:'2026-06-17 17:20:42', icon:'作' },
+            { id:'O202606112064957880322682881', status:'已关闭', time:'2026-06-11 14:28:19', product:'作业批改服务 一个月体验版', appName:'作业批改服务', combo:'一个月体验版', price:0.01, qty:1, total:0.01, buyType:'个人', payMethod:'—', payStatus:'未付款', remark:'无', invoiceType:'—', taxId:'—', invoiceTitle:'—', invoiceContent:'—', companyName:'—', email:'—', payDeadline:'2026-06-11 14:58:19', icon:'作' },
+            { id:'O2026061820635265262', status:'已完成', time:'2026-06-18 10:12:35', product:'作业批改服务 初中版2个学期', appName:'作业批改服务', combo:'初中版2个学期', price:25000.00, qty:1, total:25000.00, buyType:'个人', payMethod:'银行转账', payStatus:'已付款', remark:'无', invoiceType:'增值税普通发票', taxId:'91450100XXXX8888', invoiceTitle:'南宁市第一中学', invoiceContent:'软件服务费', companyName:'南宁市第一中学', email:'finance@nn1z.com', payDeadline:'2026-06-18 10:42:35', icon:'作' },
+            { id:'O2026061920645123456', status:'待支付', time:'2026-06-19 09:30:00', product:'课堂互动助手 专业版', appName:'课堂互动助手', combo:'专业版', price:2999.00, qty:1, total:2999.00, buyType:'机构', payMethod:'—', payStatus:'未付款', remark:'无', invoiceType:'增值税专用发票', taxId:'91450101XXXX9999', invoiceTitle:'南宁市教育局', invoiceContent:'软件服务费', companyName:'南宁市教育局', email:'finance@nnedu.cn', payDeadline:'2099-12-31 23:59:59', icon:'课' },
           ],
           orderList: [
             { id:'ORD-20260701-001', authMode:'自动', pkgName:'短信500条', scope:'通用', bizType:'短信充值', duration:365, allocSize:'500', org:'南宁市教育局', userId:'user_001', expireTime:'2027-07-01', receiveTime:'2026-07-01 10:30', authStatus:'authorized', authDesc:'已自动授权' },
@@ -3160,6 +3143,7 @@
             { id:'ORD-20260708-008', authMode:'手动', pkgName:'AI增强套餐', scope:'自定义：AI-PLUS', bizType:'TOKEN充值', duration:180, allocSize:'', org:'南宁市教育局', userId:'user_008', expireTime:'2027-01-08', receiveTime:'2026-07-08 15:30', authStatus:'pending', authDesc:'等待手动授权' },
             { id:'ORD-20260709-009', authMode:'自动', pkgName:'短信1000条', scope:'通用', bizType:'短信充值', duration:365, allocSize:'1000', org:'南宁市教育局', userId:'user_009', expireTime:'2027-07-09', receiveTime:'2026-07-09 09:00', authStatus:'authorized', authDesc:'已自动授权' },
             { id:'ORD-20260710-010', authMode:'手动', pkgName:'存储500G', scope:'通用', bizType:'存储容量充值', duration:365, allocSize:'500', org:'自治区教育厅', userId:'user_010', expireTime:'2027-07-10', receiveTime:'2026-07-10 10:20', authStatus:'pending', authDesc:'等待手动授权' },
+            { id:'ORD-20260711-011', authMode:'自动', pkgName:'TOKEN 20万', scope:'通用', bizType:'TOKEN充值', duration:180, allocSize:'200000', org:'南宁市教育局', userId:'user_011', expireTime:'2027-01-11', receiveTime:'2026-07-11 09:15', authStatus:'failed', authDesc:'自动授权失败：回调 Token 校验超时' },
           ],
           pkgList: [
             { code:'SMS_100_10000', name:'短信服务-100元/1W条', type:'短信充值', authMode:'自动', scope:'', allocSize:'10000', unit:'条', duration:'', basePkg:'', targetType:'机构', price:100 },
@@ -3195,7 +3179,8 @@
             { id:6, appId:1006, appOpenId:'sb_chengji_ana1', name:'成绩分析', cat:'教务管理', appTypeLabel:'非平台应用', type:'原生应用', native_type:'自建应用', scope:'学校、上级单位', level:'初中、高中', source:'本机构', status:'online', listing:'listed', logo:'成' },
             { id:7, appId:1007, appOpenId:'eco_xiaoyuanOA0', name:'校园OA', cat:'校园办公', appTypeLabel:'非平台应用', type:'生态应用', scope:'学校', level:'所有学段', source:'本机构', status:'offline', listing:'unlisted', logo:'OA' },
             { id:8, appId:1008, appOpenId:'sb_jiaxiao_hud1', name:'家校互动', cat:'校园办公', appTypeLabel:'非平台应用', type:'原生应用', native_type:'自建应用', scope:'学校', level:'小学、初中', source:'本机构', status:'online', listing:'unlisted', logo:'家' },
-            { id:9, appId:1009, appOpenId:'eco_xuanke_app1', name:'选课系统', cat:'教务管理', appTypeLabel:'非平台应用', type:'生态应用', scope:'学校', level:'高中', source:'本机构', status:'offline', listing:'unlisted', logo:'选' },
+            { id:9, appId:1009, appOpenId:'sb_kaoshi_gl01', name:'考试管理', cat:'教务管理', appTypeLabel:'非平台应用', type:'原生应用', native_type:'自建应用', scope:'学校、上级单位', level:'初中、高中', source:'本机构', status:'offline', listing:'dismissed', logo:'考' },
+            { id:11, appId:1011, appOpenId:'eco_xuanke_app1', name:'选课系统', cat:'教务管理', appTypeLabel:'非平台应用', type:'生态应用', scope:'学校', level:'高中', source:'本机构', status:'offline', listing:'unlisted', logo:'选' },
             { id:10, appId:1010, appOpenId:'sb_dianzibanpa1', name:'电子班牌', cat:'教学管理', appTypeLabel:'平台应用', type:'原生应用', native_type:'自建应用', scope:'学校', level:'所有学段', source:'本机构', status:'online', listing:'listed', logo:'电' },
           ],
           shelfList: [
@@ -3210,6 +3195,7 @@
             { initial:'选', name:'选课系统', cat:'教务管理', dev:'自治区教育厅', zoneList:['广西壮族自治区教育厅'], time:'2026-07-20', status:'listed', source:'南宁市教育局', type:'生态应用', native_type:'', appTypeLabel:'非平台应用' },
             { initial:'电', name:'电子班牌', cat:'教学管理', dev:'自治区教育厅', zoneList:['广西壮族自治区教育厅'], time:'2026-07-21', status:'listed', source:'南宁市教育局', type:'原生应用', native_type:'自建应用', appTypeLabel:'非平台应用' },
             { initial:'智', name:'智慧课堂', cat:'教学管理', dev:'柳州市高级中学', zoneList:['—'], time:'2026-07-22', status:'unlisted', source:'柳州市高级中学', sharedFrom:'柳州市高级中学', type:'原生应用', native_type:'低代码应用', appTypeLabel:'平台应用' },
+            { initial:'考', name:'考试管理', cat:'教务管理', dev:'南宁市教育局', zoneList:['南宁市教育局'], time:'2026-07-23', status:'dismissed', source:'南宁市教育局', type:'原生应用', native_type:'自建应用', appTypeLabel:'非平台应用' },
           ],
           // 应用分享管理：当前机构分享给其他机构 / 桂教通平台的应用（shareScope 记录上架时的分享范围）
           shareList: [
@@ -3435,7 +3421,7 @@
           shelfConfig: {
             crossTenant: 'no',
             crossLevel: '',
-            targetTenant: '',
+            targetTenant: [],
             scopeType: 'all',
             selectedZones: [],
             shareScope: [],
@@ -3447,9 +3433,13 @@
             authPackages: [],
             agreePromise: false,
           },
-          tenantPickerVisible: false,
-          tenantPickerOptions: [],
-          pickerTemp: '',
+          targetTenantOptions: [],
+          targetTenantSearching: false,
+          targetTenantPool: {
+            hall: ['广西壮族自治区教育厅'],
+            city: ['南宁市教育局','柳州市教育局','桂林市教育局','梧州市教育局','北海市教育局','防城港市教育局','钦州市教育局','贵港市教育局','玉林市教育局','百色市教育局','贺州市教育局','河池市教育局','来宾市教育局','崇左市教育局'],
+            district: ['南宁市青秀区教育局','南宁市兴宁区教育局','南宁市西乡塘区教育局','南宁市江南区教育局','南宁市良庆区教育局','南宁市邕宁区教育局','柳州市城中区教育局','柳州市柳北区教育局','柳州市鱼峰区教育局','柳州市柳南区教育局','桂林市秀峰区教育局','桂林市叠彩区教育局','桂林市七星区教育局','桂林市象山区教育局','北海市海城区教育局','北海市银海区教育局','梧州市万秀区教育局','钦州市钦南区教育局','玉林市玉州区教育局','来宾市兴宾区教育局'],
+          },
           orgOptions: [],
           orgSearching: false,
         }
@@ -3461,11 +3451,11 @@
           return this.currentPage;
         },
         pageTitle() {
-          const t = { P01:'应用申请管理', P02:'应用申请编辑', P02b:'应用详情', P04:'应用上架管理', P04b:'应用安装列表', P05:'应用上架配置', P06:'全平台应用', P07:'上架范围管理', P07a:'范围机构列表', P08:'上架范围编辑', P09:'应用分类管理', P10:'应用审批列表', P11:'应用审批操作', P11v:'审批详情', P12:'标签管理', P12a:'标签机构列表', P12e:'标签编辑', P13:'应用配置管理', P15:'全局应用管理', P17:'应用统计看板', P18:'订单套餐授权', P19:'订单记录', P20:'试用订单记录', P21:'教育服务中心', P22:'教育服务中心', P24:'我的应用中心', P25:'我的订单', P26:'应用套餐配置', P26e:'套餐编辑' };
+          const t = { P01:'应用申请管理', P02:'应用申请编辑', P02b:'应用详情', P04:'应用上架管理', P04b:'应用安装列表', P05:'应用上架配置', P06:'全平台应用', P07:'上架范围管理', P07a:'范围机构列表', P08:'上架范围编辑', P09:'应用分类管理', P10:'应用审批列表', P11:'应用审批操作', P11v:'审批详情', P12:'标签管理', P12a:'标签机构列表', P12e:'标签编辑', P17:'应用统计看板', P18:'订单套餐授权', P19:'订单记录', P20:'试用订单记录', P21:'教育服务中心', P22:'教育服务中心', P24:'我的应用中心', P25:'我的订单', P26:'应用套餐配置', P26e:'套餐编辑' };
           return t[this.currentPage] || '应用中心';
         },
         currentModule() {
-          const m = { P01:'应用管理', P02:'应用管理', P02b:'应用管理', P04:'应用管理', P04b:'应用管理', P05:'应用管理', P06:'应用管理', P07:'应用管理', P07a:'应用管理', P08:'应用管理', P09:'应用管理', P10:'应用管理', P11:'应用管理', P11v:'应用管理', P12:'应用管理', P12a:'应用管理', P12e:'应用管理', P13:'平台管理', P15:'平台管理', P17:'平台管理', P18:'订单管理', P21:'我的空间', P22:'我的空间', P24:'我的空间', P25:'我的空间', P19:'订单管理', P20:'订单管理', P26:'订单管理', P26e:'订单管理' };
+          const m = { P01:'应用管理', P02:'应用管理', P02b:'应用管理', P04:'应用管理', P04b:'应用管理', P05:'应用管理', P06:'应用管理', P07:'应用管理', P07a:'应用管理', P08:'应用管理', P09:'应用管理', P10:'应用管理', P11:'应用管理', P11v:'应用管理', P12:'应用管理', P12a:'应用管理', P12e:'应用管理', P17:'平台管理', P18:'订单管理', P21:'我的空间', P22:'我的空间', P24:'我的空间', P25:'我的空间', P19:'订单管理', P20:'订单管理', P26:'订单管理', P26e:'订单管理' };
           return m[this.currentPage] || '应用中心';
         },
         currentApp() { return this.appList.find(a => a.id === this.editAppId) || null; },
@@ -3759,6 +3749,32 @@
         visibleApps(group) { return this.expandedGroups[group.name] ? group.apps : group.apps.slice(0, 3); },
         openMyOrderDetail(o) { this.currentMyOrder = o; this.myOrderView = 'detail'; },
         backMyOrder() { this.myOrderView = 'list'; this.currentMyOrder = null; },
+        isOrderExpired(o) {
+          if (!o || !o.payDeadline) return false;
+          return new Date(String(o.payDeadline).replace(/-/g, '/')).getTime() < Date.now();
+        },
+        canPayOrder(o) {
+          return !!o && o.status === '待支付' && !this.isOrderExpired(o);
+        },
+        payMyOrder(o) {
+          const base = (this.appList || []).find(x => x.name === o.appName);
+          this.currentAppDetail = Object.assign({}, base || {}, {
+            name: o.appName, initial: o.icon, gradient: (base && base.gradient) || '#3b82f6',
+            packages: [{ name: o.combo, price: o.price }]
+          });
+          this.buyPackage = o.combo;
+          this.buyQty = o.qty;
+          this.buyStep = 2;
+          this.orderCode = o.id;
+          this.payTimeLeft = 900;
+          this.payTime = '';
+          this.cancelPayTimer();
+          clearTimeout(this.payTimeout);
+          this.serviceView = 'buy';
+          this.currentPage = 'P22';
+          this.startPayTimer();
+          this.payTimeout = setTimeout(() => this.paySuccess(), 5000);
+        },
         openAppDetail(app) { this.currentAppDetail = app; this.appDetailTab = 'intro'; this.detailLiked = !!app.userLiked; this.detailFaved = !!app.userFaved; this.detailPkgIdx = 0; this.serviceView = 'detail'; },
         openBuy(app, pkgIdx) {
           const pkg = (app.packages && app.packages[pkgIdx != null ? pkgIdx : 0]) || null;
@@ -3802,6 +3818,8 @@
           const now = new Date();
           const pad = n => String(n).padStart(2,'0');
           this.payTime = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate()) + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
+          const ord = this.myOrders.find(x => x.id === this.orderCode);
+          if (ord) { ord.status = '已完成'; ord.payStatus = '已付款'; ord.payMethod = '微信支付'; }
           this.buyStep = 3;
         },
         cancelOrder() {
@@ -3928,25 +3946,70 @@
           if (!this.whitelistRemoved.includes(w)) this.whitelistRemoved.push(w);
         },
         onSaveApp() {
-          if (this.currentRole === 'platform_admin' && !this.appType) {
-            this.$message.warning('请选择应用类型');
-            return;
+          // 编辑模式（保存新建/编辑）：校验基本信息字段；上线申请模式基本信息只读锁定、不校验
+          if (this.editMode) {
+            if (this.currentRole === 'platform_admin' && !this.appType) {
+              this.$message.warning('请选择应用类型');
+              return;
+            }
+            if (this.appDataSync === 'yes' && !/^https?:\/\//i.test(this.pushUrl || '')) {
+              this.$message.warning('推送地址格式必须为 http:// 或 https://');
+              return;
+            }
+            if (this.appDataSync === 'yes' && !(this.syncToken || '').trim()) {
+              this.$message.warning('请填写 TOKEN');
+              return;
+            }
+            if (this.appDataSync === 'yes' && !(this.syncAesKey || '').trim()) {
+              this.$message.warning('请填写 EncodingAesKey');
+              return;
+            }
+            if (this.appAttr[1] === 'lowcode' && !(this.lowcodeAppId || '').trim()) {
+              this.$message.warning('低代码应用请填写应用ID');
+              return;
+            }
           }
-          if (this.appDataSync === 'yes' && !/^https?:\/\//i.test(this.pushUrl || '')) {
-            this.$message.warning('推送地址格式必须为 http:// 或 https://');
-            return;
-          }
-          if (this.appDataSync === 'yes' && !(this.syncToken || '').trim()) {
-            this.$message.warning('请填写 TOKEN');
-            return;
-          }
-          if (this.appDataSync === 'yes' && !(this.syncAesKey || '').trim()) {
-            this.$message.warning('请填写 EncodingAesKey');
-            return;
-          }
-          if (this.appAttr[1] === 'lowcode' && !(this.lowcodeAppId || '').trim()) {
-            this.$message.warning('低代码应用请填写应用ID');
-            return;
+          // 上线申请模式：校验上线配置区字段（基本信息沿用 currentApp）
+          if (this.detailMode === 'online') {
+            if (this.currentAppIsLowcode) {
+              if (!this.shelfConfig.crossTenant) {
+                this.$message.warning('请选择是否跨机构');
+                return;
+              }
+              if (this.shelfConfig.crossTenant === 'yes' && this.currentRole === 'platform_admin') {
+                if (!this.shelfConfig.crossLevel) {
+                  this.$message.warning('请选择跨机构层级');
+                  return;
+                }
+                if (!this.shelfConfig.targetTenant || this.shelfConfig.targetTenant.length === 0) {
+                  this.$message.warning('请选择所属机构');
+                  return;
+                }
+              }
+            } else {
+              if (!this.shelfConfig.chargeType) {
+                this.$message.warning('请选择收费方式');
+                return;
+              }
+              if (this.shelfConfig.chargeType === 'paid') {
+                if (!this.shelfConfig.canTrial) {
+                  this.$message.warning('请选择是否可试用');
+                  return;
+                }
+                if (this.shelfConfig.canTrial === 'yes' && !this.shelfConfig.trialPackage) {
+                  this.$message.warning('请选择试用套餐');
+                  return;
+                }
+                if (!this.shelfConfig.authPackages || this.shelfConfig.authPackages.length === 0) {
+                  this.$message.warning('请选择授权套餐');
+                  return;
+                }
+              }
+            }
+            if (!this.shelfConfig.agreePromise) {
+              this.$message.warning('请勾选上架承诺书');
+              return;
+            }
           }
           const finalAppType = this.currentRole === 'tenant_admin' ? 'non_platform' : this.appType;
           const label = finalAppType === 'platform' ? '平台应用' : '非平台应用';
@@ -4019,7 +4082,8 @@
         onRoleChange() {
           this.shelfConfig.crossTenant = 'no';
           this.shelfConfig.crossLevel = '';
-          this.shelfConfig.targetTenant = '';
+          this.shelfConfig.targetTenant = [];
+          this.targetTenantOptions = [];
           this.shelfConfig.scopeType = 'all';
           this.shelfConfig.selectedZones = [];
           this.shelfConfig.shareScope = [];
@@ -4073,11 +4137,20 @@
           this.editAppId = found ? found.id : null;
           this.currentShelfRecord = a;
           this.shelfConfig = {
-            crossTenant: 'no', crossLevel: '', targetTenant: '',
+            crossTenant: 'no', crossLevel: '', targetTenant: [],
             scopeType: 'all', selectedZones: [], shareScope: [], versionNo: '', targetOrgs: [],
             canTrial: 'no', trialPackage: '', chargeType: 'free', authPackages: [],
             agreePromise: false,
-          };
+          }
+          // dismissed 重上架：P05 默认回填下架前的上架范围（PRD P04：保留原上架范围）
+          if (a.status === 'dismissed' && Array.isArray(a.zoneList) && a.zoneList.length) {
+            const firstZone = a.zoneList[0];
+            if (firstZone !== '全平台' && firstZone !== '当前机构及所有下级机构') {
+              this.shelfConfig.scopeType = 'zone';
+              this.shelfConfig.selectedZones = a.zoneList.slice();
+            }
+          }
+          this.targetTenantOptions = [];;
           this.versionOptions = [];
           this.versionSearched = false;
           this.orgOptions = [];
@@ -4170,20 +4243,26 @@
           if (this.currentRole === 'platform_admin') {
             this.shelfConfig.scopeType = this.shelfConfig.crossTenant === 'yes' ? 'zone' : 'all';
           }
+          if (this.shelfConfig.crossTenant !== 'yes') {
+            this.shelfConfig.crossLevel = '';
+            this.shelfConfig.targetTenant = [];
+            this.targetTenantOptions = [];
+          }
         },
-        onOpenTenantPicker() {
+        onCrossLevelChange() {
+          // 跨机构层级变化：清空已选所属机构并预加载该层级机构候选
+          this.shelfConfig.targetTenant = [];
+          this.onTargetTenantSearch('');
+        },
+        onTargetTenantSearch(query) {
           const lvl = this.shelfConfig.crossLevel;
-          if (lvl === 'hall') this.tenantPickerOptions = ['广西壮族自治区教育厅'];
-          else if (lvl === 'city') this.tenantPickerOptions = ['南宁市教育局','柳州市教育局','桂林市教育局','梧州市教育局','北海市教育局','防城港市教育局','钦州市教育局','贵港市教育局','玉林市教育局','百色市教育局','贺州市教育局','河池市教育局','来宾市教育局','崇左市教育局'];
-          else if (lvl === 'district') this.tenantPickerOptions = ['南宁市青秀区教育局','南宁市兴宁区教育局','南宁市西乡塘区教育局','柳州市城中区教育局','桂林市秀峰区教育局'];
-          else { this.$message.warning('请先选择跨机构层级'); return; }
-          this.pickerTemp = this.shelfConfig.targetTenant;
-          this.tenantPickerVisible = true;
-        },
-        onPickTenant(val) {
-          if (!val) return;
-          this.shelfConfig.targetTenant = val;
-          this.tenantPickerVisible = false;
+          const pool = this.targetTenantPool[lvl] || [];
+          if (!pool.length) { this.$message.warning('请先选择跨机构层级'); return; }
+          this.targetTenantSearching = true;
+          const q = (query || '').trim().toLowerCase();
+          const filtered = pool.filter(o => o.toLowerCase().includes(q)).slice(0, 50);
+          this.targetTenantOptions = filtered.map(o => ({ label: o, value: o }));
+          this.targetTenantSearching = false;
         },
         onOrgRemoteSearch(query) {
           // 其他机构：输入机构名称模糊筛选，最多返回 50 条，结果可多选
@@ -4392,10 +4471,15 @@
         onConfirmShelf() {
           const a = this.currentShelfRecord;
           if (!a) { this.$message.warning('未找到待上架记录'); return; }
+          if (!this.shelfConfig.agreePromise) {
+            this.$message.warning('请勾选上架承诺书');
+            return;
+          }
           const isPlatform = this.currentRole === 'platform_admin';
           // 跨机构上架：更新原记录的 上架范围，不新增记录
           if (this.shelfConfig.crossTenant === 'yes') {
-            const zoneName = this.shelfConfig.targetTenant || '跨机构范围';
+            const targetArr = this.shelfConfig.targetTenant || [];
+            const zoneName = targetArr.length ? targetArr.join('、') : '跨机构范围';
             a.zoneList = [zoneName];
             a.status = 'listed';
             this.$message.success('跨机构上架成功，已自动安装到范围内机构的应用中心');
@@ -4673,8 +4757,11 @@
           };
           this.statsTimeDesc = descs[val] || '';
         },
+        onRefreshStats() {
+          this.$message.success('已刷新统计数据（结构类指标实时更新，行为类指标最长延迟 5 分钟）');
+        },
         onExportStats() {
-          this.$message.success('正在导出统计数据…');
+          this.$message.success('正在导出统计数据（应用统计.xlsx，含 6 张工作表：统计概览、应用安装统计、应用使用统计、应用分类统计、用户数量榜、应用安装排行榜）…');
         },
         onStopTrial(i) {
           const t = this.trialList[i];
@@ -4716,6 +4803,13 @@
             o.authStatus = 'authorized';
             o.authDesc = '已手动授权';
             this.$message.success('授权成功');
+          }).catch(() => {});
+        },
+        onManualAuthorize(o) {
+          this.$confirm('自动授权失败，确认手动授权【' + o.pkgName + '】吗？', '手动授权', { confirmButtonText:'确认', cancelButtonText:'取消', type:'warning' }).then(() => {
+            o.authStatus = 'authorized';
+            o.authDesc = '已手动授权';
+            this.$message.success('手动授权成功');
           }).catch(() => {});
         },
         openAddAuth() {
@@ -4776,8 +4870,8 @@
           if (!this.pkgForm.code || !this.pkgForm.name || !this.pkgForm.type || !this.pkgForm.scope || this.pkgForm.price === null || this.pkgForm.price === undefined) { this.$message.warning('请填写必填项（含价格）'); return; }
           const codeExists = this.pkgList.some(p => p.code === this.pkgForm.code && p.code !== this.pkgEditId);
           if (codeExists) { this.$message.warning('套餐编码已存在，请保证全局唯一'); return; }
-          if (['短信充值','存储容量充值','TOKEN充值'].includes(this.pkgForm.type) && !this.pkgForm.allocSize) { this.$message.warning('当前套餐类型需填写分配大小'); return; }
-          if (['应用使用授权','应用试用授权','存储容量充值'].includes(this.pkgForm.type) && !this.pkgForm.duration) { this.$message.warning('当前套餐类型需填写有效期'); return; }
+          if (['短信充值','存储容量充值','TOKEN充值'].includes(this.pkgForm.type) && !this.pkgForm.allocSize) { this.$message.warning('当前业务套餐需填写分配大小'); return; }
+          if (['应用使用授权','应用试用授权','存储容量充值'].includes(this.pkgForm.type) && !this.pkgForm.duration) { this.$message.warning('当前业务套餐需填写有效期'); return; }
           if (this.pkgForm.type === '基座套餐' && (!this.pkgForm.basePkg || this.pkgForm.basePkg.length === 0)) { this.$message.warning('基座套餐需选择基座套餐关联'); return; }
           const record = {
             code:this.pkgForm.code, name:this.pkgForm.name, type:this.pkgForm.type, price:this.pkgForm.price,
