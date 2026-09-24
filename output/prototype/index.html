@@ -146,6 +146,8 @@
     .my-order-price { font-size: 13px; color: #f53f3f; }
     .my-order-detail-btn { background: #00bfa5; border-color: #00bfa5; border-radius: 6px; }
     .my-order-detail-btn:hover { background: #00a68f; border-color: #00a68f; }
+    .link-app { color: var(--shell-primary); cursor: pointer; font-weight: 600; }
+    .link-app:hover { text-decoration: underline; }
     .my-order-back { margin-bottom: 16px; background: #00bfa5; border-color: #00bfa5; border-radius: 6px; }
     .my-order-back:hover { background: #00a68f; border-color: #00a68f; }
     .my-order-section { background: #fff; border-radius: 12px; padding: 20px 24px; margin-bottom: 16px; box-shadow: 0 2px 10px rgba(31,35,41,.06); }
@@ -615,6 +617,13 @@
                         <el-checkbox value="mini_standalone">独立小程序</el-checkbox>
                       </el-checkbox-group>
                     </el-form-item>
+                    <el-form-item label="跳转登录限制" required style="width:50%;padding:0 8px;">
+                      <el-select v-model="appJumpLoginLimit" placeholder="请选择" clearable style="width:100%;">
+                        <el-option label="无需登录" value="none"></el-option>
+                        <el-option label="仅持有账号登录" value="account_only"></el-option>
+                        <el-option label="可注册或登录" value="register_or_login"></el-option>
+                      </el-select>
+                    </el-form-item>
                     <el-form-item label="应用详情介绍" required style="width:50%;padding:0 8px;">
                       <div style="border:1px solid var(--shell-line);border-radius:6px;overflow:hidden;width:100%;">
                         <div style="display:flex;gap:2px;padding:6px 8px;border-bottom:1px solid var(--shell-line);background:#f7f8fa;font-size:12px;">
@@ -804,6 +813,7 @@
                   <el-form-item label="一级分类" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentApp.cat?.split('/')[0] }}</span></el-form-item>
                   <el-form-item label="二级分类" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentApp.cat?.split('/')[1] || '-' }}</span></el-form-item>
                   <el-form-item label="打开方式" style="width:50%;padding:0 8px;"><span style="line-height:32px;">PCweb、H5</span></el-form-item>
+                  <el-form-item label="跳转登录限制" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ jumpLoginLimitText(currentApp.jumpLoginLimit) }}</span></el-form-item>
                   <el-form-item label="适用机构" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentApp.scope }}</span></el-form-item>
                   <el-form-item label="适用学段" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentApp.level }}</span></el-form-item>
                   <el-form-item label="应用详情介绍" style="width:50%;padding:0 8px;">
@@ -1123,6 +1133,7 @@
                   <el-form-item label="一级分类" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentApp.cat?.split('/')[0] }}</span></el-form-item>
                   <el-form-item label="二级分类" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentApp.cat?.split('/')[1] || '-' }}</span></el-form-item>
                   <el-form-item label="打开方式" style="width:50%;padding:0 8px;"><span style="line-height:32px;">PCweb、H5</span></el-form-item>
+                  <el-form-item label="跳转登录限制" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ jumpLoginLimitText(currentApp.jumpLoginLimit) }}</span></el-form-item>
                   <el-form-item label="适用机构" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentApp.scope }}</span></el-form-item>
                   <el-form-item label="适用学段" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentApp.level }}</span></el-form-item>
                   <el-form-item label="应用属性" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentApp.type }}{{ currentApp.native_type ? ' / ' + currentApp.native_type : '' }}</span></el-form-item>
@@ -1502,6 +1513,7 @@
                   <el-form-item label="一级分类" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教学管理</span></el-form-item>
                   <el-form-item label="二级分类" style="width:50%;padding:0 8px;"><span style="line-height:32px;">课堂工具</span></el-form-item>
                   <el-form-item label="打开方式" style="width:50%;padding:0 8px;"><span style="line-height:32px;">PCweb、H5、独立小程序</span></el-form-item>
+                  <el-form-item label="跳转登录限制" style="width:50%;padding:0 8px;"><span style="line-height:32px;">仅持有账号登录</span></el-form-item>
                   <el-form-item label="适用机构" style="width:50%;padding:0 8px;"><span style="line-height:32px;">学校、上级单位</span></el-form-item>
                   <el-form-item label="适用学段" style="width:50%;padding:0 8px;"><span style="line-height:32px;">所有学段</span></el-form-item>
                   <el-form-item label="应用详情介绍" style="width:50%;padding:0 8px;">
@@ -1575,6 +1587,7 @@
                   <el-form-item label="一级分类" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教学管理</span></el-form-item>
                   <el-form-item label="二级分类" style="width:50%;padding:0 8px;"><span style="line-height:32px;">课堂工具</span></el-form-item>
                   <el-form-item label="打开方式" style="width:50%;padding:0 8px;"><span style="line-height:32px;">PCweb、H5、独立小程序</span></el-form-item>
+                  <el-form-item label="跳转登录限制" style="width:50%;padding:0 8px;"><span style="line-height:32px;">仅持有账号登录</span></el-form-item>
                   <el-form-item label="适用机构" style="width:50%;padding:0 8px;"><span style="line-height:32px;">学校、上级单位</span></el-form-item>
                   <el-form-item label="适用学段" style="width:50%;padding:0 8px;"><span style="line-height:32px;">所有学段</span></el-form-item>
                   <el-form-item label="应用详情介绍" style="width:50%;padding:0 8px;">
@@ -2418,7 +2431,7 @@
                 <div class="my-order-list">
                   <div v-for="o in filteredMyOrders" :key="o.id" class="my-order-card">
                     <div class="my-order-card-header">
-                      <span class="my-order-status">{{ o.status }}</span>
+                      <el-tag size="small" :type="orderStatusType(o.status)">{{ o.status }}</el-tag>
                       <span class="my-order-no">订单号：{{ o.id }}</span>
                       <span class="my-order-time">{{ o.time }}</span>
                       <span class="my-order-total">¥{{ o.total.toFixed(2) }}</span>
@@ -2430,6 +2443,7 @@
                         <div class="my-order-price">¥{{ o.price.toFixed(2) }} × {{ o.qty }}</div>
                       </div>
                       <el-button v-if="canPayOrder(o)" type="warning" class="my-order-detail-btn" @click="payMyOrder(o)">支付</el-button>
+                      <el-button v-if="o.status === '已支付'" type="danger" plain class="my-order-detail-btn" @click="applyRefund(o)">退款</el-button>
                       <el-button type="primary" class="my-order-detail-btn" @click="openMyOrderDetail(o)">订单详情</el-button>
                     </div>
                   </div>
@@ -2438,41 +2452,35 @@
 
               <!-- 订单详情 -->
               <div v-if="myOrderView === 'detail'" class="my-order-detail">
-                <div class="my-order-detail-title">订单详细信息</div>
-                <div v-if="canPayOrder(currentMyOrder)" style="display:flex;justify-content:flex-end;margin:-4px 0 12px;">
-                  <el-button type="warning" @click="payMyOrder(currentMyOrder)">支付</el-button>
-                </div>
-                <div class="my-order-section">
+                <div class="my-order-detail-title">订单详细</div>
+                <el-button size="small" class="my-order-back-btn" @click="backMyOrder">&lt; 返回订单列表</el-button>
+                <el-form label-width="96px" class="order-detail-form" v-if="currentMyOrder">
                   <div class="my-order-section-title">订单信息</div>
-                  <div class="my-order-section-body my-order-info-grid">
-                    <div class="my-order-field"><span class="label">订单 ID：</span><span class="value">{{ currentMyOrder.id }}</span></div>
-                    <div class="my-order-field">
-                      <span class="label">付款状态：</span>
-                      <el-tag size="small" :type="currentMyOrder.status === '已完成' ? 'success' : (currentMyOrder.status === '待支付' ? 'warning' : 'info')">{{ currentMyOrder.status === '已完成' ? '已支付' : currentMyOrder.status }}</el-tag>
-                    </div>
-                  </div>
-                </div>
-                <div class="my-order-section">
+                  <el-form-item label="订单 ID">{{ currentMyOrder.id }}</el-form-item>
+                  <el-form-item label="订单状态"><el-tag size="small" :type="orderStatusType(currentMyOrder.status)">{{ currentMyOrder.status }}</el-tag></el-form-item>
                   <div class="my-order-section-title">商品信息</div>
-                  <div class="my-order-section-body my-order-invoice">
-                    <div class="my-order-field"><span class="label">应用名称：</span><span class="value">{{ currentMyOrder.appName }}</span></div>
-                    <div class="my-order-field"><span class="label">套餐名称：</span><span class="value">{{ currentMyOrder.combo }}</span></div>
-                    <div class="my-order-field"><span class="label">价格：</span><span class="value">¥{{ currentMyOrder.price.toFixed(2) }}</span></div>
-                    <div class="my-order-field"><span class="label">购买类型：</span><span class="value">{{ currentMyOrder.buyType }}</span></div>
-                    <div class="my-order-field"><span class="label">数量：</span><span class="value">{{ currentMyOrder.qty }}</span></div>
-                    <div class="my-order-field"><span class="label">实付金额：</span><span class="value">¥{{ currentMyOrder.total.toFixed(2) }}</span></div>
-                  </div>
-                </div>
-                <div class="my-order-section">
+                  <el-form-item label="应用名称"><span class="link-app" @click="openOrderAppDetail(currentMyOrder.appName)">{{ currentMyOrder.appName }} <el-icon style="vertical-align:middle;"><ArrowRight /></el-icon></span></el-form-item>
+                  <el-form-item label="套餐名称">{{ currentMyOrder.combo }}</el-form-item>
+                  <el-form-item label="价格">¥{{ currentMyOrder.price.toFixed(2) }}</el-form-item>
+                  <el-form-item label="购买类型">{{ currentMyOrder.buyType }}</el-form-item>
+                  <el-form-item label="数量">{{ currentMyOrder.qty }}</el-form-item>
+                  <el-form-item label="实付金额">¥{{ currentMyOrder.total.toFixed(2) }}</el-form-item>
                   <div class="my-order-section-title">发票信息</div>
-                  <div class="my-order-section-body my-order-invoice">
-                    <div class="my-order-field"><span class="label">发票类型：</span><span class="value">{{ currentMyOrder.invoiceType }}</span></div>
-                    <div class="my-order-field"><span class="label">纳税人识别号：</span><span class="value">{{ currentMyOrder.taxId }}</span></div>
-                    <div class="my-order-field"><span class="label">发票抬头：</span><span class="value">{{ currentMyOrder.invoiceTitle }}</span></div>
-                    <div class="my-order-field"><span class="label">发票内容：</span><span class="value">{{ currentMyOrder.invoiceContent }}</span></div>
-                    <div class="my-order-field"><span class="label">单位名称：</span><span class="value">{{ currentMyOrder.companyName }}</span></div>
-                    <div class="my-order-field"><span class="label">邮箱：</span><span class="value">{{ currentMyOrder.email }}</span></div>
-                  </div>
+                  <el-form-item label="发票类型">{{ currentMyOrder.invoiceType }}</el-form-item>
+                  <el-form-item label="纳税人识别号">{{ currentMyOrder.taxId }}</el-form-item>
+                  <el-form-item label="发票抬头">{{ currentMyOrder.invoiceTitle }}</el-form-item>
+                  <el-form-item label="发票内容">{{ currentMyOrder.invoiceContent }}</el-form-item>
+                  <el-form-item label="单位名称">{{ currentMyOrder.companyName }}</el-form-item>
+                  <el-form-item label="邮箱">{{ currentMyOrder.email }}</el-form-item>
+                  <template v-if="currentMyOrder.approvalResult">
+                    <div class="my-order-section-title">审批结果</div>
+                    <el-form-item label="审批结果"><el-tag size="small" :type="currentMyOrder.approvalResult === '通过' ? 'success' : 'danger'">{{ currentMyOrder.approvalResult === '通过' ? '退款成功' : '退款驳回' }}</el-tag></el-form-item>
+                    <el-form-item label="审批意见">{{ currentMyOrder.approvalOpinion || '—' }}</el-form-item>
+                  </template>
+                </el-form>
+                <div class="my-order-detail-footer" style="display:flex;gap:10px;margin-top:8px;">
+                  <el-button v-if="canPayOrder(currentMyOrder)" type="warning" @click="payMyOrder(currentMyOrder)">支付</el-button>
+                  <el-button v-if="currentMyOrder.status === '已支付'" type="danger" plain @click="applyRefund(currentMyOrder)">申请退款</el-button>
                 </div>
               </div>
             </div>
@@ -2585,6 +2593,7 @@
 
             <!-- ===== P19 订单记录 ===== -->
             <div v-show="currentPage === 'P19'" class="shell-workbench">
+              <div v-if="!orderReceiveView">
               <div class="filter-bar">
                 <span style="font-size:13px;color:var(--shell-text-secondary);white-space:nowrap;">订单 ID:</span>
                 <input type="text" v-model="orderReceiveFilter.id" placeholder="" style="width:140px;height:28px;border:1px solid var(--shell-line);border-radius:4px;padding:0 8px;font-size:13px;outline:none;">
@@ -2598,6 +2607,9 @@
                   <el-option label="待支付" value="待支付"></el-option>
                   <el-option label="已支付" value="已支付"></el-option>
                   <el-option label="已取消" value="已取消"></el-option>
+                  <el-option label="退款中" value="退款中"></el-option>
+                  <el-option label="退款成功" value="退款成功"></el-option>
+                  <el-option label="退款驳回" value="退款驳回"></el-option>
                 </el-select>
                 <el-button type="primary" size="small">搜索</el-button>
                 <el-button size="small" @click="orderReceiveFilter={id:'',name:'',userId:'',status:''}">重置</el-button>
@@ -2612,53 +2624,58 @@
                       <td>{{ r.userId }}</td>
                       <td>{{ r.userName }}</td>
                       <td>{{ r.org }}</td>
-                      <td><el-tag size="small" :type="r.status==='已支付'?'success':r.status==='待支付'?'warning':'danger'">{{ r.status }}</el-tag></td>
+                      <td><el-tag size="small" :type="orderStatusType(r.status)">{{ r.status }}</el-tag></td>
                       <td>{{ r.buyType }}</td>
                       <td>{{ r.receiveTime }}</td>
-                      <td><el-button text size="small" @click="onViewOrderReceive(r)">查看</el-button></td>
+                      <td style="white-space:nowrap;">
+                        <el-button text size="small" @click="onViewOrderReceive(r, 'view')">查看</el-button>
+                        <el-button v-if="r.status === '退款中'" text size="small" type="warning" @click="onViewOrderReceive(r, 'approve')">审批</el-button>
+                      </td>
                     </tr>
                   </tbody>
                 </table>
               </div>
+              </div>
 
-              <el-dialog v-model="showOrderReceiveDetail" title="订单详细信息" width="700px" :close-on-click-modal="false">
-                <div v-if="currentOrderReceive" style="padding:0 8px;">
-                  <div style="font-weight:600;font-size:14px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--shell-line);">订单信息</div>
-                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13px;margin-bottom:20px;">
-                    <div><b>订单 ID：</b>{{ currentOrderReceive.id }}</div>
-                    <div><b>付款状态：</b><el-tag size="small" :type="currentOrderReceive.status==='已支付'?'success':'warning'" style="margin-left:4px;">{{ currentOrderReceive.status }}</el-tag></div>
-                  </div>
-
-                  <div style="font-weight:600;font-size:14px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--shell-line);">商品套餐</div>
-                  <table class="data-table" style="margin-bottom:20px;">
-                    <thead><tr><th>应用名称</th><th>套餐名称</th><th>价格</th><th>购买类型</th><th>数量</th><th>实付金额</th><th>总计</th></tr></thead>
-                    <tbody>
-                      <tr>
-                        <td>{{ currentOrderReceive.appName }}</td>
-                        <td>{{ currentOrderReceive.pkgName }}</td>
-                        <td>¥{{ currentOrderReceive.price }}</td>
-                        <td>{{ currentOrderReceive.buyType }}</td>
-                        <td>{{ currentOrderReceive.qty }}</td>
-                        <td>¥{{ currentOrderReceive.payAmount }}</td>
-                        <td>¥{{ currentOrderReceive.total }}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-
-                  <div style="font-weight:600;font-size:14px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--shell-line);">发票信息</div>
-                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13px;">
-                    <div><b>发票类型：</b>{{ currentOrderReceive.invoiceType || '—' }}</div>
-                    <div><b>纳税人识别号：</b>{{ currentOrderReceive.taxId || '—' }}</div>
-                    <div><b>发票抬头：</b>{{ currentOrderReceive.invoiceTitle || '—' }}</div>
-                    <div><b>发票内容：</b>{{ currentOrderReceive.invoiceContent || '—' }}</div>
-                    <div><b>单位名称：</b>{{ currentOrderReceive.companyName || '—' }}</div>
-                    <div><b>邮箱：</b>{{ currentOrderReceive.email || '—' }}</div>
-                  </div>
+              <div v-else class="order-receive-detail">
+                <div style="margin-bottom:12px;">
+                  <el-button text size="small" @click="orderReceiveView=false"><el-icon><ArrowLeft /></el-icon> 返回订单记录</el-button>
                 </div>
-                <template #footer>
-                  <el-button type="primary" @click="showOrderReceiveDetail=false">关闭</el-button>
-                </template>
-              </el-dialog>
+                <el-form label-width="104px" v-if="currentOrderReceive" style="padding:0 8px;">
+                  <div style="font-weight:600;font-size:14px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--shell-line);">订单信息</div>
+                  <el-form-item label="订单 ID">{{ currentOrderReceive.id }}</el-form-item>
+                  <el-form-item label="付款状态"><el-tag size="small" :type="orderStatusType(currentOrderReceive.status)">{{ currentOrderReceive.status }}</el-tag></el-form-item>
+                  <div style="font-weight:600;font-size:14px;margin:14px 0 10px;padding-bottom:8px;border-bottom:1px solid var(--shell-line);">商品套餐</div>
+                  <el-form-item label="应用名称"><span class="link-app" @click="openOrderAppDetail(currentOrderReceive.appName)">{{ currentOrderReceive.appName }} <el-icon style="vertical-align:middle;"><ArrowRight /></el-icon></span></el-form-item>
+                  <el-form-item label="套餐名称">{{ currentOrderReceive.pkgName }}</el-form-item>
+                  <el-form-item label="价格">¥{{ currentOrderReceive.price }}</el-form-item>
+                  <el-form-item label="购买类型">{{ currentOrderReceive.buyType }}</el-form-item>
+                  <el-form-item label="数量">{{ currentOrderReceive.qty }}</el-form-item>
+                  <el-form-item label="实付金额">¥{{ currentOrderReceive.payAmount }}</el-form-item>
+                  <div style="font-weight:600;font-size:14px;margin:14px 0 10px;padding-bottom:8px;border-bottom:1px solid var(--shell-line);">发票信息</div>
+                  <el-form-item label="发票类型">{{ currentOrderReceive.invoiceType || '—' }}</el-form-item>
+                  <el-form-item label="纳税人识别号">{{ currentOrderReceive.taxId || '—' }}</el-form-item>
+                  <el-form-item label="发票抬头">{{ currentOrderReceive.invoiceTitle || '—' }}</el-form-item>
+                  <el-form-item label="发票内容">{{ currentOrderReceive.invoiceContent || '—' }}</el-form-item>
+                  <el-form-item label="单位名称">{{ currentOrderReceive.companyName || '—' }}</el-form-item>
+                  <el-form-item label="邮箱">{{ currentOrderReceive.email || '—' }}</el-form-item>
+                  <template v-if="orderReceiveViewMode === 'approve' && currentOrderReceive.status === '退款中'">
+                    <div style="font-weight:600;font-size:14px;margin:14px 0 10px;padding-bottom:8px;border-bottom:1px solid var(--shell-line);">审批操作</div>
+                    <el-form-item label="审批结果" required>
+                      <el-radio-group v-model="refundApproval.result">
+                        <el-radio value="通过">通过</el-radio>
+                        <el-radio value="驳回">驳回</el-radio>
+                      </el-radio-group>
+                    </el-form-item>
+                    <el-form-item label="审批意见" :required="refundApproval.result === '驳回'">
+                      <el-input v-model="refundApproval.opinion" type="textarea" :rows="3" placeholder="通过可选填；驳回时必填" />
+                    </el-form-item>
+                  </template>
+                </el-form>
+                <div style="text-align:right;margin-top:16px;" v-if="orderReceiveViewMode === 'approve' && currentOrderReceive && currentOrderReceive.status === '退款中'">
+                  <el-button type="primary" @click="submitRefundApproval">提交审批</el-button>
+                </div>
+              </div>
             </div>
 
             <!-- ===== P20 试用订单记录 ===== -->
@@ -2934,6 +2951,7 @@
           appCategory: [],
           appType: '',
           appDataSync: 'no',
+          appJumpLoginLimit: '',
           pushUrl: '',
           syncToken: '',
           syncAesKey: '',
@@ -3119,9 +3137,12 @@
             { id:'ORD-20260708-008', pkgName:'AI增强套餐', userId:'user_008', userName:'郑伟', org:'自治区教育厅', status:'已支付', buyType:'个人', receiveTime:'2026-07-08 15:30', appName:'AI增强服务', price:3999, qty:1, payAmount:3999, total:3999, invoiceType:'—', taxId:'—', invoiceTitle:'郑伟', invoiceContent:'AI增强服务费', companyName:'—', email:'zhengwei@example.com' },
             { id:'ORD-20260709-009', pkgName:'短信1000条', userId:'user_009', userName:'黄强', org:'自治区教育厅', status:'已支付', buyType:'机构', receiveTime:'2026-07-09 09:00', appName:'短信服务', price:90, qty:2, payAmount:180, total:180, invoiceType:'增值税专用发票', taxId:'91450101XXXX', invoiceTitle:'自治区教育厅', invoiceContent:'短信服务费', companyName:'自治区教育厅', email:'finance@gxedu.cn' },
             { id:'ORD-20260710-010', pkgName:'存储500G', userId:'user_010', userName:'杨明', org:'南宁市教育局', status:'已支付', buyType:'个人', receiveTime:'2026-07-10 10:20', appName:'存储服务', price:399, qty:1, payAmount:399, total:399, invoiceType:'—', taxId:'—', invoiceTitle:'杨明', invoiceContent:'存储扩容服务', companyName:'—', email:'yangming@example.com' },
+            { id:'ORD-20260712-RF01', pkgName:'课堂互动助手专业版', userId:'user_002', userName:'李芳（机构）', org:'南宁市教育局', status:'已支付', buyType:'机构', receiveTime:'2026-07-12 09:10', appName:'课堂互动助手', price:2999, qty:1, payAmount:2999, total:2999, invoiceType:'增值税专用发票', taxId:'91450101XXXX9999', invoiceTitle:'南宁市教育局', invoiceContent:'软件服务费', companyName:'南宁市教育局', email:'finance@nnedu.cn' },
           ],
-          showOrderReceiveDetail: false,
+          orderReceiveView: false,
+          orderReceiveViewMode: 'view',
           currentOrderReceive: null,
+          refundApproval: { result: '通过', opinion: '' },
           myOrderView: 'list',
           currentMyOrder: null,
           myOrderSearch: '',
@@ -3131,6 +3152,7 @@
             { id:'O202606112064957880322682881', status:'已关闭', time:'2026-06-11 14:28:19', product:'作业批改服务 一个月体验版', appName:'作业批改服务', combo:'一个月体验版', price:0.01, qty:1, total:0.01, buyType:'个人', payMethod:'—', payStatus:'未付款', remark:'无', invoiceType:'—', taxId:'—', invoiceTitle:'—', invoiceContent:'—', companyName:'—', email:'—', payDeadline:'2026-06-11 14:58:19', icon:'作' },
             { id:'O2026061820635265262', status:'已完成', time:'2026-06-18 10:12:35', product:'作业批改服务 初中版2个学期', appName:'作业批改服务', combo:'初中版2个学期', price:25000.00, qty:1, total:25000.00, buyType:'个人', payMethod:'银行转账', payStatus:'已付款', remark:'无', invoiceType:'增值税普通发票', taxId:'91450100XXXX8888', invoiceTitle:'南宁市第一中学', invoiceContent:'软件服务费', companyName:'南宁市第一中学', email:'finance@nn1z.com', payDeadline:'2026-06-18 10:42:35', icon:'作' },
             { id:'O2026061920645123456', status:'待支付', time:'2026-06-19 09:30:00', product:'课堂互动助手 专业版', appName:'课堂互动助手', combo:'专业版', price:2999.00, qty:1, total:2999.00, buyType:'机构', payMethod:'—', payStatus:'未付款', remark:'无', invoiceType:'增值税专用发票', taxId:'91450101XXXX9999', invoiceTitle:'南宁市教育局', invoiceContent:'软件服务费', companyName:'南宁市教育局', email:'finance@nnedu.cn', payDeadline:'2099-12-31 23:59:59', icon:'课' },
+            { id:'ORD-20260712-RF01', status:'已支付', time:'2026-07-12 09:10:22', product:'课堂互动助手 专业版', appName:'课堂互动助手', combo:'专业版', price:2999.00, qty:1, total:2999.00, buyType:'机构', payMethod:'银行转账', payStatus:'已付款', remark:'无', invoiceType:'增值税专用发票', taxId:'91450101XXXX9999', invoiceTitle:'南宁市教育局', invoiceContent:'软件服务费', companyName:'南宁市教育局', email:'finance@nnedu.cn', payDeadline:'2099-12-31 23:59:59', icon:'课' },
           ],
           orderList: [
             { id:'ORD-20260701-001', authMode:'自动', pkgName:'短信500条', scope:'通用', bizType:'短信充值', duration:365, allocSize:'500', org:'南宁市教育局', userId:'user_001', expireTime:'2027-07-01', receiveTime:'2026-07-01 10:30', authStatus:'authorized', authDesc:'已自动授权' },
@@ -3883,12 +3905,17 @@
           if (Array.isArray(list)) list.forEach(v => { if (v && v !== e.target) v.pause(); });
         },
         goPage(p) { this.currentPage = p; },
+        jumpLoginLimitText(val) {
+          const map = { none: '无需登录', account_only: '仅持有账号登录', register_or_login: '可注册或登录' };
+          return map[val] || '-';
+        },
         onNewApp() {
           this.editMode = false;
           this.editAppId = null;
           this.appCategory = [];
           this.appType = '';
           this.appDataSync = 'no';
+          this.appJumpLoginLimit = '';
           this.pushUrl = '';
           this.syncToken = '';
           this.syncAesKey = '';
@@ -3922,6 +3949,7 @@
           this.appCategory = a && a.cat ? a.cat.split('/') : [];
           this.appType = a && a.appTypeLabel === '平台应用' ? 'platform' : 'non_platform';
           this.appDataSync = 'no';
+          this.appJumpLoginLimit = a && a.jumpLoginLimit ? a.jumpLoginLimit : '';
           this.pushUrl = '';
           this.syncToken = '';
           this.syncAesKey = '';
@@ -3962,6 +3990,10 @@
             }
             if (this.appDataSync === 'yes' && !(this.syncAesKey || '').trim()) {
               this.$message.warning('请填写 EncodingAesKey');
+              return;
+            }
+            if (!this.appJumpLoginLimit) {
+              this.$message.warning('请选择跳转登录限制');
               return;
             }
             if (this.appAttr[1] === 'lowcode' && !(this.lowcodeAppId || '').trim()) {
@@ -4018,6 +4050,7 @@
             if (t) {
               t.appTypeLabel = label;
               t.lowcodeAppId = this.lowcodeAppId;
+              t.jumpLoginLimit = this.appJumpLoginLimit;
               // 机构管理员提交上线申请：生成审批记录，由桂教通超级管理员审批
               if (this.currentRole === 'tenant_admin') {
                 const rid = 'APP-' + (t.appId || 1000);
@@ -4036,7 +4069,7 @@
             const newAppId = maxAppId + 1;
             const isLowcode = this.appAttr[1] === 'lowcode';
             const newOpenId = isLowcode ? (this.lowcodeAppId || this.genOpenId()) : this.genOpenId();
-            this.appList.unshift({ id: Date.now(), appId: newAppId, lowcodeAppId: this.lowcodeAppId, appOpenId: newOpenId, name:'新建应用', cat: (this.appCategory || []).join('/'), appTypeLabel: label, type:'原生应用', native_type: isLowcode ? '低代码应用' : '自建应用', scope:'学校', level:'所有学段', source:'本机构', status:'offline', listing:'unlisted', logo:'新' });
+            this.appList.unshift({ id: Date.now(), appId: newAppId, lowcodeAppId: this.lowcodeAppId, appOpenId: newOpenId, name:'新建应用', cat: (this.appCategory || []).join('/'), appTypeLabel: label, type:'原生应用', native_type: isLowcode ? '低代码应用' : '自建应用', scope:'学校', level:'所有学段', source:'本机构', status:'offline', listing:'unlisted', logo:'新', jumpLoginLimit: this.appJumpLoginLimit });
           }
           if (!this.editAppId) {
             this.$message.success('应用创建成功');
@@ -4794,9 +4827,64 @@
           }
           this.showExtendHistory = true;
         },
-        onViewOrderReceive(r) {
+        onViewOrderReceive(r, mode) {
           this.currentOrderReceive = r;
-          this.showOrderReceiveDetail = true;
+          this.orderReceiveViewMode = mode === 'approve' ? 'approve' : 'view';
+          this.orderReceiveView = true;
+          this.refundApproval = { result: '通过', opinion: '' };
+        },
+        openOrderAppDetail(appName) {
+          const all = [].concat(this.installedApps || [], this.mallApps || []);
+          let app = all.find(a => a.name === appName);
+          if (!app) {
+            app = { name: appName, initial: (appName || '应').slice(0, 1), gradient: 'linear-gradient(135deg,#2b7df6,#3b82f6)', paid: true, users: '—', score: '4.8', likes: 0, favorites: 0, views: 0, desc: appName + ' 应用详情', packages: [{ name: '专业版', price: 2999, unit: '/年' }], trial: false };
+          }
+          this.currentAppDetail = Object.assign({ users: app.source || '教育服务中心', score: '4.8', likes: 0, favorites: 0, views: 0 }, app);
+          this.appDetailTab = 'intro';
+          this.detailPkgIdx = 0;
+          this.currentPage = 'P22';
+          this.serviceView = 'detail';
+        },
+        revertRefundedApp(appName) {
+          // 退款仅回退购买/归属状态，不改变应用原有的安装状态：购买前已安装保持已安装、未安装保持未安装
+        },
+        orderStatusType(s) {
+          return ({ '待支付':'warning', '已完成':'success', '已支付':'success', '已取消':'info', '已关闭':'info', '退款中':'warning', '退款成功':'success', '退款驳回':'danger' })[s] || 'info';
+        },
+        nowStr() {
+          const d = new Date(); const p = n => String(n).padStart(2, '0');
+          return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
+        },
+        syncOrderStatus(id, status, extra) {
+          extra = extra || {};
+          const m = (this.myOrders || []).find(x => x.id === id);
+          if (m) { m.status = status; Object.assign(m, extra); }
+          const o = (this.orderReceiveList || []).find(x => x.id === id);
+          if (o) { o.status = status; Object.assign(o, extra); }
+        },
+        applyRefund(o) {
+          this.$confirm('确认申请退款【' + o.product + '】吗？退款将提交桂教通超级管理员审批。', '申请退款', {
+            confirmButtonText: '确认申请', cancelButtonText: '取消', type: 'warning'
+          }).then(() => {
+            this.syncOrderStatus(o.id, '退款中', { refundApplyTime: this.nowStr() });
+            this.$message.success('退款申请已提交，等待桂教通超级管理员审批');
+          }).catch(() => {});
+        },
+        submitRefundApproval() {
+          const r = this.currentOrderReceive;
+          if (!r || r.status !== '退款中') return;
+          if (this.refundApproval.result === '驳回' && !this.refundApproval.opinion.trim()) {
+            this.$message.warning('驳回时审批意见必填');
+            return;
+          }
+          const next = this.refundApproval.result === '通过' ? '退款成功' : '退款驳回';
+          this.syncOrderStatus(r.id, next, { approvalResult: this.refundApproval.result, approvalOpinion: this.refundApproval.opinion });
+          if (this.currentOrderReceive) { this.currentOrderReceive.approvalResult = this.refundApproval.result; this.currentOrderReceive.approvalOpinion = this.refundApproval.opinion; }
+          this.refundApproval = { result: '通过', opinion: '' };
+          // 退款审批通过后，应用回到购买前状态：购买前已安装则保持已安装状态，未安装则保持未安装状态，不强制从「我的应用中心」移除；应用详情页根据状态展示购买/安装按钮
+          if (next === '退款成功') this.revertRefundedApp(r.appName);
+          this.orderReceiveView = false;
+          this.$message.success(next === '退款成功' ? '退款审批通过，已完成退款，应用已回到购买前状态' : '已驳回该退款申请');
         },
         onAuthorize(o) {
           this.$confirm('确认授权【' + o.pkgName + '】吗？', '提示', { confirmButtonText:'确认', cancelButtonText:'取消', type:'info' }).then(() => {
