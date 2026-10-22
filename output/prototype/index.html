@@ -537,7 +537,7 @@
                 <el-button type="primary" size="small" @click="onNewApp">新增应用</el-button>
               </div>
               <table class="data-table">
-                <thead><tr><th>Logo</th><th>应用名称</th><th>应用ID</th><th v-if="currentRole==='platform_admin'">应用openId</th><th>应用分类</th><th v-if="currentRole==='platform_admin'">应用类型</th><th>应用属性</th><th>适用机构</th><th>学段</th><th>状态</th><th>操作</th></tr></thead>
+                <thead><tr><th>Logo</th><th>应用名称</th><th>应用ID</th><th v-if="currentRole==='platform_admin'">应用openId</th><th>应用分类</th><th v-if="currentRole==='platform_admin'">是否平台应用</th><th>应用属性</th><th>适用机构</th><th>学段</th><th>状态</th><th>操作</th></tr></thead>
                 <tbody>
                   <tr v-for="app in appList" :key="app.id">
                     <td><span style="display:inline-flex;width:28px;height:28px;border-radius:6px;background:#e8f0fe;align-items:center;justify-content:center;font-size:12px;color:#2f7df6;">{{ app.logo }}</span></td>
@@ -581,11 +581,14 @@
                     <el-form-item label="所属分类" required style="width:50%;padding:0 8px;">
                       <el-cascader v-model="appCategory" :options="appCategoryOptions" :props="{ expandTrigger: 'hover' }" placeholder="请选择" style="width:100%;" />
                     </el-form-item>
-                    <el-form-item label="应用类型" required v-if="currentRole==='platform_admin'" style="width:50%;padding:0 8px;">
-                      <el-radio-group v-model="appType">
-                        <el-radio value="platform">平台应用</el-radio>
-                        <el-radio value="non_platform">非平台应用</el-radio>
-                      </el-radio-group>
+                    <el-form-item label="是否平台应用" required v-if="currentRole==='platform_admin'" style="width:50%;padding:0 8px;">
+                      <div>
+                        <el-radio-group v-model="appType">
+                          <el-radio value="platform">平台型</el-radio>
+                          <el-radio value="non_platform">非平台型</el-radio>
+                        </el-radio-group>
+                        <div style="font-size:12px;color:var(--shell-text-secondary);line-height:1.6;margin-top:4px;">平台型指的是不需要上架能用的应用，比如：桂教通门户；非平台型指的是需要上架使用的原生应用、生态应用等。</div>
+                      </div>
                     </el-form-item>
                     <el-form-item label="是否数据同步" required style="width:50%;padding:0 8px;">
                       <el-radio-group v-model="appDataSync">
@@ -939,7 +942,7 @@
                 <el-button size="small">重置</el-button>
               </div>
               <table class="data-table">
-                <thead><tr><th>Logo</th><th>应用名称</th><th>分类</th><th>开发者</th><th>应用属性</th><th v-if="currentRole==='platform_admin'">应用类型</th><th>上架范围</th><th>创建时间</th><th>状态</th><th>操作</th></tr></thead>
+                <thead><tr><th>Logo</th><th>应用名称</th><th>分类</th><th>开发者</th><th>应用属性</th><th v-if="currentRole==='platform_admin'">是否平台应用</th><th>上架范围</th><th>创建时间</th><th>状态</th><th>操作</th></tr></thead>
                 <tbody>
                   <tr v-for="(a,i) in shelfList" :key="i">
                     <td><span style="display:inline-flex;width:28px;height:28px;border-radius:6px;background:#e8f0fe;align-items:center;justify-content:center;font-size:12px;color:#2f7df6;">{{ a.initial }}</span></td>
@@ -971,11 +974,11 @@
                       <el-option label="教务管理" value="教务管理"></el-option>
                       <el-option label="校园办公" value="校园办公"></el-option>
                     </el-select>
-                    <span style="font-size:13px;color:var(--shell-text-secondary);white-space:nowrap;margin-left:4px;">应用属性:</span>
+                    <span style="font-size:13px;color:var(--shell-text-secondary);white-space:nowrap;margin-left:4px;">是否平台应用:</span>
                     <el-select v-model="shareFilter.attr" placeholder="全部" style="width:130px;" size="small" clearable>
                       <el-option label="全部" value=""></el-option>
-                      <el-option label="平台应用" value="平台应用"></el-option>
-                      <el-option label="非平台应用" value="非平台应用"></el-option>
+                      <el-option label="平台型" value="平台型"></el-option>
+                      <el-option label="非平台型" value="非平台型"></el-option>
                     </el-select>
                     <el-button type="primary" size="small" @click="onShareSearch">搜索</el-button>
                     <el-button size="small" @click="onShareReset">重置</el-button>
@@ -1042,7 +1045,7 @@
                 <thead>
                   <tr>
                     <th>Logo</th><th>应用名称</th><th>应用ID</th><th>应用openId</th><th>上架机构</th>
-                    <th>应用分类</th><th v-if="currentRole==='platform_admin'">应用类型</th><th>应用属性</th><th>适用机构</th><th>学段</th><th>状态</th><th>操作</th>
+                    <th>应用分类</th><th v-if="currentRole==='platform_admin'">是否平台应用</th><th>应用属性</th><th>适用机构</th><th>学段</th><th>状态</th><th>操作</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1478,7 +1481,7 @@
               </div>
               <div class="list-hint" style="font-size:12px;color:var(--shell-text-secondary);margin:6px 0 0;">列表复用「应用申请管理」字段（不含操作列），类型标签标识待办类型：上线 / 修改。</div>
               <table class="data-table">
-                <thead><tr><th>Logo</th><th>应用名称</th><th>应用ID</th><th>应用分类</th><th>应用属性</th><th>开发者名称</th><th>申请时间</th><th>类型</th><th v-if="reviewTab==='done'">审批时间</th><th v-if="reviewTab==='done'">审批结果</th><th v-if="reviewTab==='done'">审批人</th><th>操作</th></tr></thead>
+                <thead><tr><th>Logo</th><th>应用名称</th><th>应用ID</th><th>应用分类</th><th>是否平台应用</th><th>开发者名称</th><th>申请时间</th><th>类型</th><th v-if="reviewTab==='done'">审批时间</th><th v-if="reviewTab==='done'">审批结果</th><th v-if="reviewTab==='done'">审批人</th><th>操作</th></tr></thead>
                 <tbody>
                   <tr v-for="(r,i) in filteredReviews" :key="i">
                     <td><span class="app-logo-mini">{{ r.logo }}</span></td><td>{{ r.name }}</td><td>{{ r.id }}</td><td>{{ r.cat }}</td><td>{{ r.attr }}</td><td>{{ r.dev }}</td><td>{{ r.time }}</td><td><el-tag size="small" :type="r.typeTag==='修改'?'warning':'primary'">{{ r.typeTag }}</el-tag></td>
@@ -2949,7 +2952,7 @@
           editMode: false,
           editAppId: null,
           appCategory: [],
-          appType: '',
+          appType: 'non_platform',
           appDataSync: 'no',
           appJumpLoginLimit: '',
           pushUrl: '',
@@ -3193,38 +3196,38 @@
           dialogTitle: '',
           dialogType: '',
           appList: [
-            { id:1, appId:1001, lowcodeAppId:'lc_ketang_app01', appOpenId:'lc_ketang_app01', name:'课堂互动助手', cat:'教学管理/课堂工具', appTypeLabel:'平台应用', type:'原生应用', native_type:'低代码应用', scope:'学校', level:'所有学段', source:'本机构', status:'offline', listing:'unlisted', logo:'课' },
-            { id:2, appId:1002, appOpenId:'eco_xiaoyuan012', name:'校园通', cat:'校园办公', appTypeLabel:'非平台应用', type:'生态应用', scope:'学校、上级单位', level:'所有学段', source:'本机构', status:'online', listing:'listed', logo:'校' },
-            { id:3, appId:1003, appOpenId:'sb_yyting_train', name:'英语听说训练', cat:'教学管理', appTypeLabel:'非平台应用', type:'原生应用', native_type:'自建应用', scope:'学校', level:'初中、高中', source:'本机构', status:'offline', listing:'unlisted', logo:'英' },
-            { id:4, appId:1004, appOpenId:'eco_tushuguan01', name:'图书管理', cat:'教务管理', appTypeLabel:'非平台应用', type:'生态应用', scope:'学校', level:'所有学段', source:'本机构', status:'offline', listing:'unlisted', logo:'图' },
-            { id:5, appId:1005, lowcodeAppId:'lc_paike_app053', appOpenId:'lc_paike_app053', name:'排课系统', cat:'教学管理', appTypeLabel:'平台应用', type:'原生应用', native_type:'低代码应用', scope:'学校', level:'小学、初中', source:'本机构', status:'online', listing:'unlisted', logo:'排' },
-            { id:6, appId:1006, appOpenId:'sb_chengji_ana1', name:'成绩分析', cat:'教务管理', appTypeLabel:'非平台应用', type:'原生应用', native_type:'自建应用', scope:'学校、上级单位', level:'初中、高中', source:'本机构', status:'online', listing:'listed', logo:'成' },
-            { id:7, appId:1007, appOpenId:'eco_xiaoyuanOA0', name:'校园OA', cat:'校园办公', appTypeLabel:'非平台应用', type:'生态应用', scope:'学校', level:'所有学段', source:'本机构', status:'offline', listing:'unlisted', logo:'OA' },
-            { id:8, appId:1008, appOpenId:'sb_jiaxiao_hud1', name:'家校互动', cat:'校园办公', appTypeLabel:'非平台应用', type:'原生应用', native_type:'自建应用', scope:'学校', level:'小学、初中', source:'本机构', status:'online', listing:'unlisted', logo:'家' },
-            { id:9, appId:1009, appOpenId:'sb_kaoshi_gl01', name:'考试管理', cat:'教务管理', appTypeLabel:'非平台应用', type:'原生应用', native_type:'自建应用', scope:'学校、上级单位', level:'初中、高中', source:'本机构', status:'offline', listing:'dismissed', logo:'考' },
-            { id:11, appId:1011, appOpenId:'eco_xuanke_app1', name:'选课系统', cat:'教务管理', appTypeLabel:'非平台应用', type:'生态应用', scope:'学校', level:'高中', source:'本机构', status:'offline', listing:'unlisted', logo:'选' },
-            { id:10, appId:1010, appOpenId:'sb_dianzibanpa1', name:'电子班牌', cat:'教学管理', appTypeLabel:'平台应用', type:'原生应用', native_type:'自建应用', scope:'学校', level:'所有学段', source:'本机构', status:'online', listing:'listed', logo:'电' },
+            { id:1, appId:1001, lowcodeAppId:'lc_ketang_app01', appOpenId:'lc_ketang_app01', name:'课堂互动助手', cat:'教学管理/课堂工具', appTypeLabel:'平台型', type:'原生应用', native_type:'低代码应用', scope:'学校', level:'所有学段', source:'本机构', status:'offline', listing:'unlisted', logo:'课' },
+            { id:2, appId:1002, appOpenId:'eco_xiaoyuan012', name:'校园通', cat:'校园办公', appTypeLabel:'非平台型', type:'生态应用', scope:'学校、上级单位', level:'所有学段', source:'本机构', status:'online', listing:'listed', logo:'校' },
+            { id:3, appId:1003, appOpenId:'sb_yyting_train', name:'英语听说训练', cat:'教学管理', appTypeLabel:'非平台型', type:'原生应用', native_type:'自建应用', scope:'学校', level:'初中、高中', source:'本机构', status:'offline', listing:'unlisted', logo:'英' },
+            { id:4, appId:1004, appOpenId:'eco_tushuguan01', name:'图书管理', cat:'教务管理', appTypeLabel:'非平台型', type:'生态应用', scope:'学校', level:'所有学段', source:'本机构', status:'offline', listing:'unlisted', logo:'图' },
+            { id:5, appId:1005, lowcodeAppId:'lc_paike_app053', appOpenId:'lc_paike_app053', name:'排课系统', cat:'教学管理', appTypeLabel:'平台型', type:'原生应用', native_type:'低代码应用', scope:'学校', level:'小学、初中', source:'本机构', status:'online', listing:'unlisted', logo:'排' },
+            { id:6, appId:1006, appOpenId:'sb_chengji_ana1', name:'成绩分析', cat:'教务管理', appTypeLabel:'非平台型', type:'原生应用', native_type:'自建应用', scope:'学校、上级单位', level:'初中、高中', source:'本机构', status:'online', listing:'listed', logo:'成' },
+            { id:7, appId:1007, appOpenId:'eco_xiaoyuanOA0', name:'校园OA', cat:'校园办公', appTypeLabel:'非平台型', type:'生态应用', scope:'学校', level:'所有学段', source:'本机构', status:'offline', listing:'unlisted', logo:'OA' },
+            { id:8, appId:1008, appOpenId:'sb_jiaxiao_hud1', name:'家校互动', cat:'校园办公', appTypeLabel:'非平台型', type:'原生应用', native_type:'自建应用', scope:'学校', level:'小学、初中', source:'本机构', status:'online', listing:'unlisted', logo:'家' },
+            { id:9, appId:1009, appOpenId:'sb_kaoshi_gl01', name:'考试管理', cat:'教务管理', appTypeLabel:'非平台型', type:'原生应用', native_type:'自建应用', scope:'学校、上级单位', level:'初中、高中', source:'本机构', status:'offline', listing:'dismissed', logo:'考' },
+            { id:11, appId:1011, appOpenId:'eco_xuanke_app1', name:'选课系统', cat:'教务管理', appTypeLabel:'非平台型', type:'生态应用', scope:'学校', level:'高中', source:'本机构', status:'offline', listing:'unlisted', logo:'选' },
+            { id:10, appId:1010, appOpenId:'sb_dianzibanpa1', name:'电子班牌', cat:'教学管理', appTypeLabel:'平台型', type:'原生应用', native_type:'自建应用', scope:'学校', level:'所有学段', source:'本机构', status:'online', listing:'listed', logo:'电' },
           ],
           shelfList: [
-            { initial:'课', name:'课堂互动助手', cat:'教学管理', dev:'南宁市教育局', zoneList:['南宁市教育局'], time:'2026-07-10', status:'unlisted', source:'南宁市教育局', type:'原生应用', native_type:'低代码应用', appTypeLabel:'平台应用' },
-            { initial:'校', name:'校园通', cat:'校园办公', dev:'南宁市教育局', zoneList:['广西壮族自治区教育厅'], time:'2026-07-12', status:'listed', source:'南宁市教育局', type:'生态应用', native_type:'', appTypeLabel:'非平台应用' },
-            { initial:'英', name:'英语听说训练', cat:'教学管理', dev:'南宁市教育局', zoneList:['—'], time:'2026-07-14', status:'unlisted', source:'南宁市教育局', type:'原生应用', native_type:'自建应用', appTypeLabel:'非平台应用' },
-            { initial:'图', name:'图书管理', cat:'教务管理', dev:'南宁市教育局', zoneList:['南宁市教育局'], time:'2026-07-15', status:'unlisted', source:'南宁市教育局', type:'生态应用', native_type:'', appTypeLabel:'非平台应用' },
-            { initial:'排', name:'排课系统', cat:'教学管理', dev:'南宁市教育局', zoneList:['广西壮族自治区教育厅'], time:'2026-07-16', status:'listed', source:'南宁市教育局', type:'原生应用', native_type:'低代码应用', appTypeLabel:'平台应用' },
-            { initial:'成', name:'成绩分析', cat:'教务管理', dev:'南宁市教育局', zoneList:['南宁市教育局'], time:'2026-07-17', status:'listed', source:'南宁市教育局', type:'原生应用', native_type:'自建应用', appTypeLabel:'非平台应用' },
-            { initial:'OA', name:'校园OA', cat:'校园办公', dev:'南宁市教育局', zoneList:['—'], time:'2026-07-18', status:'unlisted', source:'南宁市教育局', type:'生态应用', native_type:'', appTypeLabel:'非平台应用' },
-            { initial:'家', name:'家校互动', cat:'校园办公', dev:'南宁市教育局', zoneList:['南宁市教育局'], time:'2026-07-19', status:'unlisted', source:'南宁市教育局', type:'原生应用', native_type:'自建应用', appTypeLabel:'非平台应用' },
-            { initial:'选', name:'选课系统', cat:'教务管理', dev:'自治区教育厅', zoneList:['广西壮族自治区教育厅'], time:'2026-07-20', status:'listed', source:'南宁市教育局', type:'生态应用', native_type:'', appTypeLabel:'非平台应用' },
-            { initial:'电', name:'电子班牌', cat:'教学管理', dev:'自治区教育厅', zoneList:['广西壮族自治区教育厅'], time:'2026-07-21', status:'listed', source:'南宁市教育局', type:'原生应用', native_type:'自建应用', appTypeLabel:'非平台应用' },
-            { initial:'智', name:'智慧课堂', cat:'教学管理', dev:'柳州市高级中学', zoneList:['—'], time:'2026-07-22', status:'unlisted', source:'柳州市高级中学', sharedFrom:'柳州市高级中学', type:'原生应用', native_type:'低代码应用', appTypeLabel:'平台应用' },
-            { initial:'考', name:'考试管理', cat:'教务管理', dev:'南宁市教育局', zoneList:['南宁市教育局'], time:'2026-07-23', status:'dismissed', source:'南宁市教育局', type:'原生应用', native_type:'自建应用', appTypeLabel:'非平台应用' },
+            { initial:'课', name:'课堂互动助手', cat:'教学管理', dev:'南宁市教育局', zoneList:['南宁市教育局'], time:'2026-07-10', status:'unlisted', source:'南宁市教育局', type:'原生应用', native_type:'低代码应用', appTypeLabel:'平台型' },
+            { initial:'校', name:'校园通', cat:'校园办公', dev:'南宁市教育局', zoneList:['广西壮族自治区教育厅'], time:'2026-07-12', status:'listed', source:'南宁市教育局', type:'生态应用', native_type:'', appTypeLabel:'非平台型' },
+            { initial:'英', name:'英语听说训练', cat:'教学管理', dev:'南宁市教育局', zoneList:['—'], time:'2026-07-14', status:'unlisted', source:'南宁市教育局', type:'原生应用', native_type:'自建应用', appTypeLabel:'非平台型' },
+            { initial:'图', name:'图书管理', cat:'教务管理', dev:'南宁市教育局', zoneList:['南宁市教育局'], time:'2026-07-15', status:'unlisted', source:'南宁市教育局', type:'生态应用', native_type:'', appTypeLabel:'非平台型' },
+            { initial:'排', name:'排课系统', cat:'教学管理', dev:'南宁市教育局', zoneList:['广西壮族自治区教育厅'], time:'2026-07-16', status:'listed', source:'南宁市教育局', type:'原生应用', native_type:'低代码应用', appTypeLabel:'平台型' },
+            { initial:'成', name:'成绩分析', cat:'教务管理', dev:'南宁市教育局', zoneList:['南宁市教育局'], time:'2026-07-17', status:'listed', source:'南宁市教育局', type:'原生应用', native_type:'自建应用', appTypeLabel:'非平台型' },
+            { initial:'OA', name:'校园OA', cat:'校园办公', dev:'南宁市教育局', zoneList:['—'], time:'2026-07-18', status:'unlisted', source:'南宁市教育局', type:'生态应用', native_type:'', appTypeLabel:'非平台型' },
+            { initial:'家', name:'家校互动', cat:'校园办公', dev:'南宁市教育局', zoneList:['南宁市教育局'], time:'2026-07-19', status:'unlisted', source:'南宁市教育局', type:'原生应用', native_type:'自建应用', appTypeLabel:'非平台型' },
+            { initial:'选', name:'选课系统', cat:'教务管理', dev:'自治区教育厅', zoneList:['广西壮族自治区教育厅'], time:'2026-07-20', status:'listed', source:'南宁市教育局', type:'生态应用', native_type:'', appTypeLabel:'非平台型' },
+            { initial:'电', name:'电子班牌', cat:'教学管理', dev:'自治区教育厅', zoneList:['广西壮族自治区教育厅'], time:'2026-07-21', status:'listed', source:'南宁市教育局', type:'原生应用', native_type:'自建应用', appTypeLabel:'非平台型' },
+            { initial:'智', name:'智慧课堂', cat:'教学管理', dev:'柳州市高级中学', zoneList:['—'], time:'2026-07-22', status:'unlisted', source:'柳州市高级中学', sharedFrom:'柳州市高级中学', type:'原生应用', native_type:'低代码应用', appTypeLabel:'平台型' },
+            { initial:'考', name:'考试管理', cat:'教务管理', dev:'南宁市教育局', zoneList:['南宁市教育局'], time:'2026-07-23', status:'dismissed', source:'南宁市教育局', type:'原生应用', native_type:'自建应用', appTypeLabel:'非平台型' },
           ],
           // 应用分享管理：当前机构分享给其他机构 / 桂教通平台的应用（shareScope 记录上架时的分享范围）
           shareList: [
-            { initial:'校', name:'校园通', cat:'校园办公', appTypeLabel:'非平台应用', type:'生态应用', native_type:'', shareScope:['guide','other'], shareOrgs:['南宁市第一中学','柳州市高级中学','桂林市育才小学','北海市实验学校','玉林市第一初级中学','梧州市实验小学'], shareTime:'2026-07-12', status:'listed' },
-            { initial:'排', name:'排课系统', cat:'教学管理', appTypeLabel:'平台应用', type:'原生应用', native_type:'低代码应用', shareScope:['guide'], shareOrgs:[], shareTime:'2026-07-16', status:'listed' },
-            { initial:'成', name:'成绩分析', cat:'教务管理', appTypeLabel:'非平台应用', type:'原生应用', native_type:'自建应用', shareScope:['other'], shareOrgs:['桂林市育才小学'], shareTime:'2026-07-17', status:'listed' },
-            { initial:'家', name:'家校互动', cat:'校园办公', appTypeLabel:'非平台应用', type:'原生应用', native_type:'自建应用', shareScope:['guide','other'], shareOrgs:['北海市实验学校'], shareTime:'2026-07-19', status:'unlisted' },
+            { initial:'校', name:'校园通', cat:'校园办公', appTypeLabel:'非平台型', type:'生态应用', native_type:'', shareScope:['guide','other'], shareOrgs:['南宁市第一中学','柳州市高级中学','桂林市育才小学','北海市实验学校','玉林市第一初级中学','梧州市实验小学'], shareTime:'2026-07-12', status:'listed' },
+            { initial:'排', name:'排课系统', cat:'教学管理', appTypeLabel:'平台型', type:'原生应用', native_type:'低代码应用', shareScope:['guide'], shareOrgs:[], shareTime:'2026-07-16', status:'listed' },
+            { initial:'成', name:'成绩分析', cat:'教务管理', appTypeLabel:'非平台型', type:'原生应用', native_type:'自建应用', shareScope:['other'], shareOrgs:['桂林市育才小学'], shareTime:'2026-07-17', status:'listed' },
+            { initial:'家', name:'家校互动', cat:'校园办公', appTypeLabel:'非平台型', type:'原生应用', native_type:'自建应用', shareScope:['guide','other'], shareOrgs:['北海市实验学校'], shareTime:'2026-07-19', status:'unlisted' },
           ],
           shelfTab: 'shelf',
           shareFilter: { name:'', cat:'', attr:'' },
@@ -3233,36 +3236,36 @@
           stopShareForm: { scopes: [] },
           platformAppFilter: { name:'', cat:'', appId:'' },
           platformAppList: [
-            { logo:'校', name:'校园通',       appId:'2001', appOpenId:'eco_xiaoyuantong', tenantName:'南宁市教育局',   cat:'校园办公', appTypeLabel:'非平台应用', type:'生态应用', native_type:'',           scope:'学校',        level:'所有学段' },
-            { logo:'排', name:'排课系统',     appId:'2002', appOpenId:'lc_paike00000001',  tenantName:'南宁市教育局',   cat:'教学管理', appTypeLabel:'平台应用',   type:'原生应用', native_type:'低代码应用', scope:'学校',        level:'高中' },
-            { logo:'成', name:'成绩分析',     appId:'2003', appOpenId:'sb_chengji_ana001', tenantName:'柳州市教育局',   cat:'教务管理', appTypeLabel:'非平台应用', type:'原生应用', native_type:'自建应用',   scope:'学校、上级单位', level:'初中、高中' },
-            { logo:'选', name:'选课系统',     appId:'2004', appOpenId:'eco_xuanke_sys002', tenantName:'自治区教育厅',   cat:'教务管理', appTypeLabel:'非平台应用', type:'生态应用', native_type:'',           scope:'学校',        level:'高中' },
-            { logo:'电', name:'电子班牌',     appId:'2005', appOpenId:'sb_dianzibanpai01', tenantName:'桂林市教育局',   cat:'教学管理', appTypeLabel:'平台应用',   type:'原生应用', native_type:'自建应用',   scope:'学校',        level:'所有学段' },
-            { logo:'课', name:'课堂互动助手', appId:'2006', appOpenId:'lc_ketang_helper01', tenantName:'南宁市教育局',   cat:'教学管理', appTypeLabel:'平台应用',   type:'原生应用', native_type:'低代码应用', scope:'学校',        level:'小学、初中' },
-            { logo:'图', name:'图书管理',     appId:'2007', appOpenId:'eco_tushu_manage01', tenantName:'北海市教育局',   cat:'教务管理', appTypeLabel:'非平台应用', type:'生态应用', native_type:'',           scope:'学校、上级单位', level:'所有学段' },
+            { logo:'校', name:'校园通',       appId:'2001', appOpenId:'eco_xiaoyuantong', tenantName:'南宁市教育局',   cat:'校园办公', appTypeLabel:'非平台型', type:'生态应用', native_type:'',           scope:'学校',        level:'所有学段' },
+            { logo:'排', name:'排课系统',     appId:'2002', appOpenId:'lc_paike00000001',  tenantName:'南宁市教育局',   cat:'教学管理', appTypeLabel:'平台型',   type:'原生应用', native_type:'低代码应用', scope:'学校',        level:'高中' },
+            { logo:'成', name:'成绩分析',     appId:'2003', appOpenId:'sb_chengji_ana001', tenantName:'柳州市教育局',   cat:'教务管理', appTypeLabel:'非平台型', type:'原生应用', native_type:'自建应用',   scope:'学校、上级单位', level:'初中、高中' },
+            { logo:'选', name:'选课系统',     appId:'2004', appOpenId:'eco_xuanke_sys002', tenantName:'自治区教育厅',   cat:'教务管理', appTypeLabel:'非平台型', type:'生态应用', native_type:'',           scope:'学校',        level:'高中' },
+            { logo:'电', name:'电子班牌',     appId:'2005', appOpenId:'sb_dianzibanpai01', tenantName:'桂林市教育局',   cat:'教学管理', appTypeLabel:'平台型',   type:'原生应用', native_type:'自建应用',   scope:'学校',        level:'所有学段' },
+            { logo:'课', name:'课堂互动助手', appId:'2006', appOpenId:'lc_ketang_helper01', tenantName:'南宁市教育局',   cat:'教学管理', appTypeLabel:'平台型',   type:'原生应用', native_type:'低代码应用', scope:'学校',        level:'小学、初中' },
+            { logo:'图', name:'图书管理',     appId:'2007', appOpenId:'eco_tushu_manage01', tenantName:'北海市教育局',   cat:'教务管理', appTypeLabel:'非平台型', type:'生态应用', native_type:'',           scope:'学校、上级单位', level:'所有学段' },
           ],
           pendingReviews: [
-            { id:'APP-001', name:'图书管理', type:'生态应用', dev:'李芳', time:'2026-07-16 09:30', logo:'图', cat:'教务管理', attr:'非平台应用', typeTag:'上线' },
-            { id:'APP-002', name:'排课系统', type:'原生应用', dev:'王强', time:'2026-07-16 14:20', logo:'排', cat:'教学管理/排课管理', attr:'平台应用', typeTag:'上线' },
-            { id:'APP-003', name:'成绩分析', type:'原生应用', dev:'刘芳', time:'2026-07-17 08:10', logo:'成', cat:'教务管理', attr:'非平台应用', typeTag:'上线' },
-            { id:'APP-004', name:'家校互动', type:'原生应用', dev:'陈丽', time:'2026-07-17 10:30', logo:'家', cat:'校园办公/家校互动', attr:'平台应用', typeTag:'修改' },
-            { id:'APP-005', name:'校园OA', type:'生态应用', dev:'杨明', time:'2026-07-17 14:00', logo:'OA', cat:'校园办公', attr:'非平台应用', typeTag:'上线' },
-            { id:'APP-006', name:'选课系统', type:'生态应用', dev:'赵刚', time:'2026-07-18 09:00', logo:'选', cat:'教务管理', attr:'非平台应用', typeTag:'上线' },
-            { id:'APP-007', name:'电子班牌', type:'原生应用', dev:'周华', time:'2026-07-18 11:20', logo:'电', cat:'校园办公', attr:'平台应用', typeTag:'修改' },
-            { id:'APP-008', name:'在线考试', type:'原生应用', dev:'吴红', time:'2026-07-18 15:40', logo:'考', cat:'教学管理', attr:'平台应用', typeTag:'上线' },
-            { id:'APP-009', name:'智慧课堂', type:'生态应用', dev:'郑伟', time:'2026-07-19 09:10', logo:'智', cat:'教学管理/课堂工具', attr:'非平台应用', typeTag:'上线' },
-            { id:'APP-010', name:'教师档案', type:'原生应用', dev:'黄强', time:'2026-07-19 13:30', logo:'教', cat:'教学管理/教师档案', attr:'平台应用', typeTag:'上线' },
+            { id:'APP-001', name:'图书管理', type:'生态应用', dev:'李芳', time:'2026-07-16 09:30', logo:'图', cat:'教务管理', attr:'非平台型', typeTag:'上线' },
+            { id:'APP-002', name:'排课系统', type:'原生应用', dev:'王强', time:'2026-07-16 14:20', logo:'排', cat:'教学管理/排课管理', attr:'平台型', typeTag:'上线' },
+            { id:'APP-003', name:'成绩分析', type:'原生应用', dev:'刘芳', time:'2026-07-17 08:10', logo:'成', cat:'教务管理', attr:'非平台型', typeTag:'上线' },
+            { id:'APP-004', name:'家校互动', type:'原生应用', dev:'陈丽', time:'2026-07-17 10:30', logo:'家', cat:'校园办公/家校互动', attr:'平台型', typeTag:'修改' },
+            { id:'APP-005', name:'校园OA', type:'生态应用', dev:'杨明', time:'2026-07-17 14:00', logo:'OA', cat:'校园办公', attr:'非平台型', typeTag:'上线' },
+            { id:'APP-006', name:'选课系统', type:'生态应用', dev:'赵刚', time:'2026-07-18 09:00', logo:'选', cat:'教务管理', attr:'非平台型', typeTag:'上线' },
+            { id:'APP-007', name:'电子班牌', type:'原生应用', dev:'周华', time:'2026-07-18 11:20', logo:'电', cat:'校园办公', attr:'平台型', typeTag:'修改' },
+            { id:'APP-008', name:'在线考试', type:'原生应用', dev:'吴红', time:'2026-07-18 15:40', logo:'考', cat:'教学管理', attr:'平台型', typeTag:'上线' },
+            { id:'APP-009', name:'智慧课堂', type:'生态应用', dev:'郑伟', time:'2026-07-19 09:10', logo:'智', cat:'教学管理/课堂工具', attr:'非平台型', typeTag:'上线' },
+            { id:'APP-010', name:'教师档案', type:'原生应用', dev:'黄强', time:'2026-07-19 13:30', logo:'教', cat:'教学管理/教师档案', attr:'平台型', typeTag:'上线' },
           ],
           doneReviews: [
-            { id:'APP-010', name:'课堂互动助手', type:'原生应用', dev:'张明', time:'2026-07-15 10:00', doneTime:'2026-07-16 11:30', result:'通过', reviewer:'赵审批', logo:'课', cat:'教学管理/课堂工具', attr:'平台应用', typeTag:'上线' },
-            { id:'APP-011', name:'校园通', type:'生态应用', dev:'张明', time:'2026-07-14 15:00', doneTime:'2026-07-15 09:00', result:'驳回', reviewer:'赵审批', logo:'校', cat:'校园办公', attr:'非平台应用', typeTag:'上线' },
-            { id:'APP-012', name:'英语听说', type:'原生应用', dev:'李芳', time:'2026-07-13 08:30', doneTime:'2026-07-14 10:00', result:'通过', reviewer:'钱审批', logo:'英', cat:'教学管理', attr:'非平台应用', typeTag:'上线' },
-            { id:'APP-013', name:'图书管理', type:'生态应用', dev:'王强', time:'2026-07-12 14:00', doneTime:'2026-07-13 16:00', result:'通过', reviewer:'孙审批', logo:'图', cat:'教务管理', attr:'非平台应用', typeTag:'修改' },
-            { id:'APP-014', name:'选课系统', type:'生态应用', dev:'刘芳', time:'2026-07-11 09:00', doneTime:'2026-07-12 11:30', result:'驳回', reviewer:'钱审批', logo:'选', cat:'教务管理', attr:'非平台应用', typeTag:'上线' },
-            { id:'APP-015', name:'排课系统', type:'原生应用', dev:'王强', time:'2026-07-10 10:00', doneTime:'2026-07-11 15:00', result:'通过', reviewer:'赵审批', logo:'排', cat:'教学管理/排课管理', attr:'平台应用', typeTag:'上线' },
-            { id:'APP-016', name:'成绩分析', type:'原生应用', dev:'刘芳', time:'2026-07-09 13:00', doneTime:'2026-07-10 09:30', result:'通过', reviewer:'孙审批', logo:'成', cat:'教务管理', attr:'非平台应用', typeTag:'上线' },
-            { id:'APP-017', name:'校园OA', type:'生态应用', dev:'杨明', time:'2026-07-08 11:00', doneTime:'2026-07-09 14:00', result:'驳回', reviewer:'赵审批', logo:'OA', cat:'校园办公', attr:'非平台应用', typeTag:'上线' },
-            { id:'APP-018', name:'家校互动', type:'原生应用', dev:'陈丽', time:'2026-07-07 15:00', doneTime:'2026-07-08 10:30', result:'通过', reviewer:'钱审批', logo:'家', cat:'校园办公/家校互动', attr:'平台应用', typeTag:'修改' },
+            { id:'APP-010', name:'课堂互动助手', type:'原生应用', dev:'张明', time:'2026-07-15 10:00', doneTime:'2026-07-16 11:30', result:'通过', reviewer:'赵审批', logo:'课', cat:'教学管理/课堂工具', attr:'平台型', typeTag:'上线' },
+            { id:'APP-011', name:'校园通', type:'生态应用', dev:'张明', time:'2026-07-14 15:00', doneTime:'2026-07-15 09:00', result:'驳回', reviewer:'赵审批', logo:'校', cat:'校园办公', attr:'非平台型', typeTag:'上线' },
+            { id:'APP-012', name:'英语听说', type:'原生应用', dev:'李芳', time:'2026-07-13 08:30', doneTime:'2026-07-14 10:00', result:'通过', reviewer:'钱审批', logo:'英', cat:'教学管理', attr:'非平台型', typeTag:'上线' },
+            { id:'APP-013', name:'图书管理', type:'生态应用', dev:'王强', time:'2026-07-12 14:00', doneTime:'2026-07-13 16:00', result:'通过', reviewer:'孙审批', logo:'图', cat:'教务管理', attr:'非平台型', typeTag:'修改' },
+            { id:'APP-014', name:'选课系统', type:'生态应用', dev:'刘芳', time:'2026-07-11 09:00', doneTime:'2026-07-12 11:30', result:'驳回', reviewer:'钱审批', logo:'选', cat:'教务管理', attr:'非平台型', typeTag:'上线' },
+            { id:'APP-015', name:'排课系统', type:'原生应用', dev:'王强', time:'2026-07-10 10:00', doneTime:'2026-07-11 15:00', result:'通过', reviewer:'赵审批', logo:'排', cat:'教学管理/排课管理', attr:'平台型', typeTag:'上线' },
+            { id:'APP-016', name:'成绩分析', type:'原生应用', dev:'刘芳', time:'2026-07-09 13:00', doneTime:'2026-07-10 09:30', result:'通过', reviewer:'孙审批', logo:'成', cat:'教务管理', attr:'非平台型', typeTag:'上线' },
+            { id:'APP-017', name:'校园OA', type:'生态应用', dev:'杨明', time:'2026-07-08 11:00', doneTime:'2026-07-09 14:00', result:'驳回', reviewer:'赵审批', logo:'OA', cat:'校园办公', attr:'非平台型', typeTag:'上线' },
+            { id:'APP-018', name:'家校互动', type:'原生应用', dev:'陈丽', time:'2026-07-07 15:00', doneTime:'2026-07-08 10:30', result:'通过', reviewer:'钱审批', logo:'家', cat:'校园办公/家校互动', attr:'平台型', typeTag:'修改' },
             { id:'APP-019', name:'电子班牌', type:'原生应用', dev:'周华', time:'2026-07-06 08:00', doneTime:'2026-07-07 16:00', result:'通过', reviewer:'孙审批' },
           ],
           mallApps: [
@@ -3913,7 +3916,7 @@
           this.editMode = false;
           this.editAppId = null;
           this.appCategory = [];
-          this.appType = '';
+          this.appType = 'non_platform';
           this.appDataSync = 'no';
           this.appJumpLoginLimit = '';
           this.pushUrl = '';
@@ -3947,7 +3950,7 @@
           this.editMode = true;
           const a = this.currentApp;
           this.appCategory = a && a.cat ? a.cat.split('/') : [];
-          this.appType = a && a.appTypeLabel === '平台应用' ? 'platform' : 'non_platform';
+          this.appType = a && a.appTypeLabel === '平台型' ? 'platform' : 'non_platform';
           this.appDataSync = 'no';
           this.appJumpLoginLimit = a && a.jumpLoginLimit ? a.jumpLoginLimit : '';
           this.pushUrl = '';
@@ -3977,7 +3980,7 @@
           // 编辑模式（保存新建/编辑）：校验基本信息字段；上线申请模式基本信息只读锁定、不校验
           if (this.editMode) {
             if (this.currentRole === 'platform_admin' && !this.appType) {
-              this.$message.warning('请选择应用类型');
+              this.$message.warning('请选择是否平台应用');
               return;
             }
             if (this.appDataSync === 'yes' && !/^https?:\/\//i.test(this.pushUrl || '')) {
@@ -4044,7 +4047,7 @@
             }
           }
           const finalAppType = this.currentRole === 'tenant_admin' ? 'non_platform' : this.appType;
-          const label = finalAppType === 'platform' ? '平台应用' : '非平台应用';
+          const label = finalAppType === 'platform' ? '平台型' : '非平台型';
           if (this.editAppId) {
             const t = this.appList.find(x => x.id === this.editAppId);
             if (t) {
@@ -4631,7 +4634,7 @@
             this.shelfList.unshift({
               initial: name.slice(0, 1), name, cat, dev, zone: '—', time: this.nowTime(),
               status: 'unlisted', source: dev, type: '原生应用',
-              native_type: r.native_type || '自建应用', appTypeLabel: r.appTypeLabel || '非平台应用'
+              native_type: r.native_type || '自建应用', appTypeLabel: r.appTypeLabel || '非平台型'
             });
             this.$message.success('审批通过，应用已进入机构管理员上架列表（未上架）');
           } else {
