@@ -2926,6 +2926,12 @@
       <div v-if="dialogType==='edit-cat'">
         <el-form label-width="80px">
           <div style="display:flex;flex-direction:column;align-items:flex-start;width:100%;">
+            <el-form-item label="上级分类" required v-if="catForm.isChild" style="width:100%;padding:0 8px;">
+              <el-select v-model="catForm.parentId" placeholder="请选择上级分类" style="width:100%;">
+                <el-option v-for="p in catParentOptions" :key="p.id" :label="p.name" :value="p.id" :disabled="p.status!=='enabled' && p.id!==catForm.originParentId"></el-option>
+              </el-select>
+              <div style="font-size:12px;color:var(--shell-text-secondary);line-height:1.6;margin-top:4px;">可变更上级分类，变更后该二级分类从原一级分类下移出并挂到所选一级分类下。</div>
+            </el-form-item>
             <el-form-item label="分类名称" required style="width:100%;padding:0 8px;"><el-input v-model="catForm.name" placeholder="最大 30 字符" maxlength="30"></el-input></el-form-item>
             <el-form-item label="分类编码" style="width:100%;padding:0 8px;"><el-input :model-value="catForm.code" disabled></el-input></el-form-item>
             <el-form-item label="排序" required style="width:100%;padding:0 8px;"><el-input-number v-model="catForm.sort" :min="1" :max="9999"></el-input-number></el-form-item>
@@ -3087,7 +3093,7 @@
             { id:9, name:'教师档案', code:'JSDA', sort:1, status:'disabled', parentId:8 },
             { id:10, name:'课表查询', code:'KBCX', sort:2, status:'enabled', parentId:8 },
           ],
-          catForm: { name:'', code:'', sort:1, parentName:'', parentId:null },
+          catForm: { name:'', code:'', sort:1, parentName:'', parentId:null, originParentId:null, isChild:false },
           tagList: [
             { id:'TAG-001', name:'热门推荐', tagType:'custom', scope:[], zoneCount:2 },
             { id:'TAG-002', name:'基础教育', tagType:'custom', scope:[], zoneCount:1 },
@@ -3557,6 +3563,10 @@
               return { ...p, children: p.children.filter(c => c.name.toLowerCase().includes(f)) };
             })
             .filter(p => f==='' || p.name.toLowerCase().includes(f) || p.children.length);
+        },
+        // 编辑二级分类时可选上级分类（全部一级分类，停用项除当前上级外不可选）
+        catParentOptions() {
+          return this.categoryList.filter(c => !c.parentId).sort((a,b) => a.sort-b.sort || b.id-a.id);
         },
         filteredTagList() {
           return this.tagList.filter(t => {
@@ -4649,20 +4659,22 @@
           else this.expandedCats.push(cat.id);
         },
         onNewCat() {
-          this.catForm = { name:'', code:'', sort:1, parentName:'', parentId:null };
+          this.catForm = { name:'', code:'', sort:1, parentName:'', parentId:null, originParentId:null, isChild:false };
           this.dialogTitle = '新增分类';
           this.dialogType = 'new-cat';
           this.showDialog = true;
         },
         onAddChild(parent) {
-          this.catForm = { name:'', code:'', sort:1, parentName:parent.name, parentId:parent.id };
+          this.catForm = { name:'', code:'', sort:1, parentName:parent.name, parentId:parent.id, originParentId:parent.id, isChild:false };
           this.dialogTitle = '添加下级分类';
           this.dialogType = 'add-child';
           this.showDialog = true;
         },
         onEditCat(cat) {
-          this.catForm = { name:cat.name, code:cat.code, sort:cat.sort, parentName:'', parentId:null };
-          this.dialogTitle = '编辑分类';
+          const isChild = !!cat.parentId;
+          const parent = isChild ? this.categoryList.find(c => c.id === cat.parentId) : null;
+          this.catForm = { name:cat.name, code:cat.code, sort:cat.sort, parentName:parent ? parent.name : '', parentId:cat.parentId || null, originParentId:cat.parentId || null, isChild };
+          this.dialogTitle = isChild ? '编辑二级分类' : '编辑一级分类';
           this.dialogType = 'edit-cat';
           this.editCatId = cat.id;
           this.showDialog = true;
@@ -4758,7 +4770,21 @@
             this.categoryList.push({ id:Date.now(), name:this.catForm.name, code:this.catForm.code, sort:this.catForm.sort, status:'enabled', parentId:this.catForm.parentId });
           } else if (this.dialogType === 'edit-cat') {
             const cat = this.categoryList.find(c => c.id === this.editCatId);
-            if (cat) { cat.name = this.catForm.name; cat.sort = this.catForm.sort; }
+            if (cat) {
+              if (this.catForm.isChild) {
+                const pid = this.catForm.parentId;
+                if (!pid) { this.$message.warning('请选择上级分类'); return; }
+                const parent = this.categoryList.find(c => c.id === pid);
+                if (!parent) { this.$message.warning('上级分类不存在'); return; }
+                const exists = this.categoryList.find(c => c.id !== cat.id && c.parentId === pid && (c.name === this.catForm.name || c.code === this.catForm.code));
+                if (exists) { this.$message.warning('该上级分类下名称或编码已存在'); return; }
+                if (pid !== cat.parentId) {
+                  cat.parentId = pid;
+                  if (!this.expandedCats.includes(pid)) this.expandedCats.push(pid);
+                }
+              }
+              cat.name = this.catForm.name; cat.sort = this.catForm.sort;
+            }
           }
           this.showDialog = false;
           this.$message.success('保存成功');
