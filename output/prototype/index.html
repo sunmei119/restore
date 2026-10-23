@@ -530,7 +530,7 @@
                 <span style="font-size:13px;color:var(--shell-text-secondary);white-space:nowrap;margin-left:4px;">分类:</span>
                 <el-select placeholder="" style="width:140px;" size="small"><el-option label="全部" value=""></el-option><el-option label="教学管理" value="教学管理"></el-option><el-option label="教务管理" value="教务管理"></el-option><el-option label="校园办公" value="校园办公"></el-option></el-select>
                 <span style="font-size:13px;color:var(--shell-text-secondary);white-space:nowrap;margin-left:4px;">状态:</span>
-                <el-select placeholder="" style="width:120px;" size="small"><el-option label="全部" value=""></el-option><el-option label="已上线" value="online"></el-option><el-option label="待审批" value="reviewing"></el-option><el-option label="未上线" value="offline"></el-option></el-select>
+                <el-select placeholder="" style="width:120px;" size="small"><el-option label="全部" value=""></el-option><el-option label="已上线" value="online"></el-option><el-option label="待审批" value="reviewing"></el-option><el-option label="已驳回" value="rejected"></el-option><el-option label="未上线" value="offline"></el-option></el-select>
                 <el-button type="primary" size="small">搜索</el-button>
                 <el-button size="small">重置</el-button>
                 <!-- <span style="flex:1"></span> -->
@@ -549,10 +549,10 @@
                     <td>{{ app.type }}{{ app.native_type ? ' / ' + app.native_type : '' }}</td>
                     <td>{{ app.scope }}</td>
                     <td>{{ app.level }}</td>
-                    <td><el-tag size="small" :type="app.status==='online'?'success':(hasPendingReview(app)?'warning':'info')">{{ app.status==='online'?'已上线':(hasPendingReview(app)?'待审批':'未上线') }}</el-tag></td>
+                    <td><el-tag size="small" :type="app.status==='online'?'success':(app.status==='rejected'?'danger':(hasPendingReview(app)?'warning':'info'))">{{ app.status==='online'?'已上线':(app.status==='rejected'?'已驳回':(hasPendingReview(app)?'待审批':'未上线')) }}</el-tag></td>
                     <td>
                       <el-button text size="small" @click="onManageApp(app)">管理</el-button>
-                      <el-button text size="small" v-if="app.status==='offline' && !hasPendingReview(app)" @click="onOnlineApp(app)">上线</el-button>
+                      <el-button text size="small" v-if="(app.status==='offline' || app.status==='rejected') && !hasPendingReview(app)" @click="onOnlineApp(app)">上线</el-button>
                       <el-button text size="small" v-if="app.status==='online' && app.listing==='unlisted'" @click="onOfflineApp(app)">下线</el-button>
                     </td>
                   </tr>
@@ -914,6 +914,19 @@
                     <el-checkbox v-model="shelfConfig.agreePromise">我已仔细阅读并完全同意<a style="color:var(--shell-primary);cursor:pointer;" @click.stop="showPromiseDialog=true">应用免责声明及上架承诺书</a>，自愿承担一切相关法律责任。</el-checkbox>
                   </div>
 
+                </div>
+
+                <!-- 审批信息（仅管理模式 + 应用上线被驳回时展示） -->
+                <div v-if="detailMode==='manage' && currentAppRejection" style="margin-top:24px;padding-top:24px;border-top:1px solid var(--shell-line);">
+                  <div style="margin-bottom:16px;font-weight:600;font-size:15px;">审批信息</div>
+                  <div style="display:flex;flex-direction:column;align-items:flex-start;width:100%;">
+                    <el-form-item label="申请时间" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentAppRejection.time || '---' }}</span></el-form-item>
+                    <el-form-item label="申请人" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentAppRejection.dev || '---' }}</span></el-form-item>
+                    <el-form-item label="审批人" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentAppRejection.reviewer || '---' }}</span></el-form-item>
+                    <el-form-item label="审批时间" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentAppRejection.doneTime || '---' }}</span></el-form-item>
+                    <el-form-item label="审批结果" style="width:50%;padding:0 8px;"><el-tag size="small" type="danger">{{ currentAppRejection.result }}</el-tag></el-form-item>
+                    <el-form-item label="审批意见" style="width:100%;padding:0 8px;"><span style="line-height:32px;color:#d9534f;">{{ currentAppRejection.reviewComment || '---' }}</span></el-form-item>
+                  </div>
                 </div>
 
                 <div style="display:flex;gap:16px;justify-content:center;margin-top:24px;padding-top:16px;border-top:1px solid var(--shell-line);">
@@ -1479,12 +1492,12 @@
                 <el-button type="primary" size="small" @click="onReviewSearch">搜索</el-button>
                 <el-button size="small" @click="onReviewReset">重置</el-button>
               </div>
-              <div class="list-hint" style="font-size:12px;color:var(--shell-text-secondary);margin:6px 0 0;">列表复用「应用申请管理」字段（不含操作列），类型标签标识待办类型：上线 / 修改。</div>
+              <div class="list-hint" style="font-size:12px;color:var(--shell-text-secondary);margin:6px 0 0;">列表复用「应用申请管理」字段（不含操作列），「应用分类」后新增「应用属性」，「开发者名称」替换为「机构名称」；类型标签标识待办类型：上线 / 修改。</div>
               <table class="data-table">
-                <thead><tr><th>Logo</th><th>应用名称</th><th>应用ID</th><th>应用分类</th><th>是否平台应用</th><th>开发者名称</th><th>申请时间</th><th>类型</th><th v-if="reviewTab==='done'">审批时间</th><th v-if="reviewTab==='done'">审批结果</th><th v-if="reviewTab==='done'">审批人</th><th>操作</th></tr></thead>
+                <thead><tr><th>Logo</th><th>应用名称</th><th>应用ID</th><th>应用分类</th><th>应用属性</th><th>是否平台应用</th><th>机构名称</th><th>申请时间</th><th>类型</th><th v-if="reviewTab==='done'">审批时间</th><th v-if="reviewTab==='done'">审批结果</th><th v-if="reviewTab==='done'">审批人</th><th>操作</th></tr></thead>
                 <tbody>
                   <tr v-for="(r,i) in filteredReviews" :key="i">
-                    <td><span class="app-logo-mini">{{ r.logo }}</span></td><td>{{ r.name }}</td><td>{{ r.id }}</td><td>{{ r.cat }}</td><td>{{ r.attr }}</td><td>{{ r.dev }}</td><td>{{ r.time }}</td><td><el-tag size="small" :type="r.typeTag==='修改'?'warning':'primary'">{{ r.typeTag }}</el-tag></td>
+                    <td><span class="app-logo-mini">{{ r.logo }}</span></td><td>{{ r.name }}</td><td>{{ r.id }}</td><td>{{ r.cat }}</td><td>{{ r.type }}{{ r.native_type ? '/' + r.native_type : '' }}</td><td>{{ r.attr }}</td><td>{{ r.org }}</td><td>{{ r.time }}</td><td><el-tag size="small" :type="r.typeTag==='修改'?'warning':'primary'">{{ r.typeTag }}</el-tag></td>
                     <td v-if="reviewTab==='done'">{{ r.doneTime }}</td>
                     <td v-if="reviewTab==='done'"><el-tag size="small" :type="r.result==='通过'?'success':'danger'">{{ r.result }}</el-tag></td>
                     <td v-if="reviewTab==='done'">{{ r.reviewer }}</td>
@@ -1625,16 +1638,23 @@
                 </div>
               </el-card>
               <el-card class="shell-block-card" shadow="never" style="margin-top:16px;">
-                <div style="margin-bottom:12px;font-weight:600;font-size:14px;">审批信息</div>
-                <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--shell-text);padding:0 8px;">
-                  <div><b>申请类型：</b><el-tag size="small" :type="currentReview.typeTag==='修改'?'warning':'primary'">{{ currentReview.typeTag || '上线' }}</el-tag></div>
-                  <div><b>申请时间：</b>{{ currentReview.time }}</div>
-                  <div><b>申请人：</b>{{ currentReview.dev }}</div>
-                  <div><b>审批人：</b>{{ currentReview.reviewer || '---' }}</div>
-                  <div><b>审批时间：</b>{{ currentReview.doneTime || '---' }}</div>
-                  <div><b>审批结果：</b><el-tag size="small" v-if="currentReview.result" :type="currentReview.result==='通过'?'success':'danger'">{{ currentReview.result }}</el-tag><span v-else>---</span></div>
-                  <div><b>审批意见：</b>{{ currentReview.reviewComment || '---' }}</div>
-                  <div style="color:var(--shell-text-secondary);margin-top:4px;">说明：编辑已上架应用（重新上架审核）期间，对外仍展示修改前旧值；审批通过后新值生效。</div>
+                <div style="margin-bottom:16px;font-weight:600;font-size:14px;">审批信息</div>
+                <div style="display:flex;flex-direction:column;align-items:flex-start;width:100%;">
+                  <el-form-item label="申请类型" style="width:50%;padding:0 8px;">
+                    <el-tag size="small" :type="currentReview.typeTag==='修改'?'warning':'primary'">{{ currentReview.typeTag || '上线' }}</el-tag>
+                  </el-form-item>
+                  <el-form-item label="申请时间" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentReview.time || '---' }}</span></el-form-item>
+                  <el-form-item label="申请人" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentReview.dev || '---' }}</span></el-form-item>
+                  <el-form-item label="审批人" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentReview.reviewer || '---' }}</span></el-form-item>
+                  <el-form-item label="审批时间" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentReview.doneTime || '---' }}</span></el-form-item>
+                  <el-form-item label="审批结果" style="width:50%;padding:0 8px;">
+                    <el-tag size="small" v-if="currentReview.result" :type="currentReview.result==='通过'?'success':'danger'">{{ currentReview.result }}</el-tag>
+                    <span v-else style="line-height:32px;">---</span>
+                  </el-form-item>
+                  <el-form-item label="审批意见" style="width:100%;padding:0 8px;">
+                    <span style="line-height:32px;" :style="currentReview.result==='驳回' ? 'color:#d9534f;' : ''">{{ currentReview.reviewComment || '---' }}</span>
+                  </el-form-item>
+                  <div style="font-size:12px;color:var(--shell-text-secondary);padding:0 16px;">说明：编辑已上架应用（重新上架审核）期间，对外仍展示修改前旧值；审批通过后新值生效。</div>
                 </div>
                 <div style="display:flex;justify-content:center;margin-top:24px;padding-top:16px;border-top:1px solid var(--shell-line);">
                   <el-button @click="goPage('P10')">返回</el-button>
@@ -3211,7 +3231,7 @@
             { id:7, appId:1007, appOpenId:'eco_xiaoyuanOA0', name:'校园OA', cat:'校园办公', appTypeLabel:'非平台型', type:'生态应用', scope:'学校', level:'所有学段', source:'本机构', status:'offline', listing:'unlisted', logo:'OA' },
             { id:8, appId:1008, appOpenId:'sb_jiaxiao_hud1', name:'家校互动', cat:'校园办公', appTypeLabel:'非平台型', type:'原生应用', native_type:'自建应用', scope:'学校', level:'小学、初中', source:'本机构', status:'online', listing:'unlisted', logo:'家' },
             { id:9, appId:1009, appOpenId:'sb_kaoshi_gl01', name:'考试管理', cat:'教务管理', appTypeLabel:'非平台型', type:'原生应用', native_type:'自建应用', scope:'学校、上级单位', level:'初中、高中', source:'本机构', status:'offline', listing:'dismissed', logo:'考' },
-            { id:11, appId:1011, appOpenId:'eco_xuanke_app1', name:'选课系统', cat:'教务管理', appTypeLabel:'非平台型', type:'生态应用', scope:'学校', level:'高中', source:'本机构', status:'offline', listing:'unlisted', logo:'选' },
+            { id:11, appId:1011, appOpenId:'eco_xuanke_app1', name:'选课系统', cat:'教务管理', appTypeLabel:'非平台型', type:'生态应用', scope:'学校', level:'高中', source:'本机构', status:'rejected', listing:'unlisted', logo:'选' },
             { id:10, appId:1010, appOpenId:'sb_dianzibanpa1', name:'电子班牌', cat:'教学管理', appTypeLabel:'平台型', type:'原生应用', native_type:'自建应用', scope:'学校', level:'所有学段', source:'本机构', status:'online', listing:'listed', logo:'电' },
           ],
           shelfList: [
@@ -3251,28 +3271,28 @@
             { logo:'图', name:'图书管理',     appId:'2007', appOpenId:'eco_tushu_manage01', tenantName:'北海市教育局',   cat:'教务管理', appTypeLabel:'非平台型', type:'生态应用', native_type:'',           scope:'学校、上级单位', level:'所有学段' },
           ],
           pendingReviews: [
-            { id:'APP-001', name:'图书管理', type:'生态应用', dev:'李芳', time:'2026-07-16 09:30', logo:'图', cat:'教务管理', attr:'非平台型', typeTag:'上线' },
-            { id:'APP-002', name:'排课系统', type:'原生应用', dev:'王强', time:'2026-07-16 14:20', logo:'排', cat:'教学管理/排课管理', attr:'平台型', typeTag:'上线' },
-            { id:'APP-003', name:'成绩分析', type:'原生应用', dev:'刘芳', time:'2026-07-17 08:10', logo:'成', cat:'教务管理', attr:'非平台型', typeTag:'上线' },
-            { id:'APP-004', name:'家校互动', type:'原生应用', dev:'陈丽', time:'2026-07-17 10:30', logo:'家', cat:'校园办公/家校互动', attr:'平台型', typeTag:'修改' },
-            { id:'APP-005', name:'校园OA', type:'生态应用', dev:'杨明', time:'2026-07-17 14:00', logo:'OA', cat:'校园办公', attr:'非平台型', typeTag:'上线' },
-            { id:'APP-006', name:'选课系统', type:'生态应用', dev:'赵刚', time:'2026-07-18 09:00', logo:'选', cat:'教务管理', attr:'非平台型', typeTag:'上线' },
-            { id:'APP-007', name:'电子班牌', type:'原生应用', dev:'周华', time:'2026-07-18 11:20', logo:'电', cat:'校园办公', attr:'平台型', typeTag:'修改' },
-            { id:'APP-008', name:'在线考试', type:'原生应用', dev:'吴红', time:'2026-07-18 15:40', logo:'考', cat:'教学管理', attr:'平台型', typeTag:'上线' },
-            { id:'APP-009', name:'智慧课堂', type:'生态应用', dev:'郑伟', time:'2026-07-19 09:10', logo:'智', cat:'教学管理/课堂工具', attr:'非平台型', typeTag:'上线' },
-            { id:'APP-010', name:'教师档案', type:'原生应用', dev:'黄强', time:'2026-07-19 13:30', logo:'教', cat:'教学管理/教师档案', attr:'平台型', typeTag:'上线' },
+            { id:'APP-001', name:'图书管理', type:'生态应用', native_type:'', org:'北海市教育局', dev:'李芳', time:'2026-07-16 09:30', logo:'图', cat:'教务管理', attr:'非平台型', typeTag:'上线' },
+            { id:'APP-002', name:'排课系统', type:'原生应用', native_type:'低代码应用', org:'南宁市教育局', dev:'王强', time:'2026-07-16 14:20', logo:'排', cat:'教学管理/排课管理', attr:'平台型', typeTag:'上线' },
+            { id:'APP-003', name:'成绩分析', type:'原生应用', native_type:'自建应用', org:'南宁市教育局', dev:'刘芳', time:'2026-07-17 08:10', logo:'成', cat:'教务管理', attr:'非平台型', typeTag:'上线' },
+            { id:'APP-004', name:'家校互动', type:'原生应用', native_type:'自建应用', org:'柳州市高级中学', dev:'陈丽', time:'2026-07-17 10:30', logo:'家', cat:'校园办公/家校互动', attr:'平台型', typeTag:'修改' },
+            { id:'APP-005', name:'校园OA', type:'生态应用', native_type:'', org:'北海市教育局', dev:'杨明', time:'2026-07-17 14:00', logo:'OA', cat:'校园办公', attr:'非平台型', typeTag:'上线' },
+            { id:'APP-006', name:'素质评价', type:'生态应用', native_type:'', org:'自治区教育厅', dev:'赵刚', time:'2026-07-18 09:00', logo:'素', cat:'教务管理', attr:'非平台型', typeTag:'上线' },
+            { id:'APP-007', name:'电子班牌', type:'原生应用', native_type:'自建应用', org:'桂林市育才小学', dev:'周华', time:'2026-07-18 11:20', logo:'电', cat:'校园办公', attr:'平台型', typeTag:'修改' },
+            { id:'APP-008', name:'在线考试', type:'原生应用', native_type:'低代码应用', org:'南宁市教育局', dev:'吴红', time:'2026-07-18 15:40', logo:'考', cat:'教学管理', attr:'平台型', typeTag:'上线' },
+            { id:'APP-009', name:'智慧课堂', type:'生态应用', native_type:'', org:'柳州市高级中学', dev:'郑伟', time:'2026-07-19 09:10', logo:'智', cat:'教学管理/课堂工具', attr:'非平台型', typeTag:'上线' },
+            { id:'APP-010', name:'教师档案', type:'原生应用', native_type:'自建应用', org:'南宁市教育局', dev:'黄强', time:'2026-07-19 13:30', logo:'教', cat:'教学管理/教师档案', attr:'平台型', typeTag:'上线' },
           ],
           doneReviews: [
-            { id:'APP-010', name:'课堂互动助手', type:'原生应用', dev:'张明', time:'2026-07-15 10:00', doneTime:'2026-07-16 11:30', result:'通过', reviewer:'赵审批', logo:'课', cat:'教学管理/课堂工具', attr:'平台型', typeTag:'上线' },
-            { id:'APP-011', name:'校园通', type:'生态应用', dev:'张明', time:'2026-07-14 15:00', doneTime:'2026-07-15 09:00', result:'驳回', reviewer:'赵审批', logo:'校', cat:'校园办公', attr:'非平台型', typeTag:'上线' },
-            { id:'APP-012', name:'英语听说', type:'原生应用', dev:'李芳', time:'2026-07-13 08:30', doneTime:'2026-07-14 10:00', result:'通过', reviewer:'钱审批', logo:'英', cat:'教学管理', attr:'非平台型', typeTag:'上线' },
-            { id:'APP-013', name:'图书管理', type:'生态应用', dev:'王强', time:'2026-07-12 14:00', doneTime:'2026-07-13 16:00', result:'通过', reviewer:'孙审批', logo:'图', cat:'教务管理', attr:'非平台型', typeTag:'修改' },
-            { id:'APP-014', name:'选课系统', type:'生态应用', dev:'刘芳', time:'2026-07-11 09:00', doneTime:'2026-07-12 11:30', result:'驳回', reviewer:'钱审批', logo:'选', cat:'教务管理', attr:'非平台型', typeTag:'上线' },
-            { id:'APP-015', name:'排课系统', type:'原生应用', dev:'王强', time:'2026-07-10 10:00', doneTime:'2026-07-11 15:00', result:'通过', reviewer:'赵审批', logo:'排', cat:'教学管理/排课管理', attr:'平台型', typeTag:'上线' },
-            { id:'APP-016', name:'成绩分析', type:'原生应用', dev:'刘芳', time:'2026-07-09 13:00', doneTime:'2026-07-10 09:30', result:'通过', reviewer:'孙审批', logo:'成', cat:'教务管理', attr:'非平台型', typeTag:'上线' },
-            { id:'APP-017', name:'校园OA', type:'生态应用', dev:'杨明', time:'2026-07-08 11:00', doneTime:'2026-07-09 14:00', result:'驳回', reviewer:'赵审批', logo:'OA', cat:'校园办公', attr:'非平台型', typeTag:'上线' },
-            { id:'APP-018', name:'家校互动', type:'原生应用', dev:'陈丽', time:'2026-07-07 15:00', doneTime:'2026-07-08 10:30', result:'通过', reviewer:'钱审批', logo:'家', cat:'校园办公/家校互动', attr:'平台型', typeTag:'修改' },
-            { id:'APP-019', name:'电子班牌', type:'原生应用', dev:'周华', time:'2026-07-06 08:00', doneTime:'2026-07-07 16:00', result:'通过', reviewer:'孙审批' },
+            { id:'APP-010', name:'课堂互动助手', type:'原生应用', native_type:'低代码应用', org:'南宁市教育局', dev:'张明', time:'2026-07-15 10:00', doneTime:'2026-07-16 11:30', result:'通过', reviewer:'赵审批', logo:'课', cat:'教学管理/课堂工具', attr:'平台型', typeTag:'上线' },
+            { id:'APP-011', name:'校园通', type:'生态应用', native_type:'', org:'北海市教育局', dev:'张明', time:'2026-07-14 15:00', doneTime:'2026-07-15 09:00', result:'驳回', reviewer:'赵审批', reviewComment:'应用截图与实际上线内容不一致，请更新截图后重新提交上线申请。', logo:'校', cat:'校园办公', attr:'非平台型', typeTag:'上线' },
+            { id:'APP-012', name:'英语听说', type:'原生应用', native_type:'自建应用', org:'柳州市高级中学', dev:'李芳', time:'2026-07-13 08:30', doneTime:'2026-07-14 10:00', result:'通过', reviewer:'钱审批', logo:'英', cat:'教学管理', attr:'非平台型', typeTag:'上线' },
+            { id:'APP-013', name:'图书管理', type:'生态应用', native_type:'', org:'北海市教育局', dev:'王强', time:'2026-07-12 14:00', doneTime:'2026-07-13 16:00', result:'通过', reviewer:'孙审批', logo:'图', cat:'教务管理', attr:'非平台型', typeTag:'修改' },
+            { id:'APP-1011', name:'选课系统', type:'生态应用', native_type:'', org:'自治区教育厅', dev:'赵刚', time:'2026-07-11 09:00', doneTime:'2026-07-12 11:30', result:'驳回', reviewer:'桂教通超级管理员', reviewComment:'应用访问地址未通过白名单校验，请补充 H5 访问地址与可见性配置后重新提交上线申请。', logo:'选', cat:'教务管理', attr:'非平台型', typeTag:'上线' },
+            { id:'APP-015', name:'排课系统', type:'原生应用', native_type:'低代码应用', org:'南宁市教育局', dev:'王强', time:'2026-07-10 10:00', doneTime:'2026-07-11 15:00', result:'通过', reviewer:'赵审批', logo:'排', cat:'教学管理/排课管理', attr:'平台型', typeTag:'上线' },
+            { id:'APP-016', name:'成绩分析', type:'原生应用', native_type:'自建应用', org:'南宁市教育局', dev:'刘芳', time:'2026-07-09 13:00', doneTime:'2026-07-10 09:30', result:'通过', reviewer:'孙审批', logo:'成', cat:'教务管理', attr:'非平台型', typeTag:'上线' },
+            { id:'APP-017', name:'校园OA', type:'生态应用', native_type:'', org:'北海市教育局', dev:'杨明', time:'2026-07-08 11:00', doneTime:'2026-07-09 14:00', result:'驳回', reviewer:'赵审批', reviewComment:'应用简介信息不完整，请补充应用详情介绍后重新提交。', logo:'OA', cat:'校园办公', attr:'非平台型', typeTag:'上线' },
+            { id:'APP-018', name:'家校互动', type:'原生应用', native_type:'自建应用', org:'柳州市高级中学', dev:'陈丽', time:'2026-07-07 15:00', doneTime:'2026-07-08 10:30', result:'通过', reviewer:'钱审批', logo:'家', cat:'校园办公/家校互动', attr:'平台型', typeTag:'修改' },
+            { id:'APP-019', name:'电子班牌', type:'原生应用', native_type:'自建应用', org:'桂林市育才小学', dev:'周华', time:'2026-07-06 08:00', doneTime:'2026-07-07 16:00', result:'通过', reviewer:'孙审批', logo:'电', cat:'校园办公' },
           ],
           mallApps: [
             { initial:'课', name:'课堂互动助手', desc:'课堂互动教学辅助工具，支持多端协同。', paid:false },
@@ -3490,6 +3510,13 @@
           return m[this.currentPage] || '应用中心';
         },
         currentApp() { return this.appList.find(a => a.id === this.editAppId) || null; },
+        currentAppRejection() {
+          // 应用上线被驳回时，返回最近一条驳回的上线审批记录，供 P02b 管理模式下方展示审批信息
+          const a = this.currentApp;
+          if (!a || a.status !== 'rejected') return null;
+          const rid = 'APP-' + (a.appId || 1000);
+          return this.doneReviews.find(r => r.id === rid && r.result === '驳回') || null;
+        },
         currentAppIsLowcode() { return !!this.currentApp && this.currentApp.native_type === '低代码应用'; },
         whitelistAuto() {
           // 默认回填：移动端/PC/H5 地址生成的完整地址（已删除的默认项不再展示）
@@ -4066,12 +4093,14 @@
               t.jumpLoginLimit = this.appJumpLoginLimit;
               // 机构管理员提交上线申请：生成审批记录，由桂教通超级管理员审批
               if (this.currentRole === 'tenant_admin') {
+                // 已驳回的应用重新提交上线申请：回到未上线（列表展示待审批）
+                if (t.status === 'rejected') t.status = 'offline';
                 const rid = 'APP-' + (t.appId || 1000);
                 const exist = this.pendingReviews.find(r => r.id === rid);
                 const rec = {
-                  id: rid, name: t.name, type: '上线', dev: '南宁市教育局',
+                  id: rid, name: t.name, type: t.type || '原生应用', org: '南宁市教育局', dev: '管理员',
                   time: this.nowTime(), cat: t.cat || '教务管理', zone: '—', source: '本机构',
-                  native_type: t.native_type || '自建应用', appTypeLabel: label
+                  native_type: t.native_type || '自建应用', attr: label, typeTag: '上线'
                 };
                 if (exist) Object.assign(exist, rec);
                 else this.pendingReviews.unshift(rec);
@@ -4648,7 +4677,13 @@
             });
             this.$message.success('审批通过，应用已进入机构管理员上架列表（未上架）');
           } else {
-            this.$message.success('已驳回');
+            // 审批驳回：应用上线状态改为已驳回，机构管理员可在 P02b 管理模式查看审批信息
+            const appIdNum = parseInt(String(r.id || '').replace('APP-', ''), 10);
+            if (!isNaN(appIdNum)) {
+              const t = this.appList.find(x => x.appId === appIdNum);
+              if (t) t.status = 'rejected';
+            }
+            this.$message.success('已驳回，应用上线状态为已驳回');
           }
           this.goPage('P10');
         },
