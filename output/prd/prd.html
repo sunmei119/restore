@@ -1,77 +1,54 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>应用中心重构 - 产品需求文档</title>
 <style>
-  :root {
-    --bg: #f5f6f8;
-    --card: #ffffff;
-    --line: #ebeef5;
-    --text: #1f2329;
-    --text-2: #4e5969;
-    --primary: #2f7df6;
-    --sidebar-w: 280px;
-  }
-  * { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-    font-size: 15px; line-height: 1.75; }
-  .layout { display: flex; min-height: 100vh; }
-  .toc { width: var(--sidebar-w); flex: 0 0 var(--sidebar-w); position: sticky; top: 0;
-    align-self: flex-start; height: 100vh; overflow-y: auto; background: var(--card);
-    border-right: 1px solid var(--line); padding: 20px 14px; }
-  .toc-title { font-size: 13px; font-weight: 700; color: var(--text-2); letter-spacing: .05em;
-    padding: 4px 10px 10px; border-bottom: 1px solid var(--line); margin-bottom: 8px; }
-  .toc-list, .toc-list ul { list-style: none; margin: 0; padding: 0; }
-  .toc-list ul { padding-left: 14px; }
-  .toc-list li { margin: 2px 0; }
-  .toc-list a { display: block; padding: 5px 10px; border-radius: 6px; color: var(--text-2);
-    text-decoration: none; font-size: 13.5px; line-height: 1.5; }
-  .toc-list a:hover { background: #f0f7ff; color: var(--primary); }
-  .toc-list a.active { background: #eaf2ff; color: var(--primary); font-weight: 600; }
-  .content { flex: 1; min-width: 0; padding: 32px 48px 80px; }
-  .content-inner { max-width: 920px; margin: 0 auto; background: var(--card);
-    border: 1px solid var(--line); border-radius: 12px; padding: 40px 48px; box-shadow: 0 2px 10px rgba(31,35,41,.04); }
-  h1 { font-size: 26px; margin: 0 0 8px; }
-  h2 { font-size: 21px; margin: 36px 0 14px; padding-bottom: 8px; border-bottom: 2px solid var(--line); }
-  h3 { font-size: 17px; margin: 26px 0 10px; }
-  h4 { font-size: 15px; margin: 20px 0 8px; color: var(--text-2); }
-  p { margin: 10px 0; }
-  ul, ol { margin: 10px 0; padding-left: 24px; }
-  li { margin: 4px 0; }
-  table { border-collapse: collapse; width: 100%; margin: 14px 0; font-size: 13.5px; }
-  th, td { border: 1px solid var(--line); padding: 8px 12px; text-align: left; vertical-align: top; }
-  th { background: #f7f8fa; font-weight: 600; }
-  tbody tr:nth-child(even) { background: #fafbfc; }
-  blockquote { margin: 12px 0; padding: 10px 16px; background: #f7f8fa;
-    border-left: 4px solid var(--primary); color: var(--text-2); border-radius: 0 6px 6px 0; }
-  pre { background: #0f172a; color: #e2e8f0; padding: 14px 16px; border-radius: 8px;
-    overflow-x: auto; font-size: 13px; }
-  code { font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; }
-  p code, li code, td code, th code { background: #eef1f6; color: #d6336c; padding: 1px 5px; border-radius: 4px; font-size: 12.5px; }
-  .mermaid { background: #f7f8fa; border: 1px solid var(--line); border-radius: 8px;
-    padding: 14px; white-space: pre-wrap; font-family: "SFMono-Regular", Consolas, monospace; font-size: 13px; }
-  hr { border: none; border-top: 1px solid var(--line); margin: 24px 0; }
-  a { color: var(--primary); }
-  @media (max-width: 900px) {
-    .toc { display: none; }
-    .content { padding: 16px; }
-    .content-inner { padding: 24px 18px; }
-  }
+  :root{--bg:#f5f6f8;--card:#fff;--line:#ebeef5;--text:#1f2329;--text-2:#4e5969;--primary:#2f7df6;--sidebar-w:280px}
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;font-size:15px;line-height:1.75}
+  .layout{display:flex;min-height:100vh}
+  .toc{width:var(--sidebar-w);flex:0 0 var(--sidebar-w);position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;background:var(--card);border-right:1px solid var(--line);padding:20px 14px}
+  .toc-title{font-size:13px;font-weight:700;color:var(--text-2);letter-spacing:.05em;padding:4px 10px 10px;border-bottom:1px solid var(--line);margin-bottom:8px}
+  .toc-list,.toc-list ul{list-style:none;margin:0;padding:0}
+  .toc-list ul{padding-left:14px}
+  .toc-list li{margin:2px 0}
+  .toc-list a{display:block;padding:5px 10px;border-radius:6px;color:var(--text-2);text-decoration:none;font-size:13.5px;line-height:1.5}
+  .toc-list a:hover{background:#f0f7ff;color:var(--primary)}
+  .toc-list a.active{background:#eaf2ff;color:var(--primary);font-weight:600}
+  .content{flex:1;min-width:0;padding:32px 48px 80px}
+  .content-inner{max-width:920px;margin:0 auto;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:40px 48px;box-shadow:0 2px 10px rgba(31,35,41,.04)}
+  h1{font-size:26px;margin:0 0 8px}
+  h2{font-size:21px;margin:36px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--line)}
+  h3{font-size:17px;margin:26px 0 10px}
+  h4{font-size:15px;margin:20px 0 8px;color:var(--text-2)}
+  p{margin:10px 0}
+  ul,ol{margin:10px 0;padding-left:24px}
+  li{margin:4px 0}
+  table{border-collapse:collapse;width:100%;margin:14px 0;font-size:13.5px}
+  th,td{border:1px solid var(--line);padding:8px 12px;text-align:left;vertical-align:top}
+  th{background:#f7f8fa;font-weight:600}
+  tbody tr:nth-child(even){background:#fafbfc}
+  blockquote{margin:12px 0;padding:10px 16px;background:#f7f8fa;border-left:4px solid var(--primary);color:var(--text-2);border-radius:0 6px 6px 0}
+  pre{background:#0f172a;color:#e2e8f0;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:13px}
+  code{font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace}
+  p code,li code,td code,th code{background:#eef1f6;color:#d6336c;padding:1px 5px;border-radius:4px;font-size:12.5px}
+  hr{border:none;border-top:1px solid var(--line);margin:24px 0}
+  a{color:var(--primary)}
+  @media(max-width:900px){.toc{display:none}.content{padding:16px}.content-inner{padding:24px 18px}}
 </style>
 </head>
 <body>
 <div class="layout">
   <nav class="toc">
     <div class="toc-title">目录</div>
-    <ul class="toc-list"><li><a href="#h-2">一、文档概述</a></li><li><a href="#h-3">二、范围</a><ul><li><a href="#h-4">2.1 建设范围</a></li><li><a href="#h-5">2.2 明确不做</a></li></ul></li><li><a href="#h-6">三、业务流程</a><ul><li><a href="#h-7">3.1 应用上线申请审批流程</a></li><li><a href="#h-8">3.2 应用上架及安装流程</a></li><li><a href="#h-9">3.3 应用付费购买流程</a></li></ul></li><li><a href="#h-10">四、详细需求说明</a><ul><li><a href="#h-11">（一）应用管理模块</a><ul><li><a href="#h-12">P01 应用申请管理页</a></li><li><a href="#h-13">P02 应用申请编辑页</a></li><li><a href="#h-14">P02b 应用详情页</a></li><li><a href="#h-16">P04 应用上架管理页</a></li><li><a href="#h-17">P04b 应用安装列表页</a></li><li><a href="#h-18">P05 应用上架配置页</a></li><li><a href="#h-18b">P06 全平台应用页</a></li><li><a href="#h-19">P07 上架范围管理页</a></li><li><a href="#h-19a">P07a 范围机构列表页</a></li><li><a href="#h-20">P08 上架范围编辑页</a></li><li><a href="#h-21">P09 应用分类管理页</a></li><li><a href="#h-22">P10 应用审批列表页</a></li><li><a href="#h-23">P11 应用审批操作页（审批模式）</a></li><li><a href="#h-24">P11v 审批详情页（查看模式）</a></li><li><a href="#h-25">P12 标签管理页</a></li><li><a href="#h-25a">P12a 标签机构列表页</a></li></ul></li><li><a href="#h-26">（二）平台管理模块</a><ul><li><a href="#h-27">P17 应用统计看板页</a></li></ul></li><li><a href="#h-28">（三）订单管理模块</a><ul><li><a href="#h-29">P18 订单套餐授权管理列表页</a></li><li><a href="#h-30">P19 订单记录管理列表页</a></li><li><a href="#h-31">P20 试用订单记录页</a></li><li><a href="#h-32">P26 应用套餐配置列表页</a></li></ul></li><li><a href="#h-33">（四）门户端模块</a><ul><li><a href="#h-34">P21 教育服务中心页</a></li><li><a href="#h-34m">P21-M 移动端门户页（Mobile）</a></li><li><a href="#h-35">P22 应用购买详情页</a></li><li><a href="#h-37">P24 我的应用中心页</a></li><li><a href="#h-38">P25 我的订单页</a></li></ul></li></ul></li><li><a href="#h-39">五、权限汇总</a><ul><li><a href="#h-40">5.1 页面级权限</a></li><li><a href="#h-41">5.1.1 导航菜单可见性（按角色）</a></li><li><a href="#h-42">5.2 按钮级权限</a></li><li><a href="#h-43">5.3 字段级权限例外</a></li></ul></li><li><a href="#h-44">六、数据字典</a><ul><li><a href="#h-45">6.1 应用（Application）</a></li><li><a href="#h-46">6.2 应用分类（Category）</a></li><li><a href="#h-47">6.3 范围（Zone）</a></li><li><a href="#h-48">6.4 范围标签（ZoneTag）</a></li><li><a href="#h-49">6.5 审批记录（ReviewRecord）</a></li><li><a href="#h-50">6.6 操作记录（OperationLog）</a></li><li><a href="#h-51">6.7 套餐（Package）</a></li><li><a href="#h-52">6.8 订单（Order）</a></li><li><a href="#h-53">6.9 授权记录（AuthorizationRecord）</a></li><li><a href="#h-54">6.10 接收记录（ReceiveRecord）</a></li><li><a href="#h-55">6.11 试用套餐记录（TrialRecord）</a></li></ul></li><li><a href="#h-56">七、状态机</a><ul><li><a href="#h-57">7.1 应用上下线状态</a></li><li><a href="#h-58">7.2 应用上架状态</a></li><li><a href="#h-59">7.3 审批记录状态机</a></li><li><a href="#h-60">7.4 订单状态机</a></li><li><a href="#h-61">7.5 授权记录状态机</a></li><li><a href="#h-62">7.6 接收记录状态机</a></li><li><a href="#h-63">7.7 试用套餐记录状态机</a></li></ul></li></ul>
+    <ul class="toc-list"><li><a href="#h-2">一、文档概述</a></li><li><a href="#h-3">二、范围</a><ul><li><a href="#h-4">2.1 建设范围</a></li><li><a href="#h-5">2.2 明确不做</a></li></ul></li><li><a href="#h-6">三、业务流程</a><ul><li><a href="#h-7">3.1 应用上线申请审批流程</a></li><li><a href="#h-8">3.2 应用上架及安装流程</a></li><li><a href="#h-9">3.3 应用付费购买流程</a></li></ul></li><li><a href="#h-10">四、详细需求说明</a><ul><li><a href="#h-11">（一）应用管理模块</a><ul><li><a href="#h-12">P01 应用申请管理页</a></li><li><a href="#h-13">P02 应用申请编辑页</a></li><li><a href="#h-14">P02b 应用详情页</a></li><li><a href="#h-15">P04 应用上架管理页</a></li><li><a href="#h-16">P04b 应用安装列表页</a></li><li><a href="#h-17">P05 应用上架配置页</a></li><li><a href="#h-18">P06 全平台应用页</a></li><li><a href="#h-19">P07 上架范围管理页</a></li><li><a href="#h-20">P08 上架范围编辑页</a></li><li><a href="#h-21">P09 应用分类管理页</a></li><li><a href="#h-22">P10 应用审批列表页</a></li><li><a href="#h-23">P11 应用审批操作页（审批模式）</a></li><li><a href="#h-24">P11v 审批详情页（查看模式）</a></li><li><a href="#h-25">P12 标签管理页</a></li></ul></li><li><a href="#h-26">（二）平台管理模块</a><ul><li><a href="#h-27">P17 应用统计看板页</a></li></ul></li><li><a href="#h-28">（三）订单管理模块</a><ul><li><a href="#h-29">P18 订单套餐授权管理列表页</a></li><li><a href="#h-30">P19 订单记录管理列表页</a></li><li><a href="#h-31">P20 试用订单记录页</a></li><li><a href="#h-32">P26 应用套餐配置列表页</a></li></ul></li><li><a href="#h-33">（四）门户端模块</a><ul><li><a href="#h-34">P21 教育服务中心页</a></li><li><a href="#h-35">P21-M 移动端门户页（Mobile）</a></li><li><a href="#h-36">P22 应用购买详情页</a></li><li><a href="#h-37">P24 我的应用中心页</a></li><li><a href="#h-38">P25 我的订单页</a></li></ul></li></ul></li><li><a href="#h-39">五、权限汇总</a><ul><li><a href="#h-40">5.1 页面级权限</a></li><li><a href="#h-41">5.1.1 导航菜单可见性（按角色）</a></li><li><a href="#h-42">5.3 字段级权限例外</a></li></ul></li><li><a href="#h-43">六、数据字典</a><ul><li><a href="#h-44">6.1 应用（Application）</a></li><li><a href="#h-45">6.2 应用分类（Category）</a></li><li><a href="#h-46">6.3 范围（Zone）</a></li><li><a href="#h-47">6.4 范围标签（ZoneTag）</a></li><li><a href="#h-48">6.5 审批记录（ReviewRecord）</a></li><li><a href="#h-49">6.6 操作记录（OperationLog）</a></li><li><a href="#h-50">6.7 套餐（Package）</a></li><li><a href="#h-51">6.8 订单（Order）</a></li><li><a href="#h-52">6.9 授权记录（AuthorizationRecord）</a></li><li><a href="#h-53">6.10 接收记录（ReceiveRecord）</a></li><li><a href="#h-54">6.11 试用套餐记录（TrialRecord）</a></li></ul></li><li><a href="#h-55">七、状态机</a><ul><li><a href="#h-56">7.1 应用上下线状态</a></li><li><a href="#h-57">7.2 应用上架状态</a></li><li><a href="#h-58">7.3 审批记录状态机</a></li><li><a href="#h-59">7.4 订单状态机</a></li><li><a href="#h-60">7.5 授权记录状态机</a></li><li><a href="#h-61">7.6 接收记录状态机</a></li><li><a href="#h-62">7.7 试用套餐记录状态机</a></li></ul></li></ul>
   </nav>
   <main class="content">
     <div class="content-inner">
-      <h1 id="h-1">应用中心重构 - 产品需求文档</h1>
-<blockquote>版本：v2.0 状态：初稿 基于 design.md v2.0</blockquote>
+<h1 id="h-1">应用中心重构 - 产品需求文档</h1>
+<blockquote>版本：v2.0<br>状态：初稿<br>基于 design.md v2.0</blockquote>
 <table><thead><tr><th>版本</th><th>日期</th><th>修订人</th><th>修订说明</th><th>状态</th></tr></thead><tbody><tr><td>v2.0</td><td>2026-07-17</td><td>孙美</td><td>重写：适配 design v2.0（范围改名、分类管理重构、审批管理重构、删除共享功能、补充 4 个状态机）</td><td>初稿</td></tr></tbody></table>
 <hr>
 <h2 id="h-2">一、文档概述</h2>
@@ -85,77 +62,16 @@
 <h3 id="h-7">3.1 应用上线申请审批流程</h3>
 <p>此处管理员指的是桂教通超级管理员，只有桂教通超级管理员具有审批权限。机构管理员新增应用、上线申请、桂教通超级管理员审批、结果归档三个阶段。</p>
 <ol><li>机构管理员在应用申请管理页对已创建但未上线（app.status = offline）的应用提交上线申请。提交前确认应用基本信息完整，提交后系统生成一条审批记录（review.status = pending）。此时应用不可编辑基本信息。</li><li>桂教通超级管理员在审批列表的"待审批"Tab 中看到该记录，查看应用详情后选择"通过"或"驳回"。通过后 app.status 变为 online，应用进入机构管理员的应用上架管理列表（P04），状态为未上架（listing_status = unlisted）；驳回时需填写驳回原因，review.status 变为 rejected，app.status 变为 rejected（已驳回）。</li><li>审批通过后应用可进入上架流程。审批驳回后回到上线申请人，修改后可重新提交上线申请（重新提交时 app.status 回到 offline、列表展示待审批）。审批记录永久保留。</li></ol>
-<div class="mermaid">flowchart TD
-    A["机构管理员：应用申请管理页"] --&gt; B{"应用状态?"}
-    B --&gt;|"offline 未上线"| C["提交上线申请&lt;br/&gt;确认基本信息完整"]
-    B --&gt;|"online 且 unlisted"| Z["下线独立路径"]
-    C --&gt; D["系统生成审批记录&lt;br/&gt;review.status = pending"]
-    D --&gt; E["应用基本信息锁定不可编辑"]
-    E --&gt; F["桂教通超级管理员在审批列表待审批Tab 查看"]
-    F --&gt; G{"审批结论"}
-    G --&gt;|"通过"| H["app.status = online&lt;br/&gt;进入机构管理员上架列表（未上架）"]
-    G --&gt;|"驳回"| I["填写驳回原因&lt;br/&gt;review.status = rejected&lt;br/&gt;app.status = rejected（已驳回）"]
-    I --&gt; J["回到上线申请人&lt;br/&gt;修改后可重新提交"]
-    J --&gt; C
-    H --&gt; K["可进入上架流程"]
-    Z --&gt; Z1{"确认下线?"}
-    Z1 --&gt;|"确认"| Z2["app.status = offline"]
-    Z1 --&gt;|"已上架 listed"| Z3["按钮直接隐藏&lt;br/&gt;不允许下线"]
-    D -. "审批期间网络中断" .-&gt; D1["当前结果不落库&lt;br/&gt;已填意见保留可重试"]</div>
 <p>审批期间网络中断时，当前审批结果不落库，已填写意见保留并允许重试。</p>
 <p>下线为独立路径，不经过审批：应用创建人或管理员对 app.status = online 且 app.listing_status = unlisted 的应用点击"下线"，弹窗确认后直接变为 offline；已上架（listing_status = listed）的应用不允许下线，按钮直接隐藏。</p>
 <h3 id="h-8">3.2 应用上架及安装流程</h3>
 <p>管理员上架应用、配置范围、安装三个环节。</p>
-<ol><li>管理员对已上线（online）且未上架（unlisted）的应用发起上架，进入上架配置页，配置上架范围（全平台或按范围选择），P05 展示上架承诺书文案及链接供查阅，须勾选上架承诺书（未勾选时"确认上架"置灰）后方可确认。确认后 app.listing_status 变为 listed。已上架的应用，点击对应的上架范围，打开应用安装列表，点击机构对应的安装按钮为单个安装，点击全部安装则安装到当前安装列表的所有机构下，卸载和全部卸载通用的逻辑；</li><li>安装的流程：非低代码应用安装，只安装到应用中心即让应用在机构可见，因为不像低代码有安装包；低代码应用安装分跨机构和不跨机构安装，跨机构安装同非低代码流程；不跨机构安装，会先安装到应用中心，如果应用中心安装失败，则状态变为安装失败，点击安装按钮可重新安装；应用中心安装成功后，再安装到低代码平台，若安装成功则非跨机构的低代码应用安装成功；若低代码平台安装失败则状态为安装失败，可点击重试按钮，继续安装到低代码平台。</li><li>下架和卸载均需二次确认。下架后用户无法使用，卸载仅从指定机构移除，不删除低代码应用。已上架的应用不允许直接下线，必须先下架方可下线。</li></ol>
-<div class="mermaid">flowchart TD
-    A[管理员：应用上架管理页] --&gt; B{应用状态?}
-    B --&gt;|online 且 unlisted| C[发起上架 → 上架配置页]
-    C --&gt; D[配置上架范围&lt;br/&gt;全平台 / 按范围选择]
-    D --&gt; E[查阅上架承诺书]
-    E --&gt; F[确认上架&lt;br/&gt;app.listing_status = listed]
-    F --&gt; G[打开安装列表]
-    G --&gt; H{应用类型}
-    H --&gt;|非低代码| I[安装到应用中心&lt;br/&gt;机构可见]
-    H --&gt;|低代码 跨机构| I
-    H --&gt;|低代码 非跨机构| J[先安装到应用中心]
-    J --&gt; J1{应用中心安装?}
-    J1 --&gt;|失败| J2[状态=安装失败&lt;br/&gt;可点击重试]
-    J1 --&gt;|成功| K[再安装到低代码平台]
-    K --&gt; K1{低代码平台安装?}
-    K1 --&gt;|成功| K2[非跨机构低代码应用安装成功]
-    K1 --&gt;|失败| K3[状态=安装失败&lt;br/&gt;可点击重试]
-    I --&gt; L[单个/全部安装完成]
-    L --&gt; M{下架 / 卸载}
-    M --&gt;|下架 二次确认| N[用户无法使用&lt;br/&gt;app.listing_status = dismissed]
-    M --&gt;|卸载 二次确认| O[仅从机构移除&lt;br/&gt;不删除低代码应用]
-    N --&gt; P{已上架 listed?}
-    P --&gt;|是| Q[不允许直接下线&lt;br/&gt;须先下架]</div>
+<ol><li>管理员对已上线（online）且未上架（unlisted）的应用发起上架，进入 P05 配置上架范围（全平台/按范围），勾选上架承诺书后确认，app.listing_status 变为 listed。点击任意上架范围进入 P04b：单个安装为安装到对应机构，全部安装为安装到当前列表所有机构，卸载/全部卸载同理。</li><li>安装：非低代码应用只装到应用中心即对机构可见；低代码应用跨机构安装同此流程，不跨机构需先装应用中心（失败则「安装失败」可重试），成功后再装低代码平台（失败同样「安装失败」可重试），两步均成功才算安装成功。</li><li>下架和卸载均需二次确认。下架后用户无法使用，卸载仅从指定机构移除，不删除低代码应用。已上架的应用不允许直接下线，必须先下架方可下线。</li></ol>
 <h3 id="h-9">3.3 应用付费购买流程</h3>
-<p>用户在教育服务中心或者我的应用中心点击应用，免费应用直接打开使用，付费应用则打开详情界面，若可试用则显示免费试用和立即购买按钮，否则值立即购买按钮。点击免费试用，生成一条试用订单记录；点击立即购买打开订单确认 & 开票信息填写界面，发票信息录入右上角提供"历史发票记录"入口，点击可查看当前人员历史发票记录，选择一条后自动回填至发票信息表单，也可手动填写发票信息；点击提交订单跳转到付费界面，展示跟惠缴费对接的二维码，手机扫码唤起惠缴费半屏支付，支付成功后PC端支付状态同步提示支付成功，支付失败则提示失败，同时出现返回订单的按钮点击返回我的订单界面。PC 端支付状态同步机制：惠缴费完成支付后通过异步回调通知平台后端（回调含签名校验、幂等处理），后端校验通过后更新订单状态为已支付，并触发订单记录、套餐授权、接收记录生成；PC 端支付界面每 3 秒轮询一次订单支付状态接口，检测到已支付即自动提示"支付成功"并进入成功页，检测到失败则提示失败并展示"返回订单"按钮，超过支付有效期（15 分钟，与二维码有效期一致）未支付则提示支付超时、二维码失效可点击"刷新二维码"；不做 WebSocket/SSE 服务端推送</p>
-<div class="mermaid">flowchart TD
-    A["用户：教育服务中心 / 我的应用中心"] --&gt; B["点击应用"]
-    B --&gt; C{"应用类型"}
-    C --&gt;|"免费应用"| D["直接打开使用"]
-    C --&gt;|"付费应用"| E["打开详情界面"]
-    E --&gt; F{"可试用?"}
-    F --&gt;|"是"| G["显示：免费试用 + 立即购买"]
-    F --&gt;|"否"| H["仅显示：立即购买"]
-    G --&gt; I["点击免费试用"]
-    I --&gt; J["生成试用订单记录"]
-    G --&gt; K["点击立即购买"]
-    H --&gt; K
-    K --&gt; L["打开购买界面&lt;br/&gt;填写发票信息"]
-    L --&gt; M["提交订单 → 付费界面"]
-    M --&gt; N["展示惠缴费二维码"]
-    N --&gt; O["手机扫码唤起惠缴费半屏支付"]
-    O --&gt; P{"支付结果"}
-    P --&gt;|"成功"| Q["PC 端提示支付成功"]
-    P --&gt;|"失败"| R["提示支付失败&lt;br/&gt;展示返回订单按钮"]
-    R --&gt; S["返回我的订单界面"]</div>
+<p>用户在教育服务中心或我的应用中心点击应用：免费应用直接打开使用；付费应用打开详情界面，可试用时显示「免费试用」+「立即购买」，否则仅显示「立即购买」。点击免费试用，生成一条试用订单记录；点击立即购买打开订单确认 &amp; 开票信息填写界面，发票信息录入右上角提供"历史发票记录"入口，点击可查看当前人员历史发票记录，选择一条后自动回填至发票信息表单，也可手动填写发票信息；点击提交订单跳转到付费界面，展示跟惠缴费对接的二维码，手机扫码唤起惠缴费半屏支付，支付成功后PC端支付状态同步提示支付成功，支付失败则提示失败，同时出现返回订单的按钮点击返回我的订单界面。PC 端支付状态同步机制：惠缴费完成支付后通过异步回调通知平台后端（回调含签名校验、幂等处理），后端校验通过后更新订单状态为已支付，并触发订单记录、套餐授权、接收记录生成；PC 端支付界面每 3 秒轮询一次订单支付状态接口，检测到已支付即自动提示"支付成功"并进入成功页，检测到失败则提示失败并展示"返回订单"按钮，超过支付有效期（15 分钟，与二维码有效期一致）未支付则提示支付超时、二维码失效可点击"刷新二维码"；不做 WebSocket/SSE 服务端推送</p>
 <h2 id="h-10">四、详细需求说明</h2>
 <h3 id="h-11">（一）应用管理模块</h3>
 <p>本模块负责机构内应用的申请、上架、范围配置、分类管理和审批全流程，包含 12 个页面。</p>
-<p>模块级权限规则：默认 tenant_admin 具备本机构应用的管理权限（新增/编辑应用、提交上线申请、上架配置）；platform_admin 和 platform_operator 仅可查看，不可修改机构应用数据；tenant_user 无此模块访问权限。</p>
 <h4 id="h-12">P01 应用申请管理页</h4>
 <p>页面由筛选区、结果列表和行内操作组成。筛选区提供应用名称、分类、状态的检索条件；列表按创建时间倒序排列，每页 20 条，展示应用关键信息和状态标签。</p>
 <p>（1）查询和查看应用列表</p>
@@ -168,7 +84,8 @@
 <p>点击"确认上线"前系统校验应用的 Logo、名称、分类等必填项是否完整。校验不通过时顶部红色提示"应用信息不完整，请先完善"，阻止提交。校验通过后系统生成一条审批记录（review.type = 上线，review.status = pending，review.applicant = 当前登录人），toast 提示"上线申请已提交，待桂教通超级管理员审批"，返回列表页。</p>
 <p>网络异常导致提交失败时，顶部红色提示"提交失败，请检查网络后重试"。</p>
 <p>（4）管理应用</p>
-<p>所有状态（已上线/未上线/待审批/已驳回）的应用行均显示"管理"按钮。点击后进入 P02b 应用详情页（管理模式），可查看凭证区和完整信息，并通过"修改"链接跳转 P02 编辑模式。</p><p>应用上线申请被驳回（app.status = rejected）时，管理模式页面下方额外展示「审批信息」区，字段为：申请时间、申请人、审批人、审批时间、审批结果（驳回红色标签）、审批意见；审批意见缺失时展示"---"。</p>
+<p>所有状态（已上线/未上线/待审批/已驳回）的应用行均显示"管理"按钮。点击后进入 P02b 应用详情页（管理模式），可查看凭证区和完整信息，并通过"修改"链接跳转 P02 编辑模式。</p>
+<p>应用上线申请被驳回（app.status = rejected）时，管理模式页面下方额外展示「审批信息」区，字段为：申请时间、申请人、审批人、审批时间、审批结果（驳回红色标签）、审批意见；审批意见缺失时展示"---"。</p>
 <p>审批中的应用"管理"按钮不置灰，可正常点击进入 P02b 管理模式；编辑应用与更新 SuiteKey 不受审批状态限制，审批中亦可操作。</p>
 <p>（5）下线应用</p>
 <p>仅 app.status = online 且 app.listing_status = unlisted 时显示"下线"按钮。已上架（listing_status = listed）时该按钮直接隐藏。</p>
@@ -179,8 +96,8 @@
 <p>页面采用垂直单列表单布局，从上至下依次排列字段。所有标记 * 的字段为必填，未通过校验时对应字段红框提示并阻止提交。</p>
 <p>（1）新建应用（新建模式）</p>
 <p>从 P01"新增应用"入口进入，页面底部按钮为"新建"和"取消"。表单字段及其规则如下：</p>
-<table><thead><tr><th>字段</th><th>必填</th><th>控件</th><th>规则</th></tr></thead><tbody><tr><td>应用 Logo</td><td>*</td><td>图片上传</td><td>jpg/png/jpeg，推荐 140×140 圆角 24px，≤200KB；缺失提示"请上传应用 Logo"；格式/大小不符时在区域下方红字提示原因</td></tr><tr><td>应用名称</td><td>*</td><td>单行文本框</td><td>最大 20 字符，右侧实时显示"已输入字数/20"；超限禁止继续输入；名称在同机构内唯一，重复时字段下方红字"该应用名称已存在，请更换"</td></tr><tr><td>应用简介</td><td>*</td><td>多行文本框</td><td>最大 100 字符，右下实时显示"已输入字数/100"</td></tr><tr><td>所属分类</td><td>*</td><td>级联选择</td><td>先选一级分类，再级联选择对应二级分类</td></tr><tr><td>是否平台应用</td><td>*</td><td>单选</td><td>平台型 / 非平台型，默认选中非平台型；仅桂教通超级管理员展示且必填，机构管理员新增应用固定为非平台型（不展示此字段）。字段下方展示说明文案：平台型指的是不需要上架能用的应用，比如：桂教通门户；非平台型指的是需要上架使用的原生应用、生态应用等</td></tr><tr><td>是否数据同步</td><td>*</td><td>单选</td><td>否 / 是，默认否</td></tr><tr><td>用户个人信息授权</td><td>*</td><td>单选</td><td>否 / 是，默认否</td></tr><tr><td>推送地址</td><td>*</td><td>文本框</td><td>仅是否数据同步=是时展示；校验格式为 http:// 或 https://，必填</td></tr><tr><td>TOKEN</td><td>*</td><td>只读文本框</td><td>仅是否数据同步=是时展示；点击右侧「随机生成Token」按钮生成 UUID，最大 50 字符，必填</td></tr><tr><td>EncodingAesKey</td><td>*</td><td>只读文本框</td><td>仅是否数据同步=是时展示；点击右侧「随机生成AesKey」按钮生成 32 字节 AES-256 密钥后 Base64 编码（去掉 = 填充），固定 43 字符，必填</td></tr><tr><td>打开方式</td><td>*</td><td>多选复选框</td><td>PCweb / H5 / 独立小程序，至少 1 项</td></tr><tr><td>跳转登录限制</td><td>*</td><td>下拉选择</td><td>无需登录 / 仅持有账号登录 / 可注册或登录，必填</td></tr><tr><td>适用机构</td><td>*</td><td>多选复选框</td><td>学校 / 上级单位，至少 1 项</td></tr><tr><td>适用学段</td><td>*</td><td>单选+多选</td><td>范围模式为单选（所有学段/部分学段，默认所有学段）；仅适用机构含"学校"时展示与校验；选"部分学段"时下方展开学段多选：幼儿园/小学/初中/高中/中职/高职/本科/研究生，支持多选，至少 1 项</td></tr><tr><td>应用详情介绍</td><td>*</td><td>富文本编辑器</td><td>支持粗体/斜体/下划线/删除线/引用/代码/列表/字号/颜色/对齐/超链接/图片/视频/清除格式；占位提示"请上传应用图文介绍、操作文档、演示视频…"；≤5MB HTML；必填</td></tr><tr><td>应用视频介绍</td><td></td><td>上传组件</td><td>附件上传，支持多选，accept="video/*"，最多 5 个视频，单个 ≤10MB</td></tr><tr><td>应用属性</td><td>*</td><td>级联选择</td><td>一级：原生应用/生态应用（默认原生）；选原生应用时级联二级：低代码应用/自建应用；选生态应用时展示 suiteID 输入</td></tr><tr><td>suiteID</td><td></td><td>单行文本框</td><td>仅应用属性=生态应用时展示，最大 64 字符；生态应用时必填，缺失提示"请填写 suiteID"</td></tr><tr><td>应用ID</td><td>*</td><td>单行文本框</td><td>仅应用属性=低代码应用时展示；输入低代码应用ID，必填，缺失提示"低代码应用请填写应用ID"</td></tr><tr><td>可见性-移动端角色</td><td>*</td><td>多选</td><td>仅打开方式含独立小程序时展示；10 类角色：教育局职工/学生/学校教职工/家长/毕业生/退休教职工/机构管理员/临时成员/公共账号/开发者，至少 1 项</td></tr><tr><td>可见性-移动端地址</td><td>*</td><td>前缀下拉+文本框</td><td>仅打开方式含独立小程序时展示，展示时必填；前缀下拉选择 http/https，文本框填写域名或路径，地址最大 500 字符（不含前缀）</td></tr><tr><td>可见性-微信 appid</td><td>*</td><td>文本框</td><td>仅打开方式含独立小程序时展示，最大 64 字符</td></tr><tr><td>可见性-PC 端角色</td><td>*</td><td>多选</td><td>仅打开方式含 PCweb 时展示；同移动端角色枚举，至少 1 项</td></tr><tr><td>可见性-PC 端地址</td><td>*</td><td>前缀下拉+文本框</td><td>仅打开方式含 PCweb 时展示，展示时必填；前缀下拉选择 http/https，文本框填写域名或路径，地址最大 500 字符（不含前缀）</td></tr><tr><td>可见性-H5 角色</td><td>*</td><td>多选</td><td>仅打开方式含 H5 时展示；同移动端角色枚举，至少 1 项</td></tr><tr><td>可见性-H5 地址</td><td>*</td><td>前缀下拉+文本框</td><td>仅打开方式含 H5 时展示，展示时必填；前缀下拉选择 http/https，文本框填写域名或路径，地址最大 500 字符（不含前缀）</td></tr><tr><td>白名单配置</td><td></td><td>默认回填标签+新增按钮+白名单输入行列表</td><td>默认根据已填写的移动端/PC端/H5 地址自动回填（标签展示完整地址，标签带删除按钮，删除后不再自动回填展示）；点击"新增白名单"按钮新增一条白名单输入行（前缀下拉 http/https + 文本框 + 删除按钮，文本框宽度与表单其他字段一致），输入完成后自动拼入白名单；重复地址去重；最多 5 个（含默认回填），达到上限禁用新增；手动行支持删除</td></tr><tr><td>查看接入文档</td><td></td><td>链接</td><td>蓝色文字链接，点击新窗口打开接入文档 URL</td></tr></tbody></table>
-<p>点击"新建"触发全量校验，未通过时页面滚动定位到首个错误字段。校验通过后写入 app 记录，系统自动生成 app.system_suite_id（全局唯一，不可修改）与 app.system_suite_key，同时自动生成业务应用ID（app.app_id，当前最大应用ID +1、全局唯一）与应用 openId（app.app_open_id：非低代码应用生成长度 15 的英文/数字/下划线串，低代码应用取填写的低代码应用ID），返回 P01 列表。toast 提示"应用创建成功"（新建仅创建应用，上线申请由 P01「上线」按钮触发，不在此处生成审批记录）。</p>
+<table><thead><tr><th>字段</th><th>必填</th><th>控件</th><th>规则</th></tr></thead><tbody><tr><td>应用 Logo</td><td>*</td><td>图片上传</td><td>jpg/png/jpeg，推荐 140×140 圆角 24px，≤200KB；缺失提示"请上传应用 Logo"；格式/大小不符时在区域下方红字提示原因</td></tr><tr><td>应用名称</td><td>*</td><td>单行文本框</td><td>最大 20 字符，右侧实时显示"已输入字数/20"；超限禁止继续输入；名称在同机构内唯一，重复时字段下方红字"该应用名称已存在，请更换"</td></tr><tr><td>应用简介</td><td>*</td><td>多行文本框</td><td>最大 100 字符，右下实时显示"已输入字数/100"</td></tr><tr><td>所属分类</td><td>*</td><td>级联选择</td><td>先选一级分类，再级联选择对应二级分类</td></tr><tr><td>是否平台应用</td><td>*</td><td>单选</td><td>平台型 / 非平台型，默认选中非平台型；仅桂教通超级管理员展示且必填，机构管理员新增应用固定为非平台型（不展示此字段）。字段下方展示说明文案：平台型指的是不需要上架能用的应用，比如：桂教通门户；非平台型指的是需要上架使用的原生应用、生态应用等。</td></tr><tr><td>是否数据同步</td><td>*</td><td>单选</td><td>否 / 是，默认否</td></tr><tr><td>用户个人信息授权</td><td>*</td><td>单选</td><td>否 / 是，默认否</td></tr><tr><td>推送地址</td><td>*</td><td>文本框</td><td>仅是否数据同步=是时展示；校验格式为 http:// 或 https://，必填</td></tr><tr><td>TOKEN</td><td>*</td><td>只读文本框</td><td>仅是否数据同步=是时展示；点击右侧「随机生成Token」按钮生成 UUID，最大 50 字符，必填</td></tr><tr><td>EncodingAesKey</td><td>*</td><td>只读文本框</td><td>仅是否数据同步=是时展示；点击右侧「随机生成AesKey」按钮生成 32 字节 AES-256 密钥后 Base64 编码（去掉 = 填充），固定 43 字符，必填</td></tr><tr><td>打开方式</td><td>*</td><td>多选复选框</td><td>PCweb / H5 / 独立小程序，至少 1 项</td></tr><tr><td>跳转登录限制</td><td>*</td><td>下拉选择</td><td>无需登录 / 仅持有账号登录 / 可注册或登录，必填</td></tr><tr><td>适用机构</td><td>*</td><td>多选复选框</td><td>学校 / 上级单位，至少 1 项</td></tr><tr><td>适用学段</td><td>*</td><td>单选+多选</td><td>范围模式为单选（所有学段/部分学段，默认所有学段）；仅适用机构含"学校"时展示与校验；选"部分学段"时下方展开学段多选：幼儿园/小学/初中/高中/中职/高职/本科/研究生，支持多选，至少 1 项</td></tr><tr><td>应用详情介绍</td><td>*</td><td>富文本编辑器</td><td>支持粗体/斜体/下划线/删除线/引用/代码/列表/字号/颜色/对齐/超链接/图片/视频/清除格式；占位提示"请上传应用图文介绍、操作文档、演示视频…"；≤5MB HTML；必填</td></tr><tr><td>应用视频介绍</td><td></td><td>上传组件</td><td>附件上传，支持多选，accept="video/*"，最多 5 个视频，单个 ≤10MB</td></tr><tr><td>应用属性</td><td>*</td><td>级联选择</td><td>一级：原生应用/生态应用（默认原生）；选原生应用时级联二级：低代码应用/自建应用</td></tr><tr><td>应用ID</td><td>*</td><td>单行文本框</td><td>仅应用属性=低代码应用时展示；输入低代码应用ID，必填，缺失提示"低代码应用请填写应用ID"</td></tr><tr><td>可见性-移动端角色</td><td>*</td><td>多选</td><td>仅打开方式含独立小程序时展示；10 类角色：教育局职工/学生/学校教职工/家长/毕业生/退休教职工/机构管理员/临时成员/公共账号/开发者，至少 1 项</td></tr><tr><td>可见性-移动端地址</td><td>*</td><td>前缀下拉+文本框</td><td>仅打开方式含独立小程序时展示，展示时必填；前缀下拉选择 http/https，文本框填写域名或路径，地址最大 500 字符（不含前缀）</td></tr><tr><td>可见性-微信 appid</td><td>*</td><td>文本框</td><td>仅打开方式含独立小程序时展示，最大 64 字符</td></tr><tr><td>可见性-PC 端角色</td><td>*</td><td>多选</td><td>仅打开方式含 PCweb 时展示；同移动端角色枚举，至少 1 项</td></tr><tr><td>可见性-PC 端地址</td><td>*</td><td>前缀下拉+文本框</td><td>仅打开方式含 PCweb 时展示，展示时必填；前缀下拉选择 http/https，文本框填写域名或路径，地址最大 500 字符（不含前缀）</td></tr><tr><td>可见性-H5 角色</td><td>*</td><td>多选</td><td>仅打开方式含 H5 时展示；同移动端角色枚举，至少 1 项</td></tr><tr><td>可见性-H5 地址</td><td>*</td><td>前缀下拉+文本框</td><td>仅打开方式含 H5 时展示，展示时必填；前缀下拉选择 http/https，文本框填写域名或路径，地址最大 500 字符（不含前缀）</td></tr><tr><td>白名单配置</td><td></td><td>默认回填标签+新增按钮+白名单输入行列表</td><td>默认根据已填写的移动端/PC端/H5 地址自动回填（标签展示完整地址，标签带删除按钮，删除后不再自动回填展示）；点击"新增白名单"按钮新增一条白名单输入行（前缀下拉 http/https + 文本框 + 删除按钮，文本框宽度与表单其他字段一致），输入完成后自动拼入白名单；重复地址去重；最多 5 个（含默认回填），达到上限禁用新增；手动行支持删除；字段下方展示两行提示：「配置的是本应用需要打开的域名地址，不配置应用无法打开」「最多可配置 5 个白名单地址（含默认回填）」</td></tr><tr><td>查看接入文档</td><td></td><td>链接</td><td>蓝色文字链接，点击新窗口打开接入文档 URL</td></tr></tbody></table>
+<p>点击"新建"触发全量校验，未通过时页面滚动定位到首个错误字段。校验通过后写入 app 记录，系统自动生成 app.system_suite_id（当前最大应用ID +1，全局唯一，不可修改）与 app.system_suite_key）与应用 openId（app.app_open_id：非低代码应用生成长度 15 的英文/数字/下划线串，低代码应用取填写的低代码应用ID），返回 P01 列表。toast 提示"应用创建成功"（新建仅创建应用，上线申请由 P01「上线」按钮触发，不在此处生成审批记录）。</p>
 <ul><li>单字段失焦触发即时校验（Logo/名称/简介/分类/打开方式/机构/学段/属性/suiteID）。</li><li>网络异常时已填写内容通过 localStorage 保留 24 小时。</li><li>网络异常提交失败时顶部红条"提交失败，请检查网络后重试"。</li><li>若表单未修改直接点击"取消"，直接返回来源页；若已修改，弹出二次确认"当前编辑未保存，确认离开？"。</li></ul>
 <p>（2）编辑应用（编辑模式）</p>
 <p>从 P02b 应用详情页的"修改"链接进入，字段按当前值回填，底部按钮为"提交"和"取消"。</p>
@@ -190,34 +107,30 @@
 <p>页面由面包屑、头部凭证区、基本信息区（上线申请模式下基本信息区下方嵌入「上线配置」区，二者同属一个模块）和底部操作区组成。根据进入入口分为四种模式：管理模式（P01"管理"进入，全部状态应用，应用上线被驳回时展示审批信息）、上线申请模式（P01"上线"进入，offline 或 rejected 应用）、只读查看模式（P01 其他用户"查看"进入）、审批详情模式（P10"详情"进入）。</p>
 <p>（1）查看头部凭证区</p>
 <table><thead><tr><th>展示项</th><th>字段</th><th>形式</th></tr></thead><tbody><tr><td>应用 Logo</td><td>app.logo</td><td>大尺寸圆角图标，与凭证区左右布局</td></tr><tr><td>应用标题</td><td>app.name + 分类拼接</td><td>加粗标题</td></tr><tr><td>SuiteId</td><td>app.system_suite_id</td><td>标签+值两栏，纯只读，全局唯一不可修改</td></tr><tr><td>SuiteKey</td><td>app.system_suite_key</td><td>标签+值两栏 + 右侧"复制"链接按钮</td></tr></tbody></table>
-<p>管理模式、上线申请模式均显示 SuiteKey 的"复制"链接（点击复制 app.system_suite_key 值）。上线申请模式展示凭证区（凭证在创建应用时已生成，只读、不可更新）。只读查看模式和审批详情模式显示凭证区但不显示"复制"链接。</p>
+<p>管理模式、上线申请模式显示 SuiteKey「复制」链接；只读查看、审批详情模式展示凭证区但不显示「复制」。凭证创建应用时生成，只读不可更新。</p>
 <p>（2）复制 SuiteKey</p>
 <p>点击 SuiteKey 右侧"复制"链接，系统将 app.system_suite_key 值写入剪贴板，toast 提示"SuiteKey 已复制"。复制失败（如浏览器权限限制）时 toast 红色提示"复制失败，请手动复制"，页面无其它变更。</p>
 <p>（3）查看基本信息区</p>
 <p>板块标题为"基本信息（修改的信息需要重新上架审批后生效）"，右侧提供"修改"链接按钮（仅管理模式显示）。点击"修改"跳转 P02 编辑模式，字段全部回填。</p>
-<p>基本信息区依次只读展示以下分组。超长文本的处理方式：应用名称截断悬停，应用介绍使用富文本渲染自带滚动。</p>
-<ul><li>基础信息：应用 Logo（大图预览）、应用名称、应用介绍、所属分类（级联路径，如"教学管理/课堂工具"）</li><li>打开方式：中文枚举全称，多值以顿号分隔（PCweb / H5 / 独立小程序）</li><li>跳转登录限制：中文枚举全称（无需登录 / 仅持有账号登录 / 可注册或登录）</li><li>适用范围：适用机构、适用学段（mode=all 时展示"所有学段"）</li><li>详情介绍：应用详情介绍（只读富文本渲染，必填字段）</li><li>应用视频：展示已上传视频文件列表（名称标签），无视频时隐藏</li><li>应用属性：应用属性（完整属性，如"原生应用/低代码应用"）、生态 suiteID（仅 type=ecosystem 时展示）</li><li>数据与授权：是否数据同步（是/否）、用户个人信息授权（是/否）、推送地址、TOKEN、EncodingAesKey（仅数据同步=是时展示推送地址/TOKEN/EncodingAesKey）</li><li>收费与可见：移动端可见性（角色列表+访问地址+微信 appid，仅打开方式含独立小程序时展示）、PC 端可见性（角色列表+地址，仅打开方式含 PCweb 时展示）、H5 可见性（角色列表+地址，仅打开方式含 H5 时展示）、白名单（标签列表展示，默认回填三个地址，最多 5 个）</li></ul>
+<p>基本信息区按 P02 字段分组只读展示：基础信息（Logo 大图/名称/介绍/分类）、打开方式（中文全称，顿号分隔）、跳转登录限制、适用范围（mode=all 显示"所有学段"）、详情介绍（富文本滚动）、应用视频（无则隐藏）、应用属性（生态应用附 suiteID）、数据与授权（数据同步=是时展示推送地址/TOKEN/EncodingAesKey）、收费与可见（按打开方式展示移动端/PC/H5 角色+地址+微信 appid；白名单默认回填三地址、最多 5 个）。超长名称截断悬停，介绍富文本自带滚动。</p>
 <p>（4）底部按钮</p>
 <p>所有底部按钮居中显示。</p>
 <p><strong>管理模式</strong>：仅显示"返回"按钮，操作通过头部 SuiteKey「更新」与基本信息区「修改」入口执行。</p>
 <p><strong>上线申请模式</strong>：应用基本信息区下方（同一模块内）新增可编辑「上线配置」区，提交/返回按钮统一置于模块最下方，显示「提交」（主）+「返回」（次）。点击"提交"前系统核对应用必填字段完整性及上线配置必填项，且须勾选上架承诺书（未勾选时"提交"置灰）；缺项时顶部红色提示"应用信息不完整，请先完善"，阻止提交。校验通过后系统生成 review 记录（review.type = 上线，review.status = pending），toast 提示"上线申请已提交，待桂教通超级管理员审批"，返回 P01 列表。</p>
-<p>上线配置区（上线申请模式）字段及显示逻辑：是否跨机构（radio 是/否，*，仅低代码应用；桂教通超级管理员选"是"联动展示跨机构层级与所属机构，机构管理员选"是"不展示这两项）/ 跨机构层级（radio 厅/市/区县，*，仅桂教通超级管理员 + 低代码应用 + 是否跨机构=是）/ 所属机构（可搜索多选输入框，*，仅桂教通超级管理员 + 低代码应用 + 是否跨机构=是；根据输入机构名称模糊搜索，最多查询 50 条，支持多选；数据来源按跨机构层级获取——层级为厅→获取所有教育行政部门，为市→获取所有市级教育行政部门，为区县→获取所有区县教育行政部门；跨机构层级切换时清空已选并重新加载候选）/ 收费方式（radio 收费/免费，*，仅非低代码应用；选"收费"联动展示是否可试用、试用套餐、授权套餐）/ 是否可试用（radio 是/否，*，仅非低代码应用 + 收费方式=收费；选"是"时展示试用套餐）/ 试用套餐（下拉，*，仅非低代码应用 + 收费方式=收费 + 是否可试用=是）/ 授权套餐（下拉多选，*，仅非低代码应用 + 收费方式=收费；数据来源应用套餐配置（套餐管理），可多选多条套餐）/ 版本号（下拉搜索框，单选，仅低代码应用展示；是否跨机构=否 时必填（*），是否跨机构=是 时非必填；按当前低代码应用ID远程获取版本列表，未获取到提示"需要上架应用到低代码应用市场"）/ 上架承诺书（checkbox，必勾选，文案"我已仔细阅读并完全同意应用免责声明及上架承诺书，自愿承担一切相关法律责任。"；点击链接弹五条免责声明弹窗，禁止点击遮罩关闭，仅"我知道了"关闭；未勾选时"提交"置灰）。</p>
+<p>上线配置区（上线申请模式）字段及显示逻辑：</p>
+<ul><li>是否跨机构（radio 是/否，*）：仅低代码应用展示；桂教通超级管理员选"是"时联动展示跨机构层级与所属机构，机构管理员选"是"时不展示这两项。</li><li>跨机构层级（radio 厅/市/区县，*）：仅桂教通超级管理员 + 低代码应用 + 是否跨机构=是 时显示。</li><li>所属机构（可搜索多选输入框，*）：仅桂教通超级管理员 + 低代码应用 + 是否跨机构=是 时显示；根据输入机构名称模糊搜索（最多查询 50 条），支持多选；数据来源按跨机构层级获取——层级为厅→获取所有教育行政部门，为市→获取所有市级教育行政部门，为区县→获取所有区县教育行政部门；跨机构层级切换时清空已选并重新加载候选。</li><li>收费方式（radio 收费/免费，*）：仅非低代码应用展示；选"收费"时联动展示是否可试用、试用套餐、授权套餐。</li><li>是否可试用（radio 是/否，*）：仅非低代码应用 + 收费方式=收费 时显示；选"是"时展示试用套餐。</li><li>试用套餐（下拉，*）：仅非低代码应用 + 收费方式=收费 + 是否可试用=是 时显示。</li><li>授权套餐（下拉多选，*）：仅非低代码应用 + 收费方式=收费 时显示；数据来源应用套餐配置（套餐管理），可多选多条套餐。</li><li>版本号（下拉搜索框，单选）：仅低代码应用展示；是否跨机构 = 否 时必填（*），是否跨机构 = 是 时非必填；按当前低代码应用ID远程获取版本列表，未获取到则提示"需要上架应用到低代码应用市场"。</li><li>上架承诺书（checkbox，必勾选）：文案与免责声明弹窗同 P05（禁止点遮罩关闭，仅「我知道了」关闭）；未勾选时「提交」置灰。</li></ul>
 <p>该应用已被删除或不属于当前机构时，页面顶部提示"应用不存在或无查看权限"，隐藏所有操作按钮。</p>
 <p>（5）查看审批信息</p>
-<p>审批详情模式：审批信息板块展示当前应用最近一条上线审批记录：申请类型（上线/下线/修改）、审批状态徽标（待审批黄色/通过绿色/驳回红色）、申请人、申请时间、审批人、审批时间、审批备注（驳回时高亮显示）。若应用从未提交过审批记录，整块板块隐藏。</p>
-<p>管理模式（应用上线被驳回时）：app.status = rejected 时同样展示审批信息板块，展示最近一条驳回的上线审批记录：申请时间、申请人、审批人、审批时间、审批结果、审批意见；未处于已驳回状态时不展示。</p>
-<h4 id="h-16">P04 应用上架管理页</h4>
+<p>审批详情模式：展示当前应用最近一条上线审批记录（申请类型、审批状态徽标、申请人/时间、审批人/时间、审批备注；字段同 P11v），无记录时整块隐藏。管理模式在 app.status = rejected 时展示最近一条驳回记录，字段相同；其余状态不展示。</p>
+<h4 id="h-15">P04 应用上架管理页</h4>
 <p>页面由筛选区、结果列表和行内操作组成。</p>
 <p>（1）查询上架应用列表</p>
-<p>筛选栏提供应用名称、应用分类、上架范围（下拉，本机构范围列表）。点击"搜索"按条件刷新列表；点击"重置"清空条件恢复默认视图。</p>
+<p>筛选栏提供应用名称、应用分类、上架范围（下拉，本机构的范围列表）。点击"搜索"按条件刷新列表；点击"重置"清空条件恢复默认视图。</p>
 <p>列表按创建时间倒序，每页 20 条，展示：应用 Logo、应用名称、应用分类（一级/二级）、是否平台应用（平台型/非平台型，仅桂教通超级管理员列展示）、开发者名称、应用属性（完整属性文本，如"原生应用""原生应用/低代码应用""生态应用"）、上架范围（仅展示上架时「范围选择」所选内容：选择全平台则展示"全平台"，选择按范围则展示所选范围名称，以英文逗号隔开；不展示分享范围。每条范围均为超链接、可单独点击进入对应范围的 P04b 应用安装列表）、创建时间、上架状态（已上架/已下架/未上架标签）。</p>
-<blockquote>上架记录规则：一次上架无论选择多少个范围，均只生成一条上架记录（listing_status = unlisted）；上架范围列仅聚合展示「范围选择」所选内容（选择全平台则展示"全平台"，选择按范围则展示所选范围名称），不含分享范围；各范围可点选进入其对应的应用安装列表页（P04b）。</blockquote>
+<blockquote>上架记录规则同 P05：一次上架只生成一条记录，上架范围列仅聚合「范围选择」内容、不含分享范围，各范围可点选进入 P04b。</blockquote>
 <p>（2）上架应用</p>
 <p>listing_status = unlisted 或 dismissed 且 app.status = online 的应用行显示"上架"按钮。点击进入 P05 应用上架配置页。</p>
-<blockquote>上架补充规则：
-<li>当操作人为学校管理员时，P05 不展示"范围选择"，默认上架的范围即本校（学校无下级机构，全平台/按范围不适用）。</li>
-<li>其他机构分享过来的应用（来源为其他机构分享），上架时 P05 不展示"分享范围"，被分享过来的应用不可再被分享给其他机构。</li>
-<li>上架范围为<strong>动态引用</strong>：应用上架后，其上架范围解析出的机构集合为每次实时解析（非上架时刻快照）。机构、标签、范围任一环节发生增删变化，已上架应用的上架范围自动同步更新，无需重新上架、无需重新审核。</li></blockquote>
+<blockquote>上架范围与分享范围规则见 P05（含学校机构、分享来源、动态引用）。</blockquote>
 <blockquote>已下架（dismissed）应用重新上架时，保留原上架范围：P05 的上架范围默认回填该应用下架前的上架范围配置，管理员可在此基础上调整，确认后直接进入 listed，不丢失原范围设置。</blockquote>
 <p>（3）下架应用</p>
 <p>仅 listing_status = listed 时显示"下架"按钮。点击弹出确认框"确认要下架 XXX 吗？下架后全区用户将无法使用此应用，已安装的应用不会被卸载"。确认后 listing_status = dismissed（已下架），仅使应用从范围不可见，不卸载已安装的应用。</p>
@@ -227,34 +140,24 @@
 <p>筛选栏提供应用名称、应用分类（下拉）、是否平台应用（下拉：平台型/非平台型）。点击"搜索"按条件刷新列表；点击"重置"清空条件。</p>
 <p>列表展示：应用 Logo、应用名称、应用属性（展示应用类型内容，原生应用/生态应用 + 低代码应用/自建应用等）、应用分类（应用对应的分类）、分享范围（记录上架时分享范围，桂教通平台及每个被分享机构均逐一列出，如"桂教通平台、南宁市第一中学、柳州市高级中学、桂林市育才小学、北海市实验学校、玉林市第一初级中学、梧州市实验小学"）、分享时间、操作（停止分享）。</p>
 <p>停止分享：点击行内"停止分享"弹出"停止分享"弹窗。弹窗内"停止分享范围"为下拉多选，逐一列出该应用上架时分享的每个范围：桂教通平台 + 每个被分享机构名称（如分享时选了 6 个机构，则这 6 个机构逐一列出，必填）。提交后：按所选停止分享范围（机构），将对应机构应用上架管理列表中的该应用下架（若已上架则改为已下架 dismissed，若未上架则保持未上架）；已安装应用不卸载。所选停止分享范围覆盖全部后，该应用从分享列表移除。</p>
-<h4 id="h-17">P04b 应用安装列表页</h4>
+<h4 id="h-16">P04b 应用安装列表页</h4>
 <p>由 P04 上架范围超链接进入，面包屑为"应用上架管理 / 安装列表（{范围名称}）"，展示所选范围覆盖的全部机构。页面根据当前应用的应用属性自动展示对应的安装流程说明（原生应用 / 低代码应用），不再提供手动切换。</p>
 <p>（1）查询和查看机构安装状态</p>
 <p>筛选栏提供机构名称、机构 ID、安装状态（安装成功/安装失败/未安装）查询，按钮包含"搜索""重置""全部安装""全部卸载"。</p>
 <p>列表展示：机构名称、机构 ID、机构类型（教育局机构/学校）、所在城市、安装状态（三态标签：安装成功、安装失败、未安装）、安装失败原因（仅安装失败展示具体失败原因，其余显示"—"）。默认按机构名称升序排列，每页 20 条。</p>
-<p>安装流程说明：</p>
-<ul><li>原生应用（非低代码）：应用安装只需安装到应用中心，安装成功后根据上架范围及应用可用学段在我的应用中心展示。</li><li>低代码应用：安装流程为安装到应用中心、成功后安装到低代码平台，两步均成功才算安装成功；若应用中心安装失败或低代码平台安装失败，状态均为"安装失败"，可在"安装失败原因"查看原因并重试。</li></ul>
+<p>安装流程见 3.2：原生应用仅装到应用中心；低代码应用需应用中心 + 低代码平台两步均成功，任一步失败即为安装失败并可重试。</p>
 <p>（2）单机构安装/卸载</p>
 <ul><li>行尾"安装"按钮（仅未安装机构显示）或"重试"按钮（仅安装失败机构显示）。点击弹窗提示"是否确认将【应用名称】应用在【机构名称】安装？"，确认后安装成功，toast 提示"安装成功"。</li><li>行尾"卸载"按钮（仅已安装机构显示）。点击弹窗提示"是否确认将【应用名称】应用从【机构名称】卸载？"，确认后卸载成功，toast 提示"卸载成功"。</li></ul>
 <p>（3）全部安装/卸载</p>
 <ul><li>"全部安装"按钮：弹窗"是否确认将【应用名称】应用安装到全部机构/学校？"，确认后后台执行全量安装任务，toast"已提交全部安装"。</li><li>"全部卸载"按钮：弹窗"是否确认将【应用名称】应用从所有机构/学校卸载？"，确认后后台执行全量卸载任务，toast"已提交全部卸载"。</li></ul>
-<h4 id="h-18">P05 应用上架配置页</h4>
-<p>由 P04"上架"按钮进入，页面分为应用基本信息区（只读）与上架配置区两部分（上架配置区仅保留"范围选择"与"分享范围"；机构管理员且当前机构为学校时，上架配置区不展示"范围选择"，默认上架范围即本校，仅展示"分享范围"；其他机构分享过来的应用上架时不展示"分享范围"，被分享过来的应用不可再被分享给其他机构）。底部按钮居中："取消"和"确认上架"；须勾选上架承诺书（未勾选时"确认上架"置灰）后才可提交。</p>
-<blockquote><strong>范围选择</strong>：桂教通超级管理员：全平台/按范围（必填）；机构管理员：全平台/按范围（必填，对低代码/非低代码均展示，全平台=上架到当前机构及所有下级机构并自动安装应用中心）；机构管理员且当前机构为学校时不展示范围选择（学校无下级机构，全平台/按范围不适用），默认上架范围即本校。<br><strong>分享范围</strong>：仅机构管理员展示（低代码/非低代码均展示）；多选（桂教通平台/其他机构，学校机构必填、其余非必填）；勾选"其他机构"时联动展示机构模糊搜索多选框（输入机构名称模糊筛选、最多 50 条、可多选）。当前机构为学校时：所选"桂教通平台"或"其他机构"会在桂教通超管与对应机构的应用上架管理界面各新增一条未上架记录。其他机构分享过来的应用不展示分享范围（被分享过来的应用不可再被分享给其他机构）。</blockquote>
-<p>（1）上架配置</p>
-<p>应用基本信息区完整展示 P02b 管理模式全部字段（头部凭证区展示 SuiteId/SuiteKey 仅只读文本 + 基本信息全字段：应用名称/简介/所属分类/打开方式/机构/学段/应用详情介绍/应用视频/属性/数据同步/用户个人信息授权/来源/移动端角色地址/微信appid/PC端角色地址/H5角色地址/白名单），仅隐藏"更新"与"修改"链接，凭证区不显示操作按钮。</p>
-<p>上架配置区依次包含以下字段：</p>
-<table><thead><tr><th>字段</th><th>控件</th><th>必填</th><th>联动规则</th></tr></thead><tbody><tr><td>范围选择</td><td>radio 全平台/按范围</td><td>*（机构管理员必填）</td><td>桂教通超级管理员：是否跨机构=否时全平台/按范围（必填），是否跨机构=是时仅按范围；机构管理员：全平台/按范围（必填，对低代码/非低代码均展示）；机构管理员且当前机构为学校时不展示该字段（默认上架范围即本校）</td></tr><tr><td>分享范围</td><td>checkbox 桂教通平台/其他机构</td><td>学校机构必填</td><td>机构管理员展示（低代码/非低代码均展示）；多选；勾选"其他机构"时联动展示"其他机构"机构多选框（模糊搜索、最多 50 条、可多选）；当前机构为学校时必填（至少选一项），所选桂教通平台/机构在桂教通超管与对应机构的应用上架管理界面新增未上架记录；其他机构分享过来的应用不展示该字段（被分享的应用不可再被分享）</td></tr></tbody></table>
-<p>说明：是否跨机构、跨机构层级、所属机构、收费方式、是否可试用、试用套餐、授权套餐、版本号已迁移至 <strong>P02b 应用详情页 - 上线申请模式</strong>，随上线申请一并提交；上架承诺书在 P02b 上线申请与 P05 上架时均须勾选（P05 未勾选时"确认上架"置灰），本页同时展示上架承诺书文案及蓝色链接供查阅。</p>
-<p>范围选择的具体交互：</p>
-<ul><li>桂教通超级管理员：是否跨机构=否时全平台（文本提示"全平台指的是所有机构和学校"）/ 按范围（可搜索下拉框多选，数据来超管的上架范围管理）；是否跨机构=是时仅显示"按范围"。</li><li>机构管理员：全平台/按范围单选、必填（低代码/非低代码均展示）。全平台=上架到当前机构及所有下级机构并自动安装到应用中心；按范围=可搜索下拉框多选（数据来源本机构上架范围管理）。确认上架后按所选范围在应用上架管理新增未上架数据。当前机构为学校时不展示范围选择，默认上架范围即本校。</li><li>分享范围 + 其他机构（仅机构管理员，低代码/非低代码均展示）：分享范围多选（桂教通平台/其他机构，学校机构必填、其余非必填）；勾选"其他机构"时展示机构模糊搜索多选框（输入机构名称模糊筛选、最多 50 条、可多选）。当前机构为学校时：所选"桂教通平台"或"其他机构"在桂教通超管与对应机构的应用上架管理界面各新增一条未上架记录。其他机构分享过来的应用不展示分享范围（被分享过来的应用不可再被分享给其他机构）。</li></ul>
-<p>（2）确认上架</p>
-<p>须勾选上架承诺书（checkbox，文案"我已仔细阅读并完全同意应用免责声明及上架承诺书，自愿承担一切相关法律责任。"，点击链接弹出免责声明弹窗，未勾选时"确认上架"按钮置灰）后方可提交。</p>
-<p>确认上架后 app.listing_status = listed，toast"上架成功"，返回 P04。</p>
-<blockquote>范围动态引用规则：上架范围为动态引用，不是上架时刻快照。机构、标签、范围增删后，已上架应用的上架范围自动同步更新；仅从范围中移除机构时，应用上架状态不变，只是该机构不再可见该应用（已安装应用不卸载，无需重新审核）。</blockquote>
-<blockquote>上架记录规则：一次上架无论选择多少个范围（含全平台/按范围多选），均只生成一条上架记录；该记录的上架范围列仅聚合展示「范围选择」所选内容（选择全平台则展示"全平台"，选择按范围则展示所选范围名称，英文逗号隔开），不含分享范围；各范围可单独点击进入对应范围的 P04b 应用安装列表页。低代码应用的版本号在 P02b 上线申请模式已配置，本页上架不要求再次选择版本号。机构管理员且当前机构为学校时：无范围选择，默认上架范围即本校，上架范围列展示本校及所选分享目标（桂教通平台/其他机构名称），记录在桂教通超管与对应机构的应用上架管理界面生成，状态为未上架。其他机构分享过来的应用上架后不生成分享记录（被分享过来的应用不可再被分享给其他机构）。</blockquote>
-<p>P05 底部展示上架承诺书 checkbox 及蓝色链接，点击可打开免责声明弹窗；上架提交须勾选承诺书（未勾选时"确认上架"置灰），P02b 上线申请模式亦须勾选。</p>
-<h4 id="h-18b">P06 全平台应用页</h4>
+<h4 id="h-17">P05 应用上架配置页</h4>
+<p>由 P04「上架」按钮进入，页面分为应用基本信息区（只读）与上架配置区（范围选择 + 分享范围）；底部居中「取消」「确认上架」，须勾选上架承诺书后方可提交（未勾选时按钮置灰）。</p>
+<p>应用基本信息区完整展示 P02b 管理模式全部字段（凭证区 SuiteId/SuiteKey 只读，基本信息全字段），隐藏「更新」「修改」链接与操作按钮。</p>
+<table><thead><tr><th>字段</th><th>控件</th><th>必填</th><th>规则</th></tr></thead><tbody><tr><td>范围选择</td><td>radio 全平台/按范围</td><td>机构管理员必填</td><td>桂教通超管：是否跨机构=否时可全平台/按范围，=是时仅按范围；机构管理员：全平台/按范围均展示（低代码/非低代码），全平台=上架到本机构及所有下级机构并自动安装到应用中心；当前机构为学校时不展示，默认本校。按范围为可搜索下拉多选，数据源为本机构上架范围管理。</td></tr><tr><td>分享范围</td><td>checkbox 桂教通平台/其他机构</td><td>学校机构必填</td><td>仅机构管理员展示（低代码/非低代码）；勾选「其他机构」联动「其他机构」下拉选择器：精确搜索（须输入完整机构名称才能检索到该机构）、查询范围为全平台机构数据（不限当前机构管辖范围）、可多选、最多分享 200 个机构；下拉框下方以只读文本区域按选择顺序回显已选机构名称（不可编辑）。学校机构至少选一项。当前机构为学校时，所选桂教通平台/其他机构会在超管与对应机构的应用上架管理各新增一条未上架记录。其他机构分享过来的应用不展示该字段（不可再分享）。</td></tr></tbody></table>
+<p>确认上架：勾选承诺书 checkbox（文案「我已仔细阅读并完全同意应用免责声明及上架承诺书，自愿承担一切相关法律责任。」，点击链接弹出免责声明弹窗）后「确认上架」可点击；确认后 app.listing_status = listed，toast「上架成功」，返回 P04。</p>
+<p><strong>范围与记录规则</strong></p>
+<ul><li>上架范围为动态引用而非快照：机构/标签/范围增删后，已上架应用范围自动同步；仅移除机构时应用上架状态不变，该机构不再可见，已安装应用不卸载、无需重新审核。</li><li>一次上架无论选多少范围只生成一条上架记录；上架范围列聚合展示「全平台」或所选范围名称（英文逗号隔开），不含分享范围；各范围可单独点击进入 P04b。</li><li>低代码版本号已在 P02b 上线申请模式配置，本页不再选择。</li><li>学校机构：无范围选择，上架范围列展示本校及分享目标，记录在超管与对应机构生成，状态未上架；分享过来的应用上架后不生成分享记录。</li></ul>
+<h4 id="h-18">P06 全平台应用页</h4>
 <p>桂教通超级管理员专属页面，跨机构查看<strong>全平台已上架应用</strong>并支持强制下架治理。仅超管可见（tenant_admin 不可访问）。菜单入口：应用管理 → 全平台应用。</p>
 <p>（1）查询区</p>
 <table><thead><tr><th>字段</th><th>控件</th><th>说明</th></tr></thead><tbody><tr><td>应用名称</td><td>文本框</td><td>app.name 模糊查询</td></tr><tr><td>应用分类</td><td>级联下拉</td><td>app.category_id，一级→二级</td></tr><tr><td>应用ID</td><td>文本框</td><td>app.app_id 精确匹配（业务应用ID）</td></tr></tbody></table>
@@ -263,26 +166,19 @@
 <p>数据范围：仅 <code>app.listing_status = listed</code> 的应用（跨全部机构）。列如下：</p>
 <table><thead><tr><th>列</th><th>字段</th><th>备注</th></tr></thead><tbody><tr><td>Logo</td><td>app.logo</td><td>圆角图标</td></tr><tr><td>应用名称</td><td>app.name</td><td>—</td></tr><tr><td>应用ID</td><td>app.app_id</td><td>业务应用ID</td></tr><tr><td>应用openId</td><td>app.app_open_id</td><td>—</td></tr><tr><td>上架机构</td><td>app.tenant_name</td><td>关联带出</td></tr><tr><td>应用分类</td><td>app.category</td><td>级联路径（一级/二级）</td></tr><tr><td>是否平台应用</td><td>app.app_type</td><td>平台型/非平台型</td></tr><tr><td>应用属性</td><td>app.type + app.native_type</td><td>拼接展示，如"原生应用/低代码应用"</td></tr><tr><td>适用机构</td><td>app.institution_scope</td><td>多值</td></tr><tr><td>学段</td><td>app.school_levels_mode + app.school_levels</td><td>多值</td></tr><tr><td>状态</td><td>app.listing_status</td><td>展示为"已上架"标签</td></tr><tr><td>操作</td><td>强制下架</td><td>见下</td></tr></tbody></table>
 <p>（3）操作：强制下架</p>
-<ul><li>仅 <code>app.listing_status = listed</code> 行显示。</li><li>点击弹窗二次确认："确定要强制下架【{app.name}】吗？下架后该应用在【{app.tenant_name}】的上架列表将变为已下架状态，已安装的应用不卸载。"</li><li>确认后：<code>app.listing_status = dismissed</code>（回到已下架）；已安装应用不卸载（沿用机构下架规则）；写入 OperationLog：<code>log.action = force_delist</code>、<code>log.operator_role = platform_admin</code>，detail 记录被下架应用、原上架机构、执行人；toast「强制下架成功」，列表刷新（该条因不满足 listed 条件被移出）。</li><li>对应机构管理员在 P04 应用上架管理页看到该应用状态由"已上架"回落为"已下架"，分享到的其他机构对应的应用状态也改为已下架。</li><li>取消：不变更。</li></ul>
+<ul><li>仅 <code>app.listing_status = listed</code> 行显示。</li><li>点击弹窗二次确认："确定要强制下架【{app.name}】吗？下架后该应用在【{app.tenant_name}】的上架列表将变为已下架状态，已安装的应用不卸载。"</li><li>确认后：<ul><li><code>app.listing_status = dismissed</code>（回到已下架）</li><li>已安装应用不卸载（沿用机构下架规则）</li><li>写入 OperationLog：<code>log.action = force_delist</code>、<code>log.operator_role = platform_admin</code>，detail 记录被下架应用、原上架机构、执行人</li><li>toast「强制下架成功」，列表刷新（该条因不满足 listed 条件被移出）</li></ul></li><li>对应机构管理员在 P04 应用上架管理页看到该应用状态由"已上架"回落为"已下架"，分享到的其他机构对应的应用状态也改为已下架，被分享的机构在分享机构未上架前，不可上架，若分享的机构重新上架后分享范围有变更，以最新的分享范围为准，历史的范围如果不在新范围内的，将对应机构的应用删除，如如强制下架前分享给了A机构，重新上架后不分享A机构，则AI机构在对应的上架管理列表将删除该应用</li><li>取消：不变更。</li></ul>
 <p>（4）说明</p>
 <ul><li>本页不提供其他跨机构操作（无编辑、无审批、无上架），仅治理性下架</li><li>状态列固定展示"已上架"（因数据范围已过滤 listed），保留字段占位用于未来扩展</li></ul>
 <h4 id="h-19">P07 上架范围管理页</h4>
 <p>页面顶部为两个 Tab 切换："自定义范围"和"默认范围"。</p>
 <p>（1）查看自定义范围列表</p>
 <p>展示本机构手动创建和维护的范围。</p>
-<p>查询条件：范围名称（输入框）、类型（下拉：自定义/按教育机构/按标签），支持「查询」「重置」，按条件筛选列表。</p>
-<p>列表列：范围名称（<strong>蓝色字体、鼠标悬停显示手型指针，点击跳转「范围机构列表」页面（P07a）</strong>）、范围 ID、范围类型（自定义/按教育机构/按标签）、范围摘要、创建时间、创建人。另有状态列（启用绿色标签/停用红色标签）和操作列（编辑 + 删除仅停用显示 + 停用/启用按钮合并在一列）。删除、启用、停用均需弹窗二次确认。</p>
-<p>删除保护：被应用上架范围引用的范围不可删除。删除前校验该范围是否被已上架（listed）应用使用，被引用时提示"该范围已被 N 个应用的上架范围引用，不可删除"。</p>
+<ul><li>查询条件：范围名称（输入框）、类型（下拉：自定义/按教育机构/按标签），支持「查询」「重置」，按条件筛选列表。</li><li>列表列：范围名称（<strong>蓝色字体、鼠标悬停显示手型指针，点击跳转「范围机构列表」页面（P07a）</strong>）、范围 ID、范围类型（自定义/按教育机构/按标签）、范围摘要、创建时间、创建人。另有状态列（启用绿色标签/停用红色标签）和操作列（编辑 + 删除仅停用显示 + 停用/启用按钮合并在一列）。删除、启用、停用均需弹窗二次确认。</li><li>删除保护：被应用上架范围引用的范围不可删除。删除前校验该范围是否被已上架（listed）应用使用，被引用时提示"该范围已被 N 个应用的上架范围引用，不可删除"。</li></ul>
 <p>（2）查看默认范围列表</p>
 <p>展示系统自动生成的范围（如教育局市场自动生成的默认范围），列表列：范围名称、范围 ID、创建时间。仅可查看，无编辑或管理操作。默认范围名称与机构名称一致（如：广西壮族自治区教育厅、南宁市教育局、南宁市青秀区教育局、横州市教育局、桂林市教育局等）。</p>
-<h4 id="h-19a">P07a 范围机构列表页</h4>
-<p>由 P07 自定义范围列表中的"范围名称"（蓝色字体、鼠标悬停手型指针）点击进入的独立页面，展示当前范围内覆盖的全部机构，支持分页查询。</p>
-<p>页面顶部：返回按钮（回到 P07）、页面标题"范围机构列表"、当前范围名称展示。</p>
-<p>（1）查询条件：机构名称（输入框）、机构类型（下拉）、机构 ID（输入框），支持"查询""重置"。</p>
-<p>（2）列表列：机构名称、机构 ID、机构类型。</p>
-<p>（3）分页：底部分页器（每页 10 条，支持翻页与总条数展示），查询条件变化后回到第 1 页重新分页。</p>
-<p>（4）操作按钮：查询区右侧提供「同步范围机构」按钮。点击后调用后端接口校验当前范围是否已包含该范围类型下全部机构；未全部包含则后端自动补足遗漏机构并刷新列表（提示「已同步范围机构，新增 N 个机构」），已全部包含则提示「当前范围机构已完整，无需同步」。</p>
-<p>动态引用说明：范围机构列表为<strong>动态解析</strong>结果（每次实时计算），机构新增/删除后由「同步范围机构」按钮（或标签联动）自动补齐/移除，使用该范围的应用上架范围同步更新。</p>
+<p><strong>范围机构列表页（P07a）</strong></p>
+<p>点击自定义范围列表中的「范围名称」跳转进入独立页面（P07a），展示当前范围内覆盖的全部机构，支持分页查询：</p>
+<ul><li>页面元素：返回按钮（回到 P07）、页面标题「范围机构列表」、当前范围名称展示。</li><li>查询条件：机构名称（输入框）、机构类型（下拉）、机构 ID（输入框），支持「查询」「重置」。</li><li>列表列：机构名称、机构 ID、机构类型。</li><li>分页：底部分页器（每页 10 条，支持翻页与总条数展示），查询条件变化后回到第 1 页重新分页。</li><li>操作按钮：查询区右侧提供「同步范围机构」按钮。点击后调用后端接口校验当前范围是否已包含该范围类型下全部机构：<ul><li>若未全部包含，后端自动将遗漏的机构补足到当前范围，前端刷新列表并提示「已同步范围机构，新增 N 个机构」；</li><li>若已全部包含，提示「当前范围机构已完整，无需同步」。</li></ul></li><li>动态引用说明：范围机构列表为<strong>动态解析</strong>结果（每次实时计算），机构新增/删除后由「同步范围机构」按钮（或标签联动）自动补齐/移除，使用该范围的应用上架范围同步更新。</li></ul>
 <h4 id="h-20">P08 上架范围编辑页</h4>
 <p>由 P07 自定义范围 Tab 的"创建范围"或"编辑"按钮进入。页面标题根据模式动态显示"创建自定义范围"或"编辑自定义范围"，编辑模式下回填范围名称和类型。</p>
 <p>（1）创建/编辑自定义范围</p>
@@ -307,34 +203,28 @@
 <p>点击"编辑"弹出表单，弹窗回填分类名称、编码（禁用）、排序。</p>
 <ul><li>一级分类：只可修改分类名称和排序，编码不可修改。</li><li>二级分类：除分类名称、排序外，额外展示「上级分类」下拉（默认带出当前所属一级分类），可修改归属的一级分类。下拉仅可选已启用的一级分类（当前上级已停用时仅展示原值、不可改选其他停用分类）；变更后该二级分类从原一级分类下移出并挂到所选一级分类下，且名称与编码在所选一级分类下不可重复（重复时提示"该上级分类下名称或编码已存在"）。</li></ul>
 <p>（5）启用/停用分类</p>
-<ul><li>点击"停用"弹窗二次确认"停用后，当前分类及下级分类将停用，请确认是否停用"，确认后当前及所有下级 status = disabled。</li><li>点击"启用"弹窗二次确认"启用后，当前分类及下级分类将启用，请确认是否启用"，确认后当前及所有下级 status = enabled。</li></ul><p>停用规则：已停用分类在已使用场景中展示正常——应用列表的分类展示、分类筛选（筛选条件中仍可选该分类）、应用详情中的分类展示均不受影响；仅在应用新增（选择所属分类）时不展示已停用分类。</p>
+<ul><li>点击"停用"弹窗二次确认"停用后，当前分类及下级分类将停用，请确认是否停用"，确认后当前及所有下级 status = disabled。</li><li>点击"启用"弹窗二次确认"启用后，当前分类及下级分类将启用，请确认是否启用"，确认后当前及所有下级 status = enabled。</li></ul>
+<p>停用规则：已停用分类在已使用场景中展示正常——应用列表的分类展示、分类筛选（筛选条件中仍可选该分类）、应用详情中的分类展示均不受影响；仅在应用新增（选择所属分类）时不展示已停用分类。</p>
 <p>（6）删除分类</p>
 <p>仅已停用（status = disabled）的分类行显示"删除"按钮。已启用分类不显示删除按钮。</p>
 <p>删除限制：已被应用使用的分类不可删除；存在下级分类的分类不可删除（需先删除其下级分类，且下级分类均无应用使用）。</p>
 <p>满足删除条件时，点击"删除"弹窗二次确认"数据删除后，无法找回，请确认是否继续删除？"，确认后删除该分类。</p>
 <h4 id="h-22">P10 应用审批列表页</h4>
-<p>页面顶部为两个 Tab 切换："待审批"和"已审批"。筛选栏提供应用名称、应用分类、应用 ID 三类查询条件，支持搜索和重置按钮。</p>
-<p>查询条件说明：应用名称（模糊查询）；应用分类（级联下拉，按分类路径过滤）；应用 ID（文本框，精确匹配业务应用 ID）。</p>
-<p>（1）查看待审批列表</p>
-<p>筛选条件：应用名称（模糊查询）、应用分类（级联下拉）、应用 ID（精确匹配），支持搜索和重置。列表展示字段复用「应用申请管理（P01）」列表，即：应用 Logo、应用名称、应用 ID、应用分类、应用属性（完整属性，如"原生应用/低代码应用""生态应用"，列位于应用分类之后）、是否平台应用（平台型/非平台型）、机构名称（应用所属机构，替代原"开发者名称"列）、申请时间、类型标签（标识待办类型：上线/修改），<strong>不含操作列</strong>。按申请时间倒序排列，每页 20 条。底部显示分页信息。</p>
-<p>操作列：显示"审批"按钮（仅 review.status = pending 时显示）和"查看"按钮（任意状态均可点击）。</p>
-<p>（2）查看已审批列表</p>
-<p>筛选条件同待审批。列表展示字段复用「应用申请管理（P01）」列表，即：应用 Logo、应用名称、应用 ID、应用分类、应用属性（完整属性，如"原生应用/低代码应用""生态应用"，列位于应用分类之后）、是否平台应用（平台型/非平台型）、机构名称（应用所属机构，替代原"开发者名称"列）、申请时间、类型标签（上线/修改），<strong>不含操作列</strong>，并附加：审批时间、审批结果标签（通过绿色/驳回红色）、审批人。</p>
-<p>操作列仅显示"查看"按钮。</p>
+<p>页面顶部 Tab：待审批 / 已审批。筛选：应用名称（模糊）、应用分类（级联一级/二级）、应用 ID（精确），支持搜索/重置；条件变化回到第 1 页。</p>
+<p>列表字段复用 P01（1）：Logo、名称、ID、分类、属性、是否平台应用、机构名称（替代开发者名称）、申请时间、类型标签（上线/修改），不含操作列；按申请时间倒序、每页 20 条。已审批 Tab 附加审批时间、审批结果标签（通过绿/驳回红）、审批人。</p>
+<p>操作列：待审批 Tab 仅 pending 显示「审批」，任意状态可「查看」；已审批 Tab 仅「查看」。</p>
 <h4 id="h-23">P11 应用审批操作页（审批模式）</h4>
 <p>由 P10 待审批 Tab 行尾"审批"按钮进入。页面分两张卡片：上方卡片展示应用完整信息（全部只读），下方卡片展示审批操作区。底部按钮居中。</p>
 <p>（1）查看应用信息（上方卡片）</p>
-<p>应用详情区域展示同 P02b 管理模式一致的全部字段，包括：</p>
-<table><thead><tr><th>展示项</th><th>说明</th></tr></thead><tbody><tr><td>凭证区</td><td>Logo、应用标题（名称+分类拼接）、SuiteId 只读文本、SuiteKey 只读文本（无更新按钮）</td></tr><tr><td>基础信息</td><td>应用名称、应用简介、所属分类（级联路径）</td></tr><tr><td>打开方式</td><td>PCweb、H5、独立小程序</td></tr><tr><td>跳转登录限制</td><td>无需登录 / 仅持有账号登录 / 可注册或登录</td></tr><tr><td>适用范围</td><td>适用机构、适用学段</td></tr><tr><td>详情介绍</td><td>应用详情介绍（只读富文本渲染，必填字段）</td></tr><tr><td>应用视频</td><td>已上传视频文件标签列表</td></tr><tr><td>应用属性</td><td>应用属性（完整属性，如"原生应用/低代码应用"）</td></tr><tr><td>数据与授权</td><td>是否数据同步（是/否）、用户个人信息授权（是/否）、推送地址、TOKEN、EncodingAesKey（仅数据同步=是时展示推送地址/TOKEN/EncodingAesKey）</td></tr><tr><td>可见性</td><td>移动端（独立小程序）角色列表+地址+微信appid、PC端（PCweb）角色列表+地址、H5角色列表+地址、白名单（标签列表），按打开方式动态展示</td></tr></tbody></table>
+<p>应用详情区域与 P02b 管理模式一致（凭证区、基础信息、打开方式、登录限制、适用范围、详情介绍、应用视频、应用属性、数据与授权、可见性），全部只读；凭证区无更新按钮。</p>
 <p>（2）审批操作（下方卡片）</p>
 <table><thead><tr><th>字段</th><th>必填</th><th>控件</th><th>规则</th></tr></thead><tbody><tr><td>审批结果</td><td>*</td><td>radio</td><td>通过 / 驳回</td></tr><tr><td>审批意见</td><td></td><td>多行文本框</td><td>最大 200 字符，show-word-limit；驳回时 * 必填，通过时非必填</td></tr></tbody></table>
 <ul><li>驳回时校验审批意见不为空，通过时无需校验。</li><li>点击"提交"：审批结果=通过时 review.status = approved，app.status = online，应用进入机构管理员的应用上架管理列表（listing_status = unlisted），写入 reviewer 和 reviewed_at，toast「审批通过，应用已进入机构管理员上架列表（未上架）」；审批结果=驳回时 review.status = rejected，app.status = rejected（已驳回），review_comment = 审批意见，toast「已驳回」。</li><li>网络异常时结果不落库，已填写意见保留可重试。</li></ul>
 <h4 id="h-24">P11v 审批详情页（查看模式）</h4>
-<p>由 P10 两个 Tab 的"查看"按钮进入。页面分两张卡片：上方卡片展示应用完整信息（同 P11 上方卡片完全一致），下方卡片展示审批信息只读。底部居中"返回"按钮。</p>
+<p>由 P10 两个 Tab 的"查看"按钮进入。页面分两张卡片：上方卡片展示应用完整信息（同 P11 上方卡片完全一致），下方卡片展示审批信息只读。底部居中"返回"按钮。审批信息区布局同 P02b 管理模式的「审批信息」块：两列表单式，标签在左、值在右，字段宽度 50%、行高 32px；审批结果用 el-tag（通过绿色/驳回红色），驳回时审批意见红色高亮。</p>
 <p>（1）查看应用信息（上方卡片）</p>
 <p>同 P11 应用信息，展示全部字段（凭证区、基础信息、打开方式、范围、详情、视频、属性、可见性）。</p>
 <p>（2）查看审批信息（下方卡片）</p>
-<p>布局同 P02b 管理模式的「审批信息」区：两列表单式，标签在左、值在右，字段宽度 50%、行高 32px；审批结果用 el-tag（通过绿色/驳回红色），驳回时审批意见红色高亮，缺失值展示"---"。</p>
 <table><thead><tr><th>展示项</th><th>字段</th></tr></thead><tbody><tr><td>申请时间</td><td>review.created_at</td></tr><tr><td>申请人</td><td>review.applicant</td></tr><tr><td>审批人</td><td>review.reviewer（未审批时显示"---"）</td></tr><tr><td>审批时间</td><td>review.reviewed_at（未审批时显示"---"）</td></tr><tr><td>审批结果</td><td>review.status el-tag 标签（通过绿色/驳回红色），未审批时显示"---"</td></tr><tr><td>审批意见</td><td>review.review_comment（无时显示"---"）</td></tr></tbody></table>
 <h4 id="h-25">P12 标签管理页</h4>
 <p>标签用于范围可见范围的多维度配置，支持按自定义机构或按机构类型设定可见范围。</p>
@@ -343,27 +233,20 @@
 <p>（2）新建标签</p>
 <p>点击"新建标签"弹出弹窗，包含以下字段：</p>
 <table><thead><tr><th>字段</th><th>必填</th><th>控件</th><th>规则</th></tr></thead><tbody><tr><td>标签名称</td><td>*</td><td>文本框</td><td>最大 50 字符，show-word-limit；同一名称不可重复</td></tr><tr><td>标签类型</td><td>*</td><td>radio</td><td>自定义 / 机构类型，切换联动下方可见范围</td></tr><tr><td>可见范围（自定义）</td><td>*</td><td>orgid输入框 + "添加" + "批量导入"</td><td>输入 orgid 以英文逗号隔开，点击添加以 el-tag 展示；批量导入弹窗同范围。支持逐条关闭删除</td></tr><tr><td>可见范围（机构类型）</td><td>*</td><td>el-select 多选</td><td>数据源：省级教育行政部门、市级教育行政部门、区县级教育行政部门、直属事业单位、幼儿园小学、小学教学点、初级中学、高级中学、完全中学、九年一贯制、十二年一贯制、专门学校、特殊教育学校、大学 学院 独立学院、其他普通高教机构(分校、大专班)、高等专科学校、职工高校、职业高中学校、中等职业学校技工学校、高等职业学校 本科层次职业学院、开放大学培养研究生的科研机构、附设中职班残疾人中等学校、培训学校、研学基地(营地)、其他社会机构。多选后以 el-tag 展示，可关闭</td></tr></tbody></table>
+<p><strong>标签机构列表页（P12a）</strong></p>
+<p>点击标签名称进入独立页面，结构与交互同 P07a：返回 P12、标题「标签机构列表」、当前标签名称；查询条件（机构名称/机构类型/机构 ID）、列表列（机构名称/机构 ID/机构类型）、每页 10 条分页均一致。差异：</p>
+<ul><li>操作按钮为「同步标签机构」，提示相应替换为「已同步标签机构，新增 N 个机构」/「当前标签机构已完整，无需同步」。</li><li>标签机构为动态解析，机构增删后由同步按钮或标签联动补齐/移除，并同步到引用该标签的范围及应用上架范围。</li></ul>
 <p>保存时校验名称不为空、名称不重复、可见范围不为空。</p>
 <p>（3）修改标签</p>
 <p>行尾"修改"按钮，弹窗回填标签名称、类型和可见范围，支持修改全部字段。</p>
 <blockquote>修改后自动同步：标签可见范围（机构）增删后，引用该标签的所有范围自动同步添加/移除对应机构，使用这些范围的应用上架范围同步更新（动态引用，无需重新上架）。</blockquote>
 <p>（4）删除标签</p>
 <p>被范围引用的标签（关联范围数量 &gt; 0）隐藏删除按钮，不可删除（删除前需确认是否被使用）。未被引用时可删除，弹窗二次确认后删除。删除后标签从关联范围可见范围自动移除（关联范围及应用上架范围同步变化）。</p>
-<h4 id="h-25a">P12a 标签机构列表页</h4>
-<p>由 P12 标签列表中的"标签名称"（蓝色字体、鼠标悬停手型指针）点击进入的独立页面，展示当前标签范围内覆盖的全部机构，支持分页查询。</p>
-<p>页面顶部：返回按钮（回到 P12）、页面标题"标签机构列表"、当前标签名称展示。</p>
-<p>（1）查询条件：机构名称（输入框）、机构类型（下拉）、机构 ID（输入框），支持"查询""重置"。</p>
-<p>（2）列表列：机构名称、机构 ID、机构类型。</p>
-<p>（3）分页：底部分页器（每页 10 条，支持翻页与总条数展示），查询条件变化后回到第 1 页重新分页。</p>
-<p>（4）操作按钮：查询区右侧提供「同步标签机构」按钮。点击后调用后端接口校验当前标签是否已包含全部机构；未全部包含则后端自动补足遗漏机构并刷新列表（提示「已同步标签机构，新增 N 个机构」），已全部包含则提示「当前标签机构已完整，无需同步」。</p>
-<p>动态引用说明：标签机构列表为<strong>动态解析</strong>结果（每次实时计算），机构新增/删除后由「同步标签机构」自动补齐/移除，自动反映到引用该标签的范围及应用上架范围。</p>
 <h3 id="h-26">（二）平台管理模块</h3>
 <p>本模块负责运营统计，包含 1 个页面。platform_admin、platform_operator 可访问并查看全平台统计数据；机构管理员（tenant_admin）可访问并查看本机构统计数据。</p>
 <h4 id="h-27">P17 应用统计看板页</h4>
 <p>页面从上至下分为：时间切换区、指标卡片区、图表区（三图一行）、排行榜区（两榜一行）、导出操作。</p>
-<blockquote>统计口径按角色区分：
-<li>桂教通超级管理员（platform_admin）/ 平台运营员（platform_operator）：统计<strong>全平台</strong>数据，含平台应用和平台管理的机构应用（独立机构应用不计入）。</li>
-<li>机构管理员（tenant_admin）：统计<strong>本机构</strong>数据，即本机构创建/管理的应用及本机构范围内的使用数据。</li></blockquote>
+<blockquote><p>统计口径按角色区分：</p><ul><li>桂教通超级管理员（platform_admin）/ 平台运营员（platform_operator）：统计<strong>全平台</strong>数据，含平台应用和平台管理的机构应用（独立机构应用不计入）。</li><li>机构管理员（tenant_admin）：统计<strong>本机构</strong>数据，即本机构创建/管理的应用及本机构范围内的使用数据。</li></ul></blockquote>
 <p>（1）切换时间范围</p>
 <p>时间切换以 el-radio-button 按钮组平铺展示：今日/本周/本月/本年，默认选中"今日"。切换后右侧联动展示时间范围描述，均展示各周期开始时间到当前时间的数据：</p>
 <ul><li>今日：0:00 ~ 当前时间</li><li>本周：周一 0:00 ~ 当前时间</li><li>本月：1 号 0:00 ~ 当前时间</li><li>本年：1 月 1 号 0:00 ~ 当前时间</li></ul>
@@ -372,28 +255,19 @@
 <ul><li>超管（platform_admin / platform_operator）：应用安装数（平台应用安装成功数量，累计至当前）、平台应用数（超管上架应用总数，累计至当前）、活跃应用数（时间范围内至少打开一次的应用数）、应用使用人数（时间范围内至少使用一次平台任意应用的用户总数）。除活跃应用数、应用使用人数随时间切换变化外，其余卡片不随时间切换变化。</li><li>机构管理员（tenant_admin）：应用安装数（本机构范围内应用安装成功数量，累计至当前）、机构应用数（本机构上架应用数，累计至当前）、活跃应用数（本机构范围内时间范围内至少打开一次的应用数）、应用使用人数（本机构范围内时间范围内至少使用一次应用的用户总数）。</li></ul>
 <p>（3）图表区（三图一行等分）</p>
 <p>三个图表卡片在同一行等宽展示，数据范围随角色切换（超管为全平台、机构管理员为本机构范围）：</p>
-<ul><li>应用点击量趋势：折线图，展示时段点击量累计与趋势（超管为全平台点击量，机构管理员为本机构范围内点击量）</li><li>分类统计：环形图，统计各分类的应用数（超管为平台分类统计，机构管理员为本机构应用分类统计）</li><li>活跃/非活跃应用占比：环形图，展示活跃应用与非活跃应用的占比（超管为全平台应用，机构管理员为本机构应用）</li></ul>
+<ul><li>应用点击量趋势：折线图，展示时段点击量累计与趋势。</li><li>分类统计：环形图，统计各分类的应用数。</li><li>活跃/非活跃应用占比：环形图，展示活跃与非活跃应用占比。</li></ul>
 <p>（4）排行榜区（两榜一行）</p>
 <p>两个表格榜单在同一行展示，数据范围随角色切换（超管为全平台、机构管理员为本机构范围）：</p>
 <ul><li>用户数量榜 Top10：打开或点击过应用的用户数由多到少的应用</li><li>应用安装排行榜 Top10：安装数量由高到低的应用</li></ul>
 <p>（5）导出</p>
 <p>点击右上角"导出"按钮，生成 1 个 Excel 文件（.xlsx），内含 6 张工作表，与页面各统计区块一一对应：</p>
-<table><thead><tr><th>工作表</th><th>对应区块</th><th>字段</th></tr></thead><tbody>
-<tr><td>统计概览</td><td>指标卡片区</td><td>统计角色、统计范围、时间范围、应用安装数、平台应用数/机构应用数、活跃应用数、应用使用人数、导出时间</td></tr>
-<tr><td>应用安装统计</td><td>应用安装数指标</td><td>应用名称、应用ID、是否平台应用（平台型/非平台型）、所属机构、应用分类（一级/二级）、安装机构数、安装数量（累计至当前）、最近安装时间</td></tr>
-<tr><td>应用使用统计</td><td>活跃应用数/应用使用人数/点击量趋势</td><td>应用名称、应用ID、所属机构、活跃状态（活跃/非活跃）、使用人数（周期内）、使用次数（周期内）、点击量（周期内）</td></tr>
-<tr><td>应用分类统计</td><td>分类统计环形图</td><td>一级分类、二级分类、应用数、占比</td></tr>
-<tr><td>用户数量榜 Top10</td><td>用户数量榜</td><td>排名、应用名称、用户数（周期内打开或点击过应用的用户数）</td></tr>
-<tr><td>应用安装排行榜 Top10</td><td>应用安装排行榜</td><td>排名、应用名称、安装数</td></tr>
-</tbody></table>
-<p>导出规则：数据范围按角色——超管统计全平台（仅平台应用和平台管理的机构应用，独立机构应用不计入），机构管理员仅本机构范围；时间范围与页面当前选择一致（今日/本周/本月/本年）；文件名为「应用统计_YYYY-MM-DD.xlsx」；导出需具备查看权限。</p>
-<p>统计范围说明：超管统计范围仅包含平台应用和平台管理的机构应用（独立机构应用不计入）；机构管理员统计本机构创建/管理的应用及本机构范围内的使用数据。</p>
+<table><thead><tr><th>工作表</th><th>对应区块</th><th>字段</th></tr></thead><tbody><tr><td>统计概览</td><td>指标卡片区</td><td>统计角色、统计范围、时间范围、应用安装数、平台应用数/机构应用数、活跃应用数、应用使用人数、导出时间</td></tr><tr><td>应用安装统计</td><td>应用安装数指标</td><td>应用名称、应用ID、是否平台应用（平台型/非平台型）、所属机构、应用分类（一级/二级）、安装机构数、安装数量（累计至当前）、最近安装时间</td></tr><tr><td>应用使用统计</td><td>活跃应用数/应用使用人数/点击量趋势</td><td>应用名称、应用ID、所属机构、活跃状态（活跃/非活跃）、使用人数（周期内）、使用次数（周期内）、点击量（周期内）</td></tr><tr><td>应用分类统计</td><td>分类统计环形图</td><td>一级分类、二级分类、应用数、占比</td></tr><tr><td>用户数量榜 Top10</td><td>用户数量榜</td><td>排名、应用名称、用户数（周期内打开或点击过应用的用户数）</td></tr><tr><td>应用安装排行榜 Top10</td><td>应用安装排行榜</td><td>排名、应用名称、安装数</td></tr></tbody></table>
+<p>导出规则：范围与时间同页面当前选择（口径见上）；文件名「应用统计_YYYY-MM-DD.xlsx」；需具备查看权限。</p>
 <p>（6）数据实时性 / 刷新频率</p>
 <p>统计采用"实时 + 准实时（分钟级）"混合模式，不做 T+1，所有指标在"今日"周期下即可查看当日数据：</p>
-<ul><li>刷新时机：进入页面、切换时间范围（今日/本周/本月/本年）、切换角色时实时向后端拉取最新统计数据；页面提供「刷新」按钮，点击后重新拉取全部区块数据；不做自动轮询。</li><li>实时指标（秒级）：应用安装数、平台应用数/机构应用数、应用分类统计、活跃/非活跃应用占比——基于应用/机构/上架等基础业务表实时聚合。</li><li>准实时指标（最长延迟 5 分钟）：应用点击量趋势、应用使用人数、活跃应用数、用户数量榜 Top10、应用安装排行榜 Top10——基于点击/使用/安装行为流水，按 5 分钟粒度窗口汇总落库，页面展示最近一次聚合结果。</li><li>历史周期数据：本周/本月/本年由日汇总表累加，已结算日期数据固定，当日部分按上述实时/准实时口径展示。</li><li>数据一致性：同一时刻结构类与行为类指标可能存在最长 5 分钟时间差，属正常现象；导出数据与页面展示同源、口径一致。</li><li>结构类与行为类指标划分：结构类指标（应用安装数、平台应用数/机构应用数、应用分类统计、活跃/非活跃应用占比）描述存量/状态，数据来源于应用、机构、上架、分类等基础业务表，仅在上架/下架、机构入驻/退出、分类调整等低频业务操作时变化，每次请求实时聚合即可秒级返回；行为类指标（应用点击量趋势、应用使用人数、活跃应用数、用户数量榜 Top10、应用安装排行榜 Top10）描述流量/活动，数据来源于点击、打开、安装等行为流水表（每次用户操作产生一条），量级大，需按 5 分钟窗口预聚合落库，页面读取最近一次聚合结果。</li></ul>
+<ul><li><strong>刷新时机</strong>：进入页面、切换时间范围（今日/本周/本月/本年）、切换角色时实时向后端拉取最新统计数据；页面提供「刷新」按钮，点击后重新拉取全部区块数据；不做自动轮询。</li><li><strong>实时指标（秒级）</strong>：应用安装数、平台应用数/机构应用数、应用分类统计、活跃/非活跃应用占比——基于应用/机构/上架等基础业务表实时聚合。</li><li><strong>准实时指标（最长延迟 5 分钟）</strong>：应用点击量趋势、应用使用人数、活跃应用数、用户数量榜 Top10、应用安装排行榜 Top10——基于点击/使用/安装行为流水，按 5 分钟粒度窗口汇总落库，页面展示最近一次聚合结果。</li><li><strong>历史周期数据</strong>：本周/本月/本年由日汇总表累加，已结算日期数据固定，当日部分按上述实时/准实时口径展示。</li><li><strong>数据一致性</strong>：同一时刻结构类与行为类指标可能存在最长 5 分钟时间差，属正常现象；导出数据与页面展示同源、口径一致。</li></ul>
 <h3 id="h-28">（三）订单管理模块</h3>
 <p>本模块负责订单套餐授权、订单记录（应用购买的订单）、试用订单和应用套餐配置管理，包含 5 个页面。</p>
-<p>模块级权限规则：platform_admin 全部管理（授权/取消授权/手动授权/新增授权、停用/延期等操作）；platform_operator 全部只读；tenant_admin 本机构内查看；套餐配置页 tenant_admin 可管理本机构套餐。</p>
 <h4 id="h-29">P18 订单套餐授权管理列表页</h4>
 <p>应用商品下单成功后生成对应的订单套餐授权记录。列表支持横向滚动（列较多）。</p>
 <p>（1）查询授权记录</p>
@@ -407,13 +281,13 @@
 <h4 id="h-30">P19 订单记录管理列表页</h4>
 <p>订单记录管理记录两类订单：①在桂教通平台购买的付费应用订单（教育服务中心/我的应用中心内嵌商城商品页下单）；②通过商城下单的订单（商城嵌入式页面/无痕下单）。列表列较多，支持横向滚动。</p>
 <p>（1）查询和列表</p>
-<p>筛选栏：订单 ID（模糊查询）、套餐名称（模糊查询）、购买用户 ID（模糊查询）、支付状态（下拉：全部/待支付/已支付/已取消/退款中/退款成功/退款驳回）。列表展示：订单 ID、套餐名称、购买用户 ID、购买用户名称、购买所属机构、订单状态标签、购买类型（个人/机构）、订单接收时间。按接收时间倒序。</p>
+<p>筛选栏：订单 ID（模糊查询）、套餐名称（模糊查询）、购买用户 ID（模糊查询）、支付状态（下拉：全部/待支付/已支付/已过期/已取消/退款中/退款成功/退款驳回）。列表展示：订单 ID、套餐名称、购买用户 ID、购买用户名称、购买所属机构、订单状态标签、购买类型（个人/机构）、订单接收时间。按接收时间倒序。</p>
 <blockquote>授权状态、授权状态描述已迁移至 P18 订单套餐授权管理列表页展示。</blockquote>
 <p>（2）查看订单详情与审批</p>
 <p>点击行尾"查看"按钮（<code>onViewOrderReceive(r, 'view')</code>），以<strong>新界面（子视图）</strong>方式打开订单详情：列表视图与详情视图通过 <code>orderReceiveView</code> 切换，详情视图顶部提供"返回订单记录"按钮。详情采用 el-form / el-form-item 表单布局（同应用详情范式），包含三大信息区：</p>
 <ul><li><strong>订单信息</strong>：订单 ID（表单值）、付款状态（el-tag 标签）</li><li><strong>商品套餐</strong>：表单展示应用名称（<strong>可点击跳转应用详情页</strong>，按安装态显示购买/安装）、套餐名称、价格、购买类型（个人/机构）、数量、实付金额</li><li><strong>发票信息</strong>：发票类型、纳税人识别号、发票抬头、发票内容、单位名称、邮箱（无数据时显示"—"）</li></ul>
-<blockquote>查看模式仅展示上述基础信息，不展示任何审批信息。</blockquote>
-<p>当状态为「退款中」、且点击操作列"审批"按钮（<code>onViewOrderReceive(r, 'approve')</code>）时，同一新界面在发票信息区之后额外展示「审批操作」区：审批结果（el-radio：通过 / 驳回，必选）、审批意见（el-textarea，驳回时必填、通过时选填）；底部"提交审批"按钮。点击"提交审批"：审批通过 → 订单状态置为退款成功（触发原路退款），<strong>对应应用回到购买前状态</strong>：购买前已安装则保持已安装状态，未安装则保持未安装状态，不强制从「我的应用中心」移除，点击应用打开应用详情页（P22），根据状态展示购买/安装按钮；审批驳回 → 订单状态置为退款驳回（需填写审批意见），订单回退至已支付可重新发起退款。</p>
+<blockquote>查看模式仅展示上述基础信息，<strong>不展示任何审批信息</strong>。</blockquote>
+<p>当状态为「退款中」、且点击操作列的"审批"按钮（<code>onViewOrderReceive(r, 'approve')</code>）时，同一新界面在发票信息区之后额外展示「审批操作」区：审批结果（el-radio：通过 / 驳回，必选）、审批意见（el-textarea，驳回时必填、通过时选填）；底部"提交审批"按钮。点击"提交审批"：审批通过 → 订单状态置为退款成功（触发原路退款），<strong>对应应用回到购买前状态</strong>：购买前已安装则保持已安装状态，未安装则保持未安装状态，不强制从「我的应用中心」移除，点击应用打开应用详情页（P22），根据状态展示购买/安装按钮；审批驳回 → 订单状态置为退款驳回（需填写审批意见），订单回退至已支付可重新发起退款。</p>
 <p>列表操作列：状态为「退款中」的行在"查看"按钮之外额外显示"审批"按钮（点击以新界面方式打开订单详情，直接定位至审批操作区）。</p>
 <h4 id="h-31">P20 试用订单记录页</h4>
 <p>试用应用生成的订单记录列表。支持停用、延期和查看延期记录操作。</p>
@@ -447,135 +321,156 @@
 <p>搜索条支持模糊搜索。分类筛选为一级分类下拉。无结果时显示"未找到相关应用"。</p>
 <p>（3）进入详情</p>
 <p>点击卡片进入 P22。</p>
-<h4 id="h-34m">P21-M 移动端门户页（Mobile）</h4>
+<h4 id="h-35">P21-M 移动端门户页（Mobile）</h4>
 <p>面向机构管理员在移动端访问应用门户的场景，独立原型（<code>output/prototype/mobile.html</code>），与 PC 端教育服务中心并存，不改动 PC 端逻辑。</p>
-<p>页面基于 390×844 视口设计，采用亮色主题（背景浅灰 #f2f2f7、分组卡片 #ffffff、主色 #007aff）。底部 Tab 分为<strong>首页、班级、消息、我的</strong>四个一级入口。</p>
-<ol><li><strong>首页</strong>：<ul><li>顶部为搜索框（支持应用名称、分类模糊搜索）。</li><li>下方按一级分类分组成块，每块含分类标题（左侧分类色条 + 一级分类名称）与该分类下的应用网格。分类层级为<strong>一级分类 → 二级分类 → 应用</strong>。</li><li>应用网格<strong>每行固定 3 个</strong>，每个应用仅展示 Logo（60×60 圆角图标）与应用名称（单行，超出省略）。</li><li>每组<strong>默认（收起态）跨二级分类取该分类下前 3 个应用，即一行</strong>。</li><li>标题右侧操作与展开方式按分组类型区分：<table><thead><tr><th>分组类型</th><th>右侧操作</th><th>点击行为</th></tr></thead><tbody><tr><td>系统分类（协同管理/教务管理/智慧教育/教育工具/学生应用/自建应用）</td><td>该分类应用数 &gt; 3 时显示「展开」/「收起」</td><td><strong>在当前界面内联展开</strong>（手风琴），展开后按二级分类分组显示该分类下全部应用，每个二级分类带小标题（名称 + 应用数量）及其应用网格；再次点击「收起」还原不跳页</td></tr><tr><td>自定义分类（用户移动端自建，与系统分类并列）</td><td>恒定显示「更多 ›」</td><td><strong>打开新界面</strong>（右侧滑入），界面内同样按二级分类分组展示</td></tr></tbody></table></li><li><strong>仅展示含应用的二级分类</strong>：二级分类下无应用时该分类整体不展示（收起态、展开态、新界面均适用）；一级分类下所有二级分类均为空时，该一级分类不展示。</li><li>点击任一应用进入移动端应用详情页。</li></ul></li><li><strong>新界面（自定义分类）</strong>：由自定义分类分组「更多」进入的新界面（右侧滑入）。顶部为返回按钮与分类名称标题，内容区<strong>按二级分类分组</strong>展示，每个二级分类带小标题（名称 + 应用数量）及其应用网格（每行 3 个）。</li><li><strong>班级页</strong>：展示当前用户关联的班级卡片列表，含班级图标、班级名称、年级与班主任、角色徽章（班主任/任课教师），以及该班级的学生数、应用数、待处理数三项统计。</li><li><strong>消息页</strong>：卡片列表展示系统通知与审批提醒，含图标、标题、摘要（截断 2 行）、时间，未读消息标题前置红点。</li><li><strong>我的页</strong>：顶部展示头像、姓名、所属机构与角色标签；其下为「已安装 / 我的收藏 / 待处理」三项统计，再下方为「我的订单、我的收藏、应用管理、消息设置、关于平台」菜单列表。</li><li><strong>移动端应用详情页</strong>：从右侧滑入的全屏页。顶部为应用信息区（Logo、名称、在用人数与评分、分类与收费类型标签）；内容区为点赞/收藏/浏览三项指标、应用简介、应用信息（分类、提供机构、适用学段）；底部操作区：已安装应用显示「打开应用」，未安装的免费应用显示「添加应用」，付费应用显示「立即购买」，可试用的付费应用同时显示「免费试用」。</li></ol>
-<blockquote>说明：移动端首页仅展示应用 Logo 与名称，不展示收费类型标签；收费与免费信息在应用详情页体现。应用详情页的安装/购买结果为原型本地状态，不联动 PC 端的订单与支付流程（P22 购买流程仍以 PC 端为准）。</blockquote>
-<h4 id="h-35">P22 应用购买详情页</h4>
-<p>（1）查看详情</p>
-<p>顶部展示 Logo、名称、应用简介、收费类型、点赞、搜藏、评分，应用介绍（可滚动）、应用视频介绍。</p>
-<p>（2）安装/购买</p>
-<ul><li>免费应用：若没有安装，展示免费安装，点击后系统自动安装，免费安装按钮loading中，安装成功后，按钮显示立即打开；若已经安装，按钮显示立即打开。</li><li>付费应用：若没有购买，详情页展示该应用的授权套餐列表（多个套餐卡片，含套餐名称与价格），默认选中第一个套餐，点击不同套餐切换选中并联动展示对应价格；"立即购买"按钮展示所选套餐价格（如"立即购买 ¥199"），若应用为可试用，同时显示免费试用按钮。点击立即购买进入订单确认 & 开票信息填写页面（展示所选套餐及对应单价），发票信息录入右上角提供"历史发票记录"入口，点击弹窗展示当前人员历史发票记录列表（弹窗支持分页，每页 5 条），选择一条后自动回填至发票信息表单；完成购买信息填写后，到支付界面，支付的微信二维码扫码唤起惠缴费的半屏支付界面，支付成功后，生成一条订单记录到订单管理模块的订单记录管理列表页，同时用户的我的空间-我的订单也生成对应的订单记录。支付结果同步：手机支付完成后惠缴费异步回调平台后端确认（签名校验、幂等），支付界面每 3 秒自动轮询订单支付状态，支付成功即自动提示"支付成功"并展示成功页；支付失败提示失败并展示"返回订单"按钮；超过支付有效期（15 分钟，与二维码有效期一致）未支付则提示支付超时、二维码失效可点击"刷新二维码"；不做 WebSocket/SSE 服务端推送。点击免费试用，后端将当前用户新增到使用机构，同时以试用机构的打开使用应用。</li></ul>
+<p>页面基于 390×844 视口设计，采用亮色主题（背景浅灰 #ECEDEF、分组卡片 #ffffff、主色蓝色系 #0A84FF）。底部 Tab 分为<strong>首页、应用、班级、消息、我的</strong>五个一级入口。</p>
+<ol><li><strong>首页（教师工作台，按教师端首页截图上下两屏还原）</strong>：<ul><li>样式按教师端首页截图 1:1 还原：背景 #ECEDEF、分组卡片 #ffffff、主色 #0A84FF；顶部深蓝→蓝紫渐变平台栏内嵌白色圆角搜索框；快捷入口卡片 1px 蓝色描边、图标分列橙/青/绿/蓝；底部 TabBar 白色、激活项蓝色带红点。</li><li>平台栏：平台标题「广西中小学智慧教育平台」与副标题「教师交流与教研活动」，其下为搜索框（占位「搜索应用 / 活动 / 资讯」）。</li><li>快捷入口：一行 4 个（40×40 图标 + 名称，超出省略），共 12 个入口：学生专区、教师专区、高考专题、中考专题、家长专区、教师资格证、数智幼教、学平保险、心理健康、学习力测评、政务服务、艺术培训。</li><li>待办通知：待办列表（红点 + 标题单行省略 + 相对时间），右上「更多」。</li><li>常用应用：一行 4 个快捷入口（44×44 图标 + 名称，超出省略），右上「全部」跳转「应用」Tab。</li><li>今日课程表：课程行（时间 + 班级·科目 + 地点），右上「更多」。</li><li>活动专区：教师学科分布（学科名称 + 占比条形 + 百分比）与活动资讯（标签 + 标题两行截断 + 浏览数）。</li><li>教师数据：教师总数 / 男教师 / 女教师 / 男女比例 / 平均年龄（示例 402 / 160 / 115 / 7:5 / 41）。</li><li>页脚：主办单位信息「主办：广西壮族自治区教育厅 · 中国电信」。</li></ul></li><li><strong>应用页</strong>（原首页内容整体迁移，承载应用门户）：<ul><li>顶部为搜索框（支持应用名称、分类模糊搜索）。</li><li>下方按一级分类分组成块，每块含分类标题（左侧分类色条 + 一级分类名称）与该分类下的应用网格。分类层级为<strong>一级分类 → 二级分类 → 应用</strong>。</li><li>应用网格<strong>每行固定 4 个</strong>，每个应用仅展示 Logo 与应用名称（最多两行，超出省略）。</li><li>每组<strong>默认（收起态）跨二级分类取该分类下前 4 个应用，即一行</strong>。</li><li>标题右侧操作与展开方式按分组类型区分：</li></ul></li></ol>
+<p>| 分组类型 | 右侧操作 | 点击行为 ||---------|---------|---------|| 系统分类（协同管理/教务管理/智慧教育/教育工具/学生应用/自建应用） | 该分类应用数 &gt; 4 时显示「展开」/「收起」 | <strong>在当前界面内联展开</strong>（手风琴），展开后按二级分类分组显示该分类下全部应用，每个二级分类带小标题（名称 + 应用数量）及其应用网格；再次点击「收起」还原不跳页 || 自定义分类（用户移动端自建，与系统分类并列） | 恒定显示「更多 ›」 | <strong>打开新界面</strong>（右侧滑入），界面内同样按二级分类分组展示 |</p>
+<ul><li><strong>仅展示含应用的二级分类</strong>：二级分类下无应用时该分类整体不展示（收起态、展开态、新界面均适用）；一级分类下所有二级分类均为空时，该一级分类不展示。</li><li>点击任一应用进入移动端应用详情页。</li></ul>
+<ol><li><strong>新界面（自定义分类）</strong>：由自定义分类分组「更多」进入的新界面（右侧滑入）。顶部为返回按钮与分类名称标题，内容区<strong>按二级分类分组</strong>展示，每个二级分类带小标题（名称 + 应用数量）及其应用网格（每行 4 个）。</li><li><strong>班级页</strong>：展示当前用户关联的班级卡片列表，含班级图标、班级名称、年级与班主任、角色徽章（班主任/任课教师），以及该班级的学生数、应用数、待处理数三项统计。</li><li><strong>消息页</strong>：卡片列表展示系统通知与审批提醒，含图标、标题、摘要（截断 2 行）、时间，未读消息标题前置红点。</li><li><strong>我的页</strong>：顶部展示头像、姓名、所属机构与角色标签；其下为「已安装 / 我的收藏 / 待处理」三项统计，再下方为「我的订单、我的收藏、应用管理、消息设置、关于平台」菜单列表。</li><li><strong>移动端应用详情页</strong>：从右侧滑入的全屏页。顶部为应用信息区（Logo、名称、在用人数与评分、分类与收费类型标签）；内容区为点赞/收藏/浏览三项指标、应用简介、应用信息（分类、提供机构、适用学段）；底部操作区：已安装应用显示「打开应用」，未安装的免费应用显示「添加应用」，付费应用显示「立即购买」，可试用的付费应用同时显示「免费试用」。</li></ol>
+<blockquote>说明：移动端应用页仅展示应用 Logo 与名称，不展示收费类型标签；收费与免费信息在应用详情页体现。应用详情页的安装/购买结果为原型本地状态，不联动 PC 端的订单与支付流程（P22 购买流程仍以 PC 端为准）。</blockquote>
+<h4 id="h-36">P22 应用购买详情页</h4>
+<p>（1）查看详情：顶部展示 Logo、名称、应用简介、收费类型、点赞、收藏、评分，应用介绍（可滚动）、应用视频介绍。</p>
+<p>（2）安装/购买：</p>
+<ul><li>免费应用：未安装显示「免费安装」（点击自动安装、按钮 loading，成功后变「立即打开」）；已安装显示「立即打开」。</li><li>付费应用：未购买时展示授权套餐卡片列表（名称 + 价格），默认选中第一个，切换联动「立即购买 ¥价格」；可试用时同时显示「免费试用」。购买、发票（历史发票弹窗，每页 5 条）、支付与结果同步流程见 3.3。点击免费试用，后端将当前用户新增到使用机构，并以试用机构身份打开应用。</li></ul>
 <h4 id="h-37">P24 我的应用中心页</h4>
-<p>页面包含顶部 Banner 与右侧入口、常用应用、我的应用 &amp; 低代码应用（合并模块）、智能体四个部分。各功能模块统一白底、无主题色区分，模块内应用/智能体图标卡片背景色一致（统一浅灰 #f4f6f9）、无边框。我的应用与低代码应用合并为第一行的一个模块，通过顶部 Tab 切换（我的应用在前、低代码应用在后）；我的应用展示所有已安装的非低代码应用（按所属机构分类切换），低代码应用展示当前用户所有已安装的低代码应用及自建应用（按分类切换），各展示两行图标卡片，右上角"全部"进入对应全量列表；智能体单独成第二行（整行通栏），顶部 Tab 切换"单位智能体"与"个人智能体"，展示两行图标卡片。所有应用与智能体均以图标卡片形式仅展示 Logo（图标）与名称，鼠标悬停时卡片上浮、点击时有缩放按压的动态反馈效果。</p>
-<ol><li><strong>顶部 Banner 与右侧入口</strong>：平台宣传轮播与右侧一列两行入口并排。右侧行1为「自定义分类」入口；行2为「管理单位应用」入口并展示应用数量徽章；点击入口进入对应管理页面。</li><li><strong>常用应用</strong>：横向展示当前用户最近使用的应用入口，仅展示应用 Logo 与名称。</li><li><strong>我的应用 &amp; 低代码应用（第一行合并模块，Tab 切换）</strong>：<ul><li>顶部 Tab 切换：我的应用（在前）、低代码应用（在后）。</li><li>我的应用 Tab 展示所有已安装的非低代码应用，提供分类切换（按所属机构：全部、各机构），切换不同分类展示对应应用（两行图标卡片），默认"全部"。</li><li>低代码应用 Tab 展示当前用户所有已安装的低代码应用及自建应用，提供分类切换（全部、教学类、行政类、科研类），切换不同分类展示对应应用（两行图标卡片），默认"全部"；低代码应用若为跨机构应用，图标卡片下方显示来源机构名称标签。</li><li>两类应用均以统一浅灰背景、无边框的图标卡片展示应用 Logo 与名称，点击有缩放动态效果。</li><li>低代码应用的每个应用图标卡片内显示"分享"图标，点击打开分享弹窗（二维码 + 复制链接地址）。</li><li>点击"全部"进入我的应用/低代码应用全量列表（同样按分类切换、统一浅灰背景无边框图标卡片，样式与首页一致）。</li></ul></li><li><strong>智能体（第二行通栏）</strong>：<ul><li>Tab 切换"单位智能体"（展示本机构的智能体）与"个人智能体"（展示个人空间创建的智能体），展示对应智能体（两行图标卡片）。</li><li>每个智能体以与"我的应用"同宽（5 列网格）、统一浅灰背景、无边框的图标卡片展示，仅展示智能体 Logo（图标）与名称，点击有缩放动态效果。</li><li>点击"全部"进入智能体范围子视图：顶部 AI 范围 Banner 与"创建智能体"入口同处一行（右侧）；下方单位智能体与个人智能体各占一行（上下排列），智能体均以统一浅灰背景、无边框的图标卡片展示（无收藏夹模块）。</li></ul></li><li>点击应用或智能体图标/名称打开/进入对应应用或智能体。</li></ol>
+<p>页面含顶部 Banner 与右侧入口、常用应用、我的应用 &amp; 低代码应用（合并模块）、智能体四部分；模块统一白底，图标卡片统一浅灰 #f4f6f9、无边框。所有卡片仅展示 Logo 与名称，悬停上浮、点击缩放。</p>
+<ol><li><strong>Banner 与右侧入口</strong>：平台宣传轮播 + 右侧一列两行入口。行1「自定义分类」；行2「管理单位应用」（带应用数量徽章）；点击进入对应管理页。</li><li><strong>常用应用</strong>：横向展示最近使用的应用，仅 Logo + 名称。</li><li><strong>我的应用 &amp; 低代码应用</strong>（Tab：我的应用在前、低代码应用在后；各展示两行卡片，右上「全部」进入全量列表）：<ul><li>我的应用：所有已安装的非低代码应用，按所属机构切换分类（全部/各机构，默认全部）。</li><li>低代码应用：当前用户已安装的低代码应用及自建应用，按分类切换（全部/教学类/行政类/科研类，默认全部）；跨机构应用卡片下方显示来源机构标签；每张卡片含「分享」图标，点击弹出二维码 + 复制链接。</li><li>「全部」列表同样支持分类切换，卡片样式与首页一致。</li></ul></li><li><strong>智能体（第二行通栏）</strong>：Tab「单位智能体」/「个人智能体」，两行 5 列卡片，仅 Logo + 名称；「全部」进入智能体子视图（顶部 AI 范围 Banner + 「创建智能体」，下方单位/个人各一行，无收藏夹）。</li><li>点击应用/智能体打开对应内容。</li></ol>
 <h4 id="h-38">P25 我的订单页</h4>
-<p>页面由订单列表与订单详情两个视图组成，通过"订单详情"按钮切换。</p>
+<p>页面由订单列表与订单详情两个视图组成。</p>
 <p>（1）订单列表</p>
-<p>顶部提供订单号搜索框。列表以卡片形式展示当前用户/机构的订单：状态标签、订单号、下单时间、实付金额（红色）、商品图标、商品名称、单价×数量，"支付"按钮（状态为待支付且未超时的订单显示，点击跳转 P22 付款界面微信扫码支付）、"退款"按钮（状态为已支付且未发起退款的订单显示，点击二次确认后提交退款申请，订单状态置为退款中，流转至桂教通超级管理员待审批队列）以及"订单详情"按钮。卡片按下单时间倒序。</p>
+<p>顶部订单号搜索框；卡片按下单时间倒序展示：状态标签、订单号、下单时间、实付金额（红色）、商品图标、商品名称、单价×数量，以及按钮：</p>
+<ul><li>「支付」（待支付且未超时）：跳转 P22 付款界面微信扫码支付。</li><li>「退款」（已支付且未发起退款）：二次确认后提交退款申请，状态置为退款中，进入超管待审批队列。</li><li>「订单详情」。</li></ul>
 <p>（2）订单详情</p>
-<p>点击"订单详情"进入详情视图（提供"&lt;&lt; 返回订单列表"返回）。详情视图采用 el-form / el-form-item 表单布局（同应用详情范式）。状态为待支付且未超时的订单，详情页展示"支付"按钮；状态为已支付且未发起退款的订单，详情页展示"申请退款"按钮，点击提交退款申请、状态置为退款中。详情页按下图结构展示：</p>
-<div class="mermaid">flowchart TD
-    A["订单详细（el-form 布局）"] --&gt; B["订单信息"]
-    A --&gt; C["商品信息"]
-    A --&gt; D["发票信息"]
-    A --&gt; E["审批结果（已审批时展示）"]
-    B --&gt; B1["订单 ID"]
-    B --&gt; B2["订单状态：el-tag 标签"]
-    C --&gt; C1["应用名称 / 套餐名称 / 价格 / 购买类型 / 数量 / 实付金额"]
-    D --&gt; D1["发票类型 / 纳税人识别号 / 发票抬头 / 发票内容 / 单位名称 / 邮箱"]
-    E --&gt; E1["审批结果：标签（退款成功 / 退款驳回）"]
-    E --&gt; E2["审批意见：回填展示"]</div>
-<ul><li><strong>订单信息</strong>：订单 ID、订单状态（el-tag 标签，如已支付/待支付/已取消/退款中/退款成功/退款驳回）。</li><li><strong>商品信息</strong>：应用名称（<strong>可点击跳转应用详情页</strong>，按安装态显示购买/安装）、套餐名称、价格、购买类型（个人/机构）、数量、实付金额（表单字段）。</li><li><strong>发票信息</strong>：发票类型、纳税人识别号、发票抬头、发票内容、单位名称、邮箱（无数据时显示"—"）。</li><li><strong>审批结果</strong>（已审批时展示）：审批结果标签（退款成功 / 退款驳回）、审批意见（回填展示）。</li></ul>
+<p>点击「订单详情」进入（提供「&lt;&lt; 返回订单列表」）。采用 el-form 布局，订单信息/商品信息/发票信息字段同 P19 详情；「商品信息」中的应用名称可点击跳转 P22（按安装态显示购买/安装）。已审批时额外展示「审批结果」（退款成功/退款驳回标签 + 审批意见）。待支付且未超时展示「支付」；已支付且未退款展示「申请退款」，点击后置为退款中。</p>
 <h2 id="h-39">五、权限汇总</h2>
 <h3 id="h-40">5.1 页面级权限</h3>
-<table><thead><tr><th>模块</th><th>页面</th><th>platform_admin</th><th>platform_operator</th><th>tenant_admin</th><th>tenant_user</th></tr></thead><tbody><tr><td>应用管理</td><td>应用申请管理页</td><td>可操作（全平台）</td><td>全部只读</td><td>本机构管理</td><td>—</td></tr><tr><td></td><td>应用申请编辑页</td><td>可操作（全平台）</td><td>—</td><td>本机构新增/编辑</td><td>—</td></tr><tr><td></td><td>应用上架管理页</td><td>可操作（全平台）</td><td>全部只读</td><td>本机构管理</td><td>—</td></tr><tr><td></td><td>应用安装列表页</td><td>可操作（全平台）</td><td>全部只读</td><td>本机构管理</td><td>—</td></tr><tr><td></td><td>上架范围管理页</td><td>全部只读</td><td>全部只读</td><td>本机构管理（自定义范围管理，默认范围只读）</td><td>—</td></tr><tr><td></td><td>上架范围编辑页</td><td>—</td><td>—</td><td>本机构编辑（自定义范围）</td><td>—</td></tr><tr><td></td><td>全平台应用页（P06）</td><td>全部管理（查询/强制下架）</td><td>—</td><td>—</td><td>—</td></tr><tr><td></td><td>应用分类管理页</td><td>—</td><td>—</td><td>本机构管理</td><td>—</td></tr><tr><td></td><td>应用审批列表页</td><td>全部审批</td><td>—</td><td>—</td><td>—</td></tr><tr><td></td><td>应用审批操作页</td><td>全部审批</td><td>—</td><td>—</td><td>—</td></tr><tr><td></td><td>标签管理页</td><td>—</td><td>—</td><td>本机构管理</td><td>—</td></tr><tr><td>平台管理</td><td>应用统计看板页</td><td>全部查看/导出</td><td>全部查看/导出</td><td>本机构查看/导出</td><td>—</td></tr><tr><td>订单管理</td><td>订单套餐授权管理</td><td>全部管理</td><td>全部只读</td><td>本机构查看</td><td>—</td></tr><tr><td></td><td>订单记录管理</td><td>全部只读（退款审批）</td><td>全部只读</td><td>本机构查看</td><td>—</td></tr><tr><td></td><td>试用套餐记录管理</td><td>全部管理</td><td>全部只读</td><td>本机构查看</td><td>—</td></tr><tr><td></td><td>应用套餐配置列表页</td><td>全部管理</td><td>全部管理</td><td>本机构管理</td><td>—</td></tr><tr><td>门户端</td><td>教育服务中心页</td><td>可见所有</td><td>可见所有</td><td>可见机构范围内</td><td>可见本机构范围</td></tr><tr><td></td><td>应用购买详情页</td><td>可购买</td><td>可购买</td><td>可购买</td><td>可购买</td></tr><tr><td></td><td>我的应用中心页</td><td>可用</td><td>可用</td><td>可用</td><td>可用</td></tr><tr><td></td><td>我的订单页</td><td>可见全部（可申请退款）</td><td>可见全部</td><td>本机构可见（本人可申请退款）</td><td>本人可见（可申请退款）</td></tr></tbody></table>
+<p>取值口径统一如下；四列角色依次为桂教通超级管理员（platform_admin）、桂教通平台运营（platform_operator）、机构管理员（tenant_admin）、机构普通用户（tenant_user），职责与数据范围见 design.md「三、角色定义」：</p>
+<ul><li><strong>全部管理（范围）</strong>：可进入该页并执行全部操作，数据范围为后缀所标注范围；</li><li><strong>全部只读</strong>：可进入该页，无可执行操作；</li><li><strong>本机构管理 / 本机构查看</strong>：仅本机构数据范围内可管理 / 可查看；</li><li><strong>—</strong>：该角色不可见该页面（导航菜单不展示，直接访问时跳转 P01）。</li></ul>
+<table><thead><tr><th>模块</th><th>页面</th><th>桂教通超级管理员</th><th>桂教通平台运营</th><th>机构管理员</th><th>机构普通用户</th></tr></thead><tbody><tr><td rowspan="16">应用管理</td><td>P01 应用申请管理页</td><td>全部管理（全平台）</td><td>全部只读</td><td>本机构管理</td><td>—</td></tr>
+<tr><td>P02 应用申请编辑页</td><td>全部管理（全平台）</td><td>—</td><td>本机构新增/编辑</td><td>—</td></tr>
+<tr><td>P02b 应用详情页</td><td>全部管理（全平台）</td><td>全部只读</td><td>本机构查看/管理</td><td>—</td></tr>
+<tr><td>P04 应用上架管理页</td><td>全部管理（全平台）</td><td>全部只读</td><td>本机构管理</td><td>—</td></tr>
+<tr><td>P04b 应用安装列表页</td><td>全部管理（全平台）</td><td>全部只读</td><td>本机构管理</td><td>—</td></tr>
+<tr><td>P05 应用上架配置页</td><td>全部管理（全平台）</td><td>—</td><td>本机构配置</td><td>—</td></tr>
+<tr><td>P06 全平台应用页</td><td>全部管理（查询/强制下架）</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>P07 上架范围管理页</td><td>全部管理（全平台，默认范围只读）</td><td>全部只读</td><td>本机构管理（自定义范围管理、默认范围只读）</td><td>—</td></tr>
+<tr><td>P07a 范围机构列表页</td><td>全部管理（全平台）</td><td>全部只读</td><td>本机构查看</td><td>—</td></tr>
+<tr><td>P08 上架范围编辑页</td><td>全部管理（全平台自定义范围）</td><td>—</td><td>本机构编辑（自定义范围）</td><td>—</td></tr>
+<tr><td>P09 应用分类管理页</td><td>全部管理（全平台）</td><td>—</td><td>本机构管理</td><td>—</td></tr>
+<tr><td>P10 应用审批列表页</td><td>全部审批</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>P11 应用审批操作页</td><td>全部审批（通过/驳回）</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>P11v 审批详情页</td><td>全部查看（只读）</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>P12 标签管理页</td><td>全部管理（全平台）</td><td>—</td><td>本机构管理</td><td>—</td></tr>
+<tr><td>P12a 标签机构列表页</td><td>全部管理（全平台）</td><td>—</td><td>本机构查看</td><td>—</td></tr>
+<tr><td rowspan="1">平台管理</td><td>P17 应用统计看板页</td><td>全部查看/导出（全平台）</td><td>全部查看/导出（全平台）</td><td>本机构查看/导出</td><td>—</td></tr>
+<tr><td rowspan="4">订单管理</td><td>P18 订单套餐授权管理</td><td>全部管理</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>P19 订单记录管理</td><td>全部管理</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>P20 试用订单记录管理</td><td>全部管理</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>P26 应用套餐配置列表页</td><td>全部管理</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td rowspan="4">门户端</td><td>P21 教育服务中心页</td><td>—</td><td>—</td><td>可见本机构范围</td><td>可见本机构范围</td></tr>
+<tr><td>P22 应用购买详情页</td><td>—</td><td>—</td><td>可购买</td><td>可购买</td></tr>
+<tr><td>P24 我的应用中心页</td><td>—</td><td>—</td><td>可用</td><td>可用</td></tr>
+<tr><td>P25 我的订单页</td><td>—</td><td>—</td><td>本机构可见（可支付/申请退款）</td><td>本人可见（可支付/申请退款）</td></tr>
+<tr><td rowspan="1">移动端门户</td><td>P21-M 移动端门户页</td><td>—</td><td>—</td><td>可用</td><td>可用</td></tr></tbody></table>
+<blockquote><p>桂教通超级管理员的权限口径：<strong>除 P21 教育服务中心页、P22 应用购买详情页、P24 我的应用中心页、P25 我的订单页、P21-M 移动端门户页这 5 个门户页外，其余后台页面均为全部管理</strong>（数据范围全平台）。P11v 审批详情页本身为只读详情页，不设操作。P07 上架范围管理页中的「默认范围」对所有角色只读，属数据规则而非权限差异。</p></blockquote>
+<blockquote><p>订单管理模块（P18/P19/P20/P26）仅桂教通超级管理员可从导航进入；机构管理员的订单在「我的订单」（P25）中查看与申请退款，应用套餐配置由平台统一维护，机构不单独管理。门户端与移动端门户仅机构侧角色可进入，平台角色通过 P06 全平台应用页与 P17 统计看板完成治理，不进入门户。</p></blockquote>
 <h3 id="h-41">5.1.1 导航菜单可见性（按角色）</h3>
 <p>左侧导航菜单随页面右上角角色选择器切换而实时切换；若切换角色后当前所在页面在新角色下不可见，则自动跳转至应用申请管理（P01）。</p>
-<table><thead><tr><th>角色</th><th>可见菜单</th></tr></thead><tbody><tr><td>机构管理员</td><td>应用管理、应用申请管理、应用上架管理、上架范围管理、应用分类管理、标签管理、应用统计看板、桂教通门户-教育服务中心、我的空间-教育服务中心、我的应用中心、我的订单</td></tr><tr><td>桂教通超级管理员</td><td>应用管理、应用申请管理、应用上架管理、全平台应用、上架范围管理、应用分类管理、应用审批管理、标签管理、应用统计看板、订单套餐授权、订单记录、试用订单记录、应用套餐配置</td></tr></tbody></table>
-<blockquote>说明：订单管理（订单套餐授权/订单记录/试用订单记录/应用套餐配置）仅桂教通超级管理员可见；应用审批管理仅桂教通超级管理员可见；桂教通门户（教育服务中心）、我的空间（教育服务中心/我的应用中心/我的订单）仅机构管理员可见。</blockquote>
-<h3 id="h-42">5.2 按钮级权限</h3>
-<table><thead><tr><th>页面</th><th>按钮/操作</th><th>platform_admin</th><th>platform_operator</th><th>tenant_admin</th><th>tenant_user</th></tr></thead><tbody><tr><td>应用申请管理页</td><td>新增/管理/上线/下线</td><td>可操作（全平台）</td><td>—</td><td>本机构可操作</td><td>—</td></tr><tr><td>应用申请编辑页</td><td>保存/提交</td><td>可操作（全平台）</td><td>—</td><td>本机构可操作</td><td>—</td></tr><tr><td>应用上架管理页</td><td>上架/下架/安装</td><td>可操作（全平台）</td><td>—</td><td>本机构可操作</td><td>—</td></tr><tr><td>应用审批操作页</td><td>通过/驳回</td><td>可审批</td><td>—</td><td>—</td><td>—</td></tr><tr><td>上架范围管理页</td><td>创建范围/管理</td><td>—</td><td>—</td><td>本机构可操作（自定义范围）</td><td>—</td></tr><tr><td>应用统计看板页</td><td>导出</td><td>可导出</td><td>可导出</td><td>可导出（本机构范围）</td><td>—</td></tr><tr><td>教育服务中心</td><td>安装/购买</td><td>可操作</td><td>可操作</td><td>可操作</td><td>可操作</td></tr><tr><td>移动端门户-服务页</td><td>添加/购买/打开</td><td>可操作</td><td>可操作</td><td>可操作</td><td>可操作</td></tr><tr><td>订单记录管理页（P19）</td><td>查看/审批</td><td>可审批（退款中订单审批）</td><td>—</td><td>本机构查看</td><td>—</td></tr><tr><td>我的订单页（P25）</td><td>支付/退款/订单详情</td><td>—</td><td>—</td><td>本机构可申请退款（已支付订单）</td><td>本人可申请退款（已支付订单）</td></tr></tbody></table>
-<h3 id="h-43">5.3 字段级权限例外</h3>
-<p><strong>应用审批操作页（P11）</strong>：</p>
-<ul><li>platform_admin：可审批所有机构提交的上线申请</li><li>机构管理员（tenant_admin）无审批权限，应用审批管理模块对其不可见</li></ul>
-<p><strong>应用统计看板页（P17）</strong>：</p>
-<ul><li>platform_admin / platform_operator：统计全平台数据，统计范围仅包含平台应用和平台管理的机构应用，独立机构应用不计入</li><li>tenant_admin（机构管理员）：统计本机构数据（本机构创建/管理的应用及本机构范围内的使用数据），导出仅限本机构范围</li><li>导出功能需具备查看权限方可操作</li></ul>
-<p><strong>上架范围编辑页（P08）</strong>：</p>
-<ul><li>tenant_admin：仅可编辑本机构的自定义范围（新增/修改/删除）</li><li>默认范围对所有角色只读，无编辑操作</li></ul>
-<p><strong>应用申请编辑页（P02）/ 应用详情页-上线配置（P02b）</strong>：</p>
-<ul><li>是否平台应用（平台型/非平台型）：仅桂教通超级管理员展示且必填，默认选中非平台型；机构管理员不展示此字段，新增应用固定为非平台型</li><li>上线配置-跨机构层级、所属机构：仅桂教通超级管理员且低代码应用时展示，且仅"是否跨机构 = 是"时显示；机构管理员展示"是否跨机构"（仅低代码应用）但不展示跨机构层级与所属机构</li><li>说明：推送地址/TOKEN/EncodingAesKey（是否数据同步=是）、suiteID（应用属性=生态应用）、应用ID（应用属性=低代码应用）、可见性地址（打开方式含对应方式）等为字段间业务联动，非角色权限差异，不在此列</li></ul>
-<p><strong>应用上架配置页（P05）</strong>：</p>
-<ul><li>范围选择：桂教通超级管理员展示（是否跨机构=否时全平台/按范围，=是时仅按范围）；机构管理员展示（全平台/按范围，必填）；机构管理员且当前机构为学校时不展示该字段，默认上架范围即本校</li><li>分享范围：仅机构管理员展示（桂教通平台/其他机构多选，学校机构必填、其余非必填）；桂教通超级管理员不展示；其他机构分享过来的应用不展示该字段（被分享的应用不可再被分享）</li></ul>
-<h2 id="h-44">六、数据字典</h2>
-<h3 id="h-45">6.1 应用（Application）</h3>
-<table><thead><tr><th>字段</th><th>类型</th><th>必填</th><th>说明</th></tr></thead><tbody><tr><td>app.id</td><td>string</td><td>是</td><td>应用唯一标识，系统生成 UUID</td></tr><tr><td>app.name</td><td>string</td><td>是</td><td>应用名称，最大 20 字符</td></tr><tr><td>app.logo</td><td>string</td><td>是</td><td>应用 Logo URL，jpg/png/jpeg，推荐 140×140 圆角 24px，≤200KB</td></tr><tr><td>app.category</td><td>string</td><td>是</td><td>所属分类，级联路径（一级/二级，如"教学管理/课堂工具"）</td></tr><tr><td>app.app_type</td><td>enum</td><td>是</td><td>non_platform（非平台型，默认）/ platform（平台型）；是否平台应用，平台型仅桂教通超级管理员可选，机构管理员新增固定为非平台型（不展示该字段）</td></tr><tr><td>app.data_sync</td><td>enum</td><td>是</td><td>no / yes，默认 no；选 yes 时必填推送地址、TOKEN、EncodingAesKey</td></tr><tr><td>app.user_auth</td><td>enum</td><td>是</td><td>no / yes，默认 no；是否授权平台获取用户个人信息</td></tr><tr><td>app.push_url</td><td>string</td><td>否</td><td>数据同步推送地址，格式 http:// 或 https://，data_sync=yes 时必填</td></tr><tr><td>app.sync_token</td><td>string</td><td>否</td><td>数据同步 TOKEN，UUID 生成，最大 50 字符，data_sync=yes 时必填</td></tr><tr><td>app.encoding_aes_key</td><td>string</td><td>否</td><td>数据同步 EncodingAesKey，32 字节 AES-256 密钥 Base64 编码（去填充=），固定 43 字符，data_sync=yes 时必填</td></tr><tr><td>app.form_types</td><td>string</td><td>是</td><td>多值枚举：pcweb / h5 / mini_standalone</td></tr><tr><td>app.type</td><td>enum</td><td>是</td><td>native / ecosystem</td></tr><tr><td>app.native_type</td><td>enum</td><td>否</td><td>lowcode / selfbuilt；应用属性=原生应用时级联必填</td></tr><tr><td>app.lowcode_app_id</td><td>string</td><td>否</td><td>低代码应用ID，仅 native_type=lowcode 时必填</td></tr><tr><td>app.app_id</td><td>integer</td><td>是</td><td>业务应用ID，新增应用时由系统在当前最大业务应用ID基础上 +1 自动生成，全局唯一、不可修改</td></tr><tr><td>app.app_open_id</td><td>string</td><td>是</td><td>应用 openId；非低代码应用由系统自动生成（长度固定 15，仅英文/数字/下划线，全局唯一）；低代码应用取创建时填写的低代码应用ID</td></tr><tr><td>app.summary</td><td>text</td><td>是</td><td>应用简介，最大 100 字符</td></tr><tr><td>app.description</td><td>text</td><td>是</td><td>应用详情介绍，富文本 HTML，≤5MB；必填</td></tr><tr><td>app.video_urls</td><td>string</td><td>否</td><td>应用视频介绍 URL 列表 JSON；最多 5 个视频，单个 ≤10MB</td></tr><tr><td>app.institution_scope</td><td>string</td><td>是</td><td>多值枚举：school / superior</td></tr><tr><td>app.school_levels_mode</td><td>enum</td><td>是</td><td>all / partial</td></tr><tr><td>app.school_levels</td><td>string</td><td>否</td><td>school_levels_mode=partial 时必填；多值枚举：kindergarten / primary / junior / senior / vocational_secondary / vocational_higher / undergraduate / graduate</td></tr><tr><td>app.visibility_mobile_roles</td><td>string</td><td>是</td><td>多值枚举：edu_staff / student / school_staff / parent / graduate / retired_staff / tenant_admin / temp_member / public_account / developer</td></tr><tr><td>app.visibility_mobile_url</td><td>string</td><td>是</td><td>form_types 含 mini_standalone 时必填；存储完整地址（含 http/https 前缀），前端以前缀下拉+文本框录入后拼接</td></tr><tr><td>app.visibility_wechat_appid</td><td>string</td><td>是</td><td>form_types 含 mini_standalone 时必填</td></tr><tr><td>app.visibility_pc_roles</td><td>string</td><td>是</td><td>同 mobile 角色枚举</td></tr><tr><td>app.visibility_pc_url</td><td>string</td><td>是</td><td>form_types 含 pcweb 时必填；存储完整地址（含 http/https 前缀），前端以前缀下拉+文本框录入后拼接</td></tr><tr><td>app.visibility_h5_roles</td><td>string</td><td>是</td><td>同 mobile 角色枚举</td></tr><tr><td>app.visibility_h5_url</td><td>string</td><td>是</td><td>form_types 含 h5 时必填；存储完整地址（含 http/https 前缀），前端以前缀下拉+文本框录入后拼接</td></tr><tr><td>app.visibility_whitelist</td><td>string</td><td>否</td><td>应用白名单，多值地址列表（完整地址含前缀，JSON 数组存储）；默认回填移动端/PC端/H5 地址（可删除，删除后不再自动回填），点击"新增白名单"按钮新增输入行手动添加（可删除），去重，最多 5 个</td></tr><tr><td>app.status</td><td>enum</td><td>是</td><td>online / offline / rejected（rejected=已驳回：上线申请被驳回，可重新提交）</td></tr><tr><td>app.listing_status</td><td>enum</td><td>是</td><td>listed / unlisted / dismissed</td></tr><tr><td>app.tenant_id</td><td>string</td><td>是</td><td>归属机构</td></tr><tr><td>app.tenant_name</td><td>string</td><td>是</td><td>归属机构名称；由 app.tenant_id 反查组织中心带出，冗余展示（P06 全平台应用页"上架机构"列）</td></tr><tr><td>app.suite_id</td><td>string</td><td>否</td><td>生态应用 suiteID，最大 64 字符</td></tr><tr><td>app.system_suite_id</td><td>string</td><td>是</td><td>系统级 SuiteId，全局唯一，创建后不可修改</td></tr><tr><td>app.system_suite_key</td><td>string</td><td>是</td><td>系统级 SuiteKey，创建应用时自动生成，可在 P02b 凭证区通过"复制"复制其值，不可手动更新</td></tr><tr><td>app.system_suite_key_updated_at</td><td>datetime</td><td>否</td><td>SuiteKey 最近一次更新时间，用于旧 Key 2 天失效期计算</td></tr><tr><td>app.created_at</td><td>datetime</td><td>是</td><td>创建时间</td></tr><tr><td>app.updated_at</td><td>datetime</td><td>是</td><td>最后更新时间</td></tr></tbody></table>
-<h3 id="h-46">6.2 应用分类（Category）</h3>
+<table><thead><tr><th>角色</th><th>可见菜单</th></tr></thead><tbody><tr><td>桂教通超级管理员</td><td>应用管理（应用申请管理、应用上架管理、全平台应用、上架范围管理、应用分类管理、应用审批管理、标签管理）、平台管理（应用统计看板）、订单管理（订单套餐授权、订单记录、试用订单记录、应用套餐配置）</td></tr>
+<tr><td>桂教通平台运营</td><td>应用管理（应用申请管理、应用上架管理、上架范围管理，均只读）、平台管理（应用统计看板）；不含应用审批管理、订单管理、门户类菜单</td></tr>
+<tr><td>机构管理员</td><td>应用管理（应用申请管理、应用上架管理、上架范围管理、应用分类管理、标签管理）、平台管理（应用统计看板）、桂教通门户-教育服务中心、我的空间（教育服务中心、我的应用中心、我的订单）</td></tr>
+<tr><td>机构普通用户</td><td>无后台菜单，仅门户端：桂教通门户-教育服务中心、我的空间（教育服务中心、我的应用中心、我的订单）</td></tr></tbody></table>
+<blockquote><p>说明：桂教通超级管理员除桂教通门户与我的空间外，后台菜单全量可见且均具备管理权限；应用审批管理、订单管理为其专属模块。平台运营仅保留应用管理（只读）与应用统计看板。桂教通门户与我的空间仅机构侧角色可见，平台角色不进入门户。本期原型仅提供「桂教通超级管理员 / 机构管理员」两个角色的切换演示，平台运营与机构普通用户按本表规则执行。</p></blockquote>
+<h3 id="h-41-1">5.2 按钮级权限（关键操作）</h3>
+<p>本表列出的为该页可执行的关键操作；未列出的普通操作（查询、重置、分页）随页面可见性放开。</p>
+<table><thead><tr><th>页面</th><th>关键操作</th><th>桂教通超级管理员</th><th>桂教通平台运营</th><th>机构管理员</th><th>机构普通用户</th></tr></thead><tbody><tr><td>P01 应用申请管理页</td><td>新增应用、管理、上线、下线</td><td>可（全平台）</td><td>—</td><td>可（本机构）</td><td>—</td></tr>
+<tr><td>P02 / P02b 申请编辑与详情</td><td>保存、提交上线申请、编辑</td><td>可（全平台）</td><td>—</td><td>可（本机构）</td><td>—</td></tr>
+<tr><td>P04 应用上架管理页</td><td>上架配置、下架</td><td>可（全平台）</td><td>—</td><td>可（本机构）</td><td>—</td></tr>
+<tr><td>P04b 应用安装列表页</td><td>安装、卸载</td><td>可（全平台）</td><td>—</td><td>可（本机构）</td><td>—</td></tr>
+<tr><td>P05 应用上架配置页</td><td>确认上架（含承诺书勾选）</td><td>可（全平台）</td><td>—</td><td>可（本机构）</td><td>—</td></tr>
+<tr><td>P06 全平台应用页</td><td>查询、强制下架</td><td>可</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>P07 / P07a / P08 上架范围</td><td>新增、编辑、删除、启用/停用自定义范围</td><td>可（全平台自定义范围）</td><td>—</td><td>可（本机构自定义范围）</td><td>—</td></tr>
+<tr><td>P09 应用分类管理页</td><td>新增分类、添加下级、编辑、启用/停用、删除</td><td>可（全平台）</td><td>—</td><td>可（本机构）</td><td>—</td></tr>
+<tr><td>P10 / P11 应用审批</td><td>审批通过、驳回</td><td>可</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>P12 / P12a 标签管理</td><td>新建、编辑、删除标签</td><td>可（全平台）</td><td>—</td><td>可（本机构）</td><td>—</td></tr>
+<tr><td>P17 应用统计看板页</td><td>查询、导出</td><td>可（全平台）</td><td>可（全平台）</td><td>可（本机构）</td><td>—</td></tr>
+<tr><td>P18 订单套餐授权管理</td><td>新增授权、取消授权、手动授权</td><td>可</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>P19 订单记录管理</td><td>查看、退款审批（通过/驳回）</td><td>可</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>P20 试用订单记录管理</td><td>停用、延期</td><td>可</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>P26 / P26e 应用套餐配置</td><td>新建、编辑、删除套餐</td><td>可</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>P25 我的订单页</td><td>支付、申请退款</td><td>—</td><td>—</td><td>可（本机构订单）</td><td>可（本人订单）</td></tr></tbody></table>
+<h3 id="h-42">5.3 字段级权限例外</h3>
+<p>字段级角色差异已并入对应页面需求（P02 / P02b / P05 / P08 / P17）与 5.2，本节不重复。共性结论仅四类存在角色差异：</p>
+<ol><li><strong>「是否平台应用」字段</strong>：平台型仅桂教通超级管理员可选且必填；机构管理员新增固定为非平台型，字段不展示（P02、P02b）。</li><li><strong>「跨机构层级 / 所属机构」字段</strong>：仅桂教通超级管理员可选；机构管理员不展示（P02b、P05）。</li><li><strong>「上架范围 / 分享范围」</strong>：学校机构管理员不展示、默认本校；分享范围仅机构管理员可配置，被分享应用不展示（P05、P08）。</li><li><strong>「统计范围 / 导出范围」</strong>：平台角色统计全平台（仅含平台应用与平台管理的机构应用，独立机构不计入），机构管理员仅本机构；导出需具备查看权限（P17）。</li></ol>
+<p>推送地址 / TOKEN / EncodingAesKey（是否数据同步=是）、suiteID（应用属性=生态应用）、应用ID（应用属性=低代码应用）、可见性地址（打开方式含对应方式）等属字段间业务联动，非角色权限差异，不在此列。</p>
+<h2 id="h-43">六、数据字典</h2>
+<h3 id="h-44">6.1 应用（Application）</h3>
+<table><thead><tr><th>字段</th><th>类型</th><th>必填</th><th>说明</th></tr></thead><tbody><tr><td>app.id</td><td>string</td><td>是</td><td>应用唯一标识，系统生成 UUID</td></tr><tr><td>app.name</td><td>string</td><td>是</td><td>应用名称，最大 20 字符</td></tr><tr><td>app.logo</td><td>string</td><td>是</td><td>应用 Logo URL，jpg/png/jpeg，推荐 140×140 圆角 24px，≤200KB</td></tr><tr><td>app.category</td><td>string</td><td>是</td><td>所属分类，级联路径（一级/二级，如"教学管理/课堂工具"）</td></tr><tr><td>app.app_type</td><td>enum</td><td>是</td><td>non_platform（非平台型，默认）/ platform（平台型）；是否平台应用，平台型仅桂教通超级管理员可选，机构管理员新增固定为非平台型（不展示该字段）</td></tr><tr><td>app.data_sync</td><td>enum</td><td>是</td><td>no / yes，默认 no；选 yes 时必填推送地址、TOKEN、EncodingAesKey</td></tr><tr><td>app.user_auth</td><td>enum</td><td>是</td><td>no / yes，默认 no；是否授权平台获取用户个人信息</td></tr><tr><td>app.push_url</td><td>string</td><td>否</td><td>数据同步推送地址，格式 http:// 或 https://，data_sync=yes 时必填</td></tr><tr><td>app.sync_token</td><td>string</td><td>否</td><td>数据同步 TOKEN，UUID 生成，最大 50 字符，data_sync=yes 时必填</td></tr><tr><td>app.encoding_aes_key</td><td>string</td><td>否</td><td>数据同步 EncodingAesKey，32 字节 AES-256 密钥 Base64 编码（去填充=），固定 43 字符，data_sync=yes 时必填</td></tr><tr><td>app.form_types</td><td>string</td><td>是</td><td>多值枚举：pcweb / h5 / mini_standalone</td></tr><tr><td>app.jump_login_limit</td><td>enum</td><td>是</td><td>none（无需登录）/ account_only（仅持有账号登录）/ register_or_login（可注册或登录）</td></tr><tr><td>app.type</td><td>enum</td><td>是</td><td>native / ecosystem</td></tr><tr><td>app.native_type</td><td>enum</td><td>否</td><td>lowcode / selfbuilt；应用属性=原生应用时级联必填</td></tr><tr><td>app.lowcode_app_id</td><td>string</td><td>否</td><td>低代码应用ID，仅 native_type=lowcode 时必填</td></tr><tr><td>app.app_id</td><td>integer</td><td>是</td><td>业务应用ID，新增应用时由系统在当前最大业务应用ID基础上 +1 自动生成，全局唯一、不可修改</td></tr><tr><td>app.app_open_id</td><td>string</td><td>是</td><td>应用 openId；非低代码应用由系统自动生成（长度固定 15，仅英文/数字/下划线，全局唯一）；低代码应用取创建时填写的低代码应用ID</td></tr><tr><td>app.summary</td><td>text</td><td>是</td><td>应用简介，最大 100 字符</td></tr><tr><td>app.description</td><td>text</td><td>是</td><td>应用详情介绍，富文本 HTML，≤5MB；必填</td></tr><tr><td>app.video_urls</td><td>string</td><td>否</td><td>应用视频介绍 URL 列表 JSON；最多 5 个视频，单个 ≤10MB</td></tr><tr><td>app.institution_scope</td><td>string</td><td>是</td><td>多值枚举：school / superior</td></tr><tr><td>app.school_levels_mode</td><td>enum</td><td>是</td><td>all / partial</td></tr><tr><td>app.school_levels</td><td>string</td><td>否</td><td>school_levels_mode=partial 时必填；多值枚举：kindergarten / primary / junior / senior / vocational_secondary / vocational_higher / undergraduate / graduate</td></tr><tr><td>app.visibility_mobile_roles</td><td>string</td><td>是</td><td>多值枚举：edu_staff / student / school_staff / parent / graduate / retired_staff / tenant_admin / temp_member / public_account / developer</td></tr><tr><td>app.visibility_mobile_url</td><td>string</td><td>是</td><td>form_types 含 mini_standalone 时必填；存储完整地址（含 http/https 前缀），前端以前缀下拉+文本框录入后拼接</td></tr><tr><td>app.visibility_wechat_appid</td><td>string</td><td>是</td><td>form_types 含 mini_standalone 时必填</td></tr><tr><td>app.visibility_pc_roles</td><td>string</td><td>是</td><td>同 mobile 角色枚举</td></tr><tr><td>app.visibility_pc_url</td><td>string</td><td>是</td><td>form_types 含 pcweb 时必填；存储完整地址（含 http/https 前缀），前端以前缀下拉+文本框录入后拼接</td></tr><tr><td>app.visibility_h5_roles</td><td>string</td><td>是</td><td>同 mobile 角色枚举</td></tr><tr><td>app.visibility_h5_url</td><td>string</td><td>是</td><td>form_types 含 h5 时必填；存储完整地址（含 http/https 前缀），前端以前缀下拉+文本框录入后拼接</td></tr><tr><td>app.visibility_whitelist</td><td>string</td><td>否</td><td>应用白名单，多值地址列表（完整地址含前缀，JSON 数组存储）；默认回填移动端/PC端/H5 地址（可删除，删除后不再自动回填），点击"新增白名单"按钮新增输入行手动添加（可删除），去重，最多 5 个</td></tr><tr><td>app.status</td><td>enum</td><td>是</td><td>online / offline / rejected（rejected=已驳回：上线申请被驳回，可重新提交）</td></tr><tr><td>app.listing_status</td><td>enum</td><td>是</td><td>listed / unlisted / dismissed</td></tr><tr><td>app.tenant_id</td><td>string</td><td>是</td><td>归属机构</td></tr><tr><td>app.tenant_name</td><td>string</td><td>是</td><td>归属机构名称；由 app.tenant_id 反查组织中心带出，冗余展示（P06 全平台应用页"上架机构"列）</td></tr><tr><td>app.suite_id</td><td>string</td><td>否</td><td>生态应用 suiteID，最大 64 字符</td></tr><tr><td>app.system_suite_id</td><td>string</td><td>是</td><td>系统级 SuiteId，全局唯一，创建后不可修改</td></tr><tr><td>app.system_suite_key</td><td>string</td><td>是</td><td>系统级 SuiteKey，创建应用时自动生成，可在 P02b 凭证区通过"复制"复制其值，不可手动更新</td></tr><tr><td>app.system_suite_key_updated_at</td><td>datetime</td><td>否</td><td>SuiteKey 最近一次更新时间，用于旧 Key 2 天失效期计算</td></tr><tr><td>app.created_at</td><td>datetime</td><td>是</td><td>创建时间</td></tr><tr><td>app.updated_at</td><td>datetime</td><td>是</td><td>最后更新时间</td></tr></tbody></table>
+<h3 id="h-45">6.2 应用分类（Category）</h3>
 <table><thead><tr><th>字段</th><th>类型</th><th>必填</th><th>说明</th></tr></thead><tbody><tr><td>category.id</td><td>string</td><td>是</td><td>分类唯一标识</td></tr><tr><td>category.name</td><td>string</td><td>是</td><td>分类名称，最大 30 字符</td></tr><tr><td>category.code</td><td>string</td><td>是</td><td>分类编码，最大 20 字符，仅限数字和英文字母，同一层级不可重复</td></tr><tr><td>category.parent_id</td><td>string</td><td>否</td><td>父分类 ID，空为一级分类；最多 2 级</td></tr><tr><td>category.sort_order</td><td>integer</td><td>是</td><td>排序号，默认 1；层级内升序，相同时更新时间优先</td></tr><tr><td>category.status</td><td>enum</td><td>是</td><td>enabled / disabled</td></tr><tr><td>category.tenant_id</td><td>string</td><td>是</td><td>归属机构</td></tr><tr><td>category.created_at</td><td>datetime</td><td>是</td><td>创建时间</td></tr><tr><td>category.updated_at</td><td>datetime</td><td>是</td><td>更新时间</td></tr></tbody></table>
-<h3 id="h-47">6.3 范围（Zone）</h3>
+<h3 id="h-46">6.3 范围（Zone）</h3>
 <table><thead><tr><th>字段</th><th>类型</th><th>必填</th><th>说明</th></tr></thead><tbody><tr><td>zone.id</td><td>string</td><td>是</td><td>范围唯一标识</td></tr><tr><td>zone.name</td><td>string</td><td>是</td><td>范围名称，最大 50 字符</td></tr><tr><td>zone.source</td><td>enum</td><td>是</td><td>custom / default</td></tr><tr><td>zone.scope_type</td><td>enum</td><td>否</td><td>custom / by_org / by_org_type；source=custom 时必填</td></tr><tr><td>zone.visible_scope</td><td>string</td><td>否</td><td>可见范围配置 JSON</td></tr><tr><td>zone.invisible_scope</td><td>string</td><td>否</td><td>不可见范围机构列表 JSON</td></tr><tr><td>zone.tags</td><td>string</td><td>否</td><td>关联标签列表 JSON</td></tr><tr><td>zone.tenant_id</td><td>string</td><td>是</td><td>归属机构</td></tr><tr><td>zone.created_by</td><td>string</td><td>是</td><td>创建人</td></tr><tr><td>zone.created_at</td><td>datetime</td><td>是</td><td>创建时间</td></tr></tbody></table>
-<h3 id="h-48">6.4 范围标签（ZoneTag）</h3>
+<h3 id="h-47">6.4 范围标签（ZoneTag）</h3>
 <table><thead><tr><th>字段</th><th>类型</th><th>必填</th><th>说明</th></tr></thead><tbody><tr><td>tag.id</td><td>string</td><td>是</td><td>标签唯一标识</td></tr><tr><td>tag.name</td><td>string</td><td>是</td><td>标签名称，最大 50 字符</td></tr><tr><td>tag.tenant_id</td><td>string</td><td>是</td><td>归属机构</td></tr></tbody></table>
-<h3 id="h-49">6.5 审批记录（ReviewRecord）</h3>
+<h3 id="h-48">6.5 审批记录（ReviewRecord）</h3>
 <table><thead><tr><th>字段</th><th>类型</th><th>必填</th><th>说明</th></tr></thead><tbody><tr><td>review.id</td><td>string</td><td>是</td><td>审批记录唯一标识</td></tr><tr><td>review.app_id</td><td>string</td><td>是</td><td>被审批应用 ID</td></tr><tr><td>review.type</td><td>enum</td><td>是</td><td>online / offline / modify（应用信息编辑后重新上架审批）</td></tr><tr><td>review.status</td><td>enum</td><td>是</td><td>pending / approved / rejected</td></tr><tr><td>review.applicant</td><td>string</td><td>是</td><td>申请人</td></tr><tr><td>review.reviewer</td><td>string</td><td>否</td><td>审批人，审批通过时写入</td></tr><tr><td>review.review_comment</td><td>string</td><td>否</td><td>审批意见/驳回原因，最大 200 字符；驳回时必填</td></tr><tr><td>review.reviewed_at</td><td>datetime</td><td>否</td><td>审批时间</td></tr><tr><td>review.created_at</td><td>datetime</td><td>是</td><td>申请提交时间</td></tr></tbody></table>
-<h3 id="h-50">6.6 操作记录（OperationLog）</h3>
+<h3 id="h-49">6.6 操作记录（OperationLog）</h3>
 <table><thead><tr><th>字段</th><th>类型</th><th>必填</th><th>说明</th></tr></thead><tbody><tr><td>log.id</td><td>string</td><td>是</td><td>记录唯一标识</td></tr><tr><td>log.app_id</td><td>string</td><td>是</td><td>操作关联应用 ID</td></tr><tr><td>log.action</td><td>enum</td><td>是</td><td>submit_review / approve / reject / list / delist / force_delist / install / uninstall</td></tr><tr><td>log.operator</td><td>string</td><td>是</td><td>操作人</td></tr><tr><td>log.operator_role</td><td>string</td><td>是</td><td>platform_admin / platform_operator / tenant_admin / tenant_user</td></tr><tr><td>log.detail</td><td>string</td><td>否</td><td>操作详情，最大 1000 字符</td></tr><tr><td>log.created_at</td><td>datetime</td><td>是</td><td>操作时间</td></tr></tbody></table>
-<h3 id="h-51">6.7 套餐（Package）</h3>
+<h3 id="h-50">6.7 套餐（Package）</h3>
 <table><thead><tr><th>字段</th><th>类型</th><th>必填</th><th>说明</th></tr></thead><tbody><tr><td>package.id</td><td>string</td><td>是</td><td>套餐唯一标识</td></tr><tr><td>package.code</td><td>string</td><td>是</td><td>套餐编码，全局唯一</td></tr><tr><td>package.name</td><td>string</td><td>是</td><td>套餐名称，最大 100 字符</td></tr><tr><td>package.type</td><td>enum</td><td>是</td><td>短信充值 / 存储容量充值 / TOKEN充值 / 基座套餐 / 应用使用授权 / 应用试用授权（数据字典）</td></tr><tr><td>package.price</td><td>decimal</td><td>是</td><td>套餐价格（元），必填</td></tr><tr><td>package.alloc_size</td><td>string</td><td>否</td><td>分配大小；短信充值/存储容量充值/TOKEN充值类型时必填</td></tr><tr><td>package.unit</td><td>string</td><td>否</td><td>计量单位（G/条/资源点等）</td></tr><tr><td>package.duration_days</td><td>integer</td><td>否</td><td>有效期天数；应用使用授权/应用试用授权/存储容量充值类型时必填</td></tr><tr><td>package.base_pkg_id</td><td>array&lt;string&gt;</td><td>否</td><td>基座套餐关联（可多选）；业务套餐=基座套餐时必填</td></tr><tr><td>package.target_type</td><td>enum</td><td>否</td><td>套餐适用对象：机构 / 个人</td></tr><tr><td>package.auth_mode</td><td>enum</td><td>是</td><td>是否手动开通业务：自动 / 手动</td></tr><tr><td>package.created_at</td><td>datetime</td><td>是</td><td>创建时间</td></tr></tbody></table>
-<h3 id="h-52">6.8 订单（Order）</h3>
+<h3 id="h-51">6.8 订单（Order）</h3>
 <table><thead><tr><th>字段</th><th>类型</th><th>必填</th><th>说明</th></tr></thead><tbody><tr><td>order.id</td><td>string</td><td>是</td><td>订单唯一编号</td></tr><tr><td>order.app_name</td><td>string</td><td>是</td><td>关联应用名称</td></tr><tr><td>order.app_id</td><td>string</td><td>是</td><td>关联应用 ID</td></tr><tr><td>order.amount</td><td>decimal</td><td>是</td><td>订单金额，默认 0</td></tr><tr><td>order.status</td><td>enum</td><td>是</td><td>pending / paid / expired / cancelled</td></tr><tr><td>order.tenant_id</td><td>string</td><td>是</td><td>下单机构</td></tr><tr><td>order.user_id</td><td>string</td><td>是</td><td>下单用户 ID</td></tr><tr><td>order.created_at</td><td>datetime</td><td>是</td><td>下单时间</td></tr></tbody></table>
-<h3 id="h-53">6.9 授权记录（AuthorizationRecord）</h3>
+<h3 id="h-52">6.9 授权记录（AuthorizationRecord）</h3>
 <table><thead><tr><th>字段</th><th>类型</th><th>必填</th><th>说明</th></tr></thead><tbody><tr><td>auth.id</td><td>string</td><td>是</td><td>授权记录编号</td></tr><tr><td>auth.order_id</td><td>string</td><td>是</td><td>关联订单 ID</td></tr><tr><td>auth.app_name</td><td>string</td><td>是</td><td>应用名称</td></tr><tr><td>auth.tenant_name</td><td>string</td><td>是</td><td>机构名称</td></tr><tr><td>auth.package_name</td><td>string</td><td>是</td><td>套餐名称</td></tr><tr><td>auth.package_id</td><td>string</td><td>是</td><td>关联套餐 ID</td></tr><tr><td>auth.status</td><td>enum</td><td>是</td><td>pending / active / failed / expired / revoked</td></tr><tr><td>auth.authorized_at</td><td>datetime</td><td>是</td><td>授权时间</td></tr><tr><td>auth.expires_at</td><td>datetime</td><td>否</td><td>到期时间</td></tr></tbody></table>
-<h3 id="h-54">6.10 接收记录（ReceiveRecord）</h3>
+<h3 id="h-53">6.10 接收记录（ReceiveRecord）</h3>
 <table><thead><tr><th>字段</th><th>类型</th><th>必填</th><th>说明</th></tr></thead><tbody><tr><td>receive.id</td><td>string</td><td>是</td><td>接收记录编号</td></tr><tr><td>receive.app_name</td><td>string</td><td>是</td><td>关联应用名称</td></tr><tr><td>receive.tenant_name</td><td>string</td><td>是</td><td>接收方机构名称</td></tr><tr><td>receive.received_at</td><td>datetime</td><td>是</td><td>接收时间</td></tr><tr><td>receive.status</td><td>enum</td><td>是</td><td>completed / pending / failed</td></tr></tbody></table>
-<h3 id="h-55">6.11 试用套餐记录（TrialRecord）</h3>
+<h3 id="h-54">6.11 试用套餐记录（TrialRecord）</h3>
 <table><thead><tr><th>字段</th><th>类型</th><th>必填</th><th>说明</th></tr></thead><tbody><tr><td>trial.id</td><td>string</td><td>是</td><td>试用记录编号</td></tr><tr><td>trial.app_name</td><td>string</td><td>是</td><td>关联应用名称</td></tr><tr><td>trial.tenant_name</td><td>string</td><td>是</td><td>机构名称</td></tr><tr><td>trial.package_name</td><td>string</td><td>是</td><td>试用套餐名称</td></tr><tr><td>trial.started_at</td><td>datetime</td><td>是</td><td>试用开始时间</td></tr><tr><td>trial.ends_at</td><td>datetime</td><td>是</td><td>试用结束时间</td></tr><tr><td>trial.status</td><td>enum</td><td>是</td><td>active / expired / converted / stopped</td></tr></tbody></table>
-<h2 id="h-56">七、状态机</h2>
-<h3 id="h-57">7.1 应用上下线状态</h3>
-<table><thead><tr><th>状态</th><th>含义</th><th>操作人</th><th>触发动作</th><th>下一状态</th><th>限制条件</th></tr></thead><tbody><tr><td>offline</td><td>未上线，不可上架</td><td>tenant_admin</td><td>提交上线审批</td><td>online / rejected</td><td>审批通过变为 online；审批驳回变为 rejected</td></tr><tr><td>rejected</td><td>已驳回，上线申请被驳回，不可上架</td><td>tenant_admin</td><td>重新提交上线审批</td><td>offline（审批中）/ online</td><td>重新提交后回到 offline（列表展示待审批）；审批通过变为 online；P02b 管理模式展示审批信息</td></tr><tr><td>online</td><td>已上线，可进行上架</td><td>tenant_admin</td><td>下线</td><td>offline</td><td>未上架时允许下线；已上架时隐藏下线按钮</td></tr></tbody></table>
-<h3 id="h-58">7.2 应用上架状态</h3>
+<h2 id="h-55">七、状态机</h2>
+<h3 id="h-56">7.1 应用上下线状态</h3>
+<table><thead><tr><th>状态</th><th>含义</th><th>操作人</th><th>触发动作</th><th>下一状态</th><th>限制条件</th></tr></thead><tbody><tr><td>offline</td><td>未上线，不可上架</td><td>tenant_admin</td><td>提交上线审批</td><td>online / rejected</td><td>审批通过变为 online；审批驳回变为 rejected</td></tr><tr><td>rejected</td><td>已驳回，上线申请被驳回，不可上架</td><td>tenant_admin</td><td>重新提交上线审批</td><td>offline（审批中）/ online</td><td>重新提交后回到 offline（列表展示待审批）；审批通过变为 online</td></tr><tr><td>online</td><td>已上线，可进行上架</td><td>tenant_admin</td><td>下线</td><td>offline</td><td>未上架时允许下线；已上架时隐藏下线按钮</td></tr></tbody></table>
+<h3 id="h-57">7.2 应用上架状态</h3>
 <table><thead><tr><th>状态</th><th>含义</th><th>操作人</th><th>触发动作</th><th>下一状态</th><th>限制条件</th></tr></thead><tbody><tr><td>unlisted</td><td>未上架，范围中不可见</td><td>tenant_admin</td><td>上架配置</td><td>listed</td><td>app.status 必须为 online；需配置上架范围；须勾选上架承诺书（未勾选时确认上架置灰）</td></tr><tr><td>listed</td><td>已上架，范围中可见</td><td>tenant_admin</td><td>下架</td><td>dismissed</td><td>二次确认："下架后全区用户将无法使用此应用，已安装的应用不会被卸载"</td></tr><tr><td>listed</td><td>已上架，范围中可见</td><td>platform_admin</td><td>强制下架（P06）</td><td>dismissed</td><td>二次确认："确定要强制下架【{app.name}】吗？下架后该应用在【{app.tenant_name}】的上架列表将变为已下架状态，已安装的应用不卸载。"；仅超管可操作；写 OperationLog（force_delist）</td></tr><tr><td>dismissed</td><td>已下架，范围中不可见，已安装应用不受影响</td><td>tenant_admin</td><td>上架配置</td><td>listed</td><td>可重新上架，且重新上架时保留原上架范围（P05 默认回填下架前的范围配置）</td></tr></tbody></table>
 <p>应用必须先上线（online）后才可上架（listed）。已上架不允许直接下线，必须先下架方可下线。</p>
 <blockquote>范围动态引用不影响状态：标签或范围内机构的增删仅改变应用的上架范围（可见机构集合），应用上架状态（listing_status）不变，仍在范围内的机构继续可见，不在范围内的机构不可见该应用；已安装应用不卸载、无需重新审核。</blockquote>
-<h3 id="h-59">7.3 审批记录状态机</h3>
+<h3 id="h-58">7.3 审批记录状态机</h3>
 <table><thead><tr><th>状态</th><th>含义</th><th>操作人</th><th>触发动作</th><th>下一状态</th><th>限制条件</th></tr></thead><tbody><tr><td>pending</td><td>待审批（上线）</td><td>tenant_admin</td><td>提交上线申请</td><td>—</td><td>app 信息完整方可提交</td></tr><tr><td>pending</td><td>待审批（修改）</td><td>tenant_admin</td><td>编辑已上架应用并提交</td><td>—</td><td>app.status = online；审批通过前对外仍展示旧值</td></tr><tr><td>pending</td><td></td><td>platform_admin（桂教通超级管理员）</td><td>审批通过</td><td>approved</td><td>—</td></tr><tr><td>pending</td><td></td><td>platform_admin（桂教通超级管理员）</td><td>驳回</td><td>rejected</td><td>驳回原因必填</td></tr><tr><td>approved</td><td>审批通过，应用进入机构管理员上架列表（未上架）；修改类型审批通过后新值对外生效</td><td>—</td><td>—</td><td>—</td><td>终态；app.status 自动变为 online，应用进入机构管理员应用上架管理列表（listing_status = unlisted）</td></tr><tr><td>rejected</td><td>审批驳回</td><td>tenant_admin</td><td>重新提交</td><td>pending</td><td>修改后可重新提交上线/修改申请</td></tr></tbody></table>
-<h3 id="h-60">7.4 订单状态机</h3>
+<h3 id="h-59">7.4 订单状态机</h3>
 <table><thead><tr><th>状态</th><th>含义</th><th>操作人</th><th>触发动作</th><th>下一状态</th><th>限制条件</th></tr></thead><tbody><tr><td>pending</td><td>待支付</td><td>系统生成</td><td>用户下单</td><td>—</td><td>用户在商城完成下单时生成</td></tr><tr><td>pending</td><td></td><td>商城系统</td><td>支付回调</td><td>paid</td><td>商城支付完成回调后自动变更</td></tr><tr><td>pending</td><td></td><td>系统</td><td>超时取消</td><td>cancelled</td><td>超过支付有效期未支付时自动变更</td></tr><tr><td>paid</td><td>已支付</td><td>系统</td><td>授权到期</td><td>expired</td><td>授权有效期到达后自动变更（套餐有效期到期）</td></tr><tr><td>expired</td><td>已过期</td><td>—</td><td>—</td><td>—</td><td>终态；授权有效期到达后从 paid 自动流转</td></tr><tr><td>cancelled</td><td>已取消</td><td>用户</td><td>取消订单</td><td>—</td><td>仅 pending 状态下可取消；paid 状态不可取消</td></tr><tr><td>paid</td><td>已支付</td><td>tenant_admin（机构管理员）</td><td>申请退款</td><td>refund_pending</td><td>仅 paid 状态可申请；退款工单提交后同步至桂教通超级管理员待审批队列</td></tr><tr><td>refund_pending</td><td>退款中</td><td>platform_admin（桂教通超级管理员）</td><td>审批通过</td><td>refund_success</td><td>审批意见选填；通过后触发原路退款，订单状态置为退款成功</td></tr><tr><td>refund_pending</td><td>退款中</td><td>platform_admin（桂教通超级管理员）</td><td>审批驳回</td><td>refund_rejected</td><td>驳回原因必填；驳回后订单回到 paid，可重新发起退款</td></tr><tr><td>refund_rejected</td><td>退款驳回</td><td>tenant_admin（机构管理员）</td><td>重新申请退款</td><td>refund_pending</td><td>修改后可重新发起退款申请</td></tr></tbody></table>
 <blockquote>退款通过后应用回到购买前状态：refund_pending 经审批通过（→ refund_success）后，对应应用回到购买前状态——购买前已安装则保持已安装状态，未安装则保持未安装状态，不强制从「我的应用中心」移除，点击应用打开应用详情页（P22），根据状态展示「购买/安装」按钮，即整体回到用户购买前的可使用状态；订单保留 refund_success 终态以留痕审计。</blockquote>
-<h3 id="h-61">7.5 授权记录状态机</h3>
+<h3 id="h-60">7.5 授权记录状态机</h3>
 <table><thead><tr><th>状态</th><th>含义</th><th>操作人</th><th>触发动作</th><th>下一状态</th><th>限制条件</th></tr></thead><tbody><tr><td>active</td><td>授权中</td><td>系统</td><td>订单支付完成生成</td><td>—</td><td>订单 paid 时自动生成，写入有效期</td></tr><tr><td>active</td><td></td><td>系统</td><td>到期</td><td>expired</td><td>到达 expires_at 时自动变更</td></tr><tr><td>active</td><td></td><td>platform_admin / tenant_admin</td><td>撤销授权</td><td>revoked</td><td>二次确认</td></tr><tr><td>expired</td><td>已到期</td><td>—</td><td>—</td><td>—</td><td>终态</td></tr><tr><td>revoked</td><td>已撤销</td><td>—</td><td>—</td><td>—</td><td>终态</td></tr></tbody></table>
-<h3 id="h-62">7.6 接收记录状态机</h3>
+<h3 id="h-61">7.6 接收记录状态机</h3>
 <table><thead><tr><th>状态</th><th>含义</th><th>操作人</th><th>触发动作</th><th>下一状态</th><th>限制条件</th></tr></thead><tbody><tr><td>pending</td><td>待接收</td><td>系统</td><td>下单成功</td><td>—</td><td>订单支付成功时生成接收记录</td></tr><tr><td>pending</td><td></td><td>系统</td><td>处理完成</td><td>completed</td><td>接收方套餐授权写入成功后自动变更</td></tr><tr><td>pending</td><td></td><td>系统</td><td>处理失败</td><td>failed</td><td>处理异常时变更</td></tr><tr><td>completed</td><td>已接收</td><td>—</td><td>—</td><td>—</td><td>终态</td></tr><tr><td>failed</td><td>接收失败</td><td>tenant_admin</td><td>重新接收</td><td>pending</td><td>修复后重新触发</td></tr></tbody></table>
-<h3 id="h-63">7.7 试用套餐记录状态机</h3>
+<h3 id="h-62">7.7 试用套餐记录状态机</h3>
 <table><thead><tr><th>状态</th><th>含义</th><th>操作人</th><th>触发动作</th><th>下一状态</th><th>限制条件</th></tr></thead><tbody><tr><td>active</td><td>试用中</td><td>系统</td><td>用户开通试用</td><td>—</td><td>申请试用时生成，写入 started_at 和 ends_at</td></tr><tr><td>active</td><td></td><td>系统</td><td>到期</td><td>expired</td><td>到达 ends_at 时自动变更</td></tr><tr><td>active</td><td></td><td>系统</td><td>购买正式套餐</td><td>converted</td><td>试用期内购买同应用正式套餐时自动变更</td></tr><tr><td>expired</td><td>试用已到期</td><td>—</td><td>—</td><td>—</td><td>终态</td></tr><tr><td>converted</td><td>已转为正式</td><td>—</td><td>—</td><td>—</td><td>终态</td></tr></tbody></table>
     </div>
   </main>
 </div>
 <script>
-  // 目录滚动高亮
-  (function () {
-    var links = Array.prototype.slice.call(document.querySelectorAll('.toc-list a'));
-    var map = {};
-    links.forEach(function (a) {
-      var id = a.getAttribute('href').slice(1);
-      var el = document.getElementById(id);
-      if (el) map[id] = a;
+(function(){
+  var links=[].slice.call(document.querySelectorAll('.toc-list a'));
+  var map={};
+  links.forEach(function(a){map[a.getAttribute('href').slice(1)]=a;});
+  var targets=Object.keys(map).map(function(id){return document.getElementById(id);}).filter(Boolean);
+  if(!('IntersectionObserver' in window))return;
+  var obs=new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){
+        links.forEach(function(l){l.classList.remove('active');});
+        var a=map[e.target.id]; if(a)a.classList.add('active');
+      }
     });
-    var targets = Object.keys(map).map(function (id) { return document.getElementById(id); });
-    if ('IntersectionObserver' in window) {
-      var obs = new IntersectionObserver(function (entries) {
-        entries.forEach(function (e) {
-          if (e.isIntersecting) {
-            links.forEach(function (l) { l.classList.remove('active'); });
-            var a = map[e.target.id];
-            if (a) a.classList.add('active');
-          }
-        });
-      }, { rootMargin: '0px 0px -70% 0px', threshold: 0 });
-      targets.forEach(function (t) { obs.observe(t); });
-    }
-    // 点击平滑滚动
-    links.forEach(function (a) {
-      a.addEventListener('click', function (ev) {
-        var id = a.getAttribute('href').slice(1);
-        var el = document.getElementById(id);
-        if (el) { ev.preventDefault(); el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
-      });
+  },{rootMargin:'0px 0px -70% 0px',threshold:0});
+  targets.forEach(function(t){obs.observe(t);});
+  links.forEach(function(a){
+    a.addEventListener('click',function(ev){
+      var el=document.getElementById(a.getAttribute('href').slice(1));
+      if(el){ev.preventDefault();el.scrollIntoView({behavior:'smooth',block:'start'});}
     });
-  })();
+  });
+})();
 </script>
-<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
-<script>mermaid.initialize({startOnLoad:true});</script>
 </body>
 </html>

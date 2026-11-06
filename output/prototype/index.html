@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>原型 - 应用中心重构</title>
-  <link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css">
+  <link rel="stylesheet" href="lib/element-plus.css">
   <style>
     :root {
       --shell-bg: #f5f6f8;
@@ -100,6 +100,9 @@
 
     .form-page { max-width: 800px; margin: 0 auto; }
     .form-page .form-section { margin-bottom: 20px; }
+
+    /* 其他机构：已选机构只读回显区 */
+    .org-picked-readonly .el-textarea__inner { background: #f5f7fa; border-color: #e4e7ed; box-shadow: none; color: var(--shell-text); font-size: 13px; line-height: 22px; }
     
     
     
@@ -781,7 +784,8 @@
                           <el-button type="primary" plain :disabled="whitelistItems.length >= 5" @click="addWhitelistRow">新增白名单</el-button>
                           <span v-if="!whitelistItems.length" style="color:var(--shell-text-secondary,#8b95a7);font-size:13px;">暂无白名单，默认根据移动端/PC/H5 地址自动回填</span>
                         </div>
-                        <div style="font-size:12px;color:var(--shell-text-secondary,#8b95a7);margin-top:6px;">最多可配置 5 个白名单地址（含默认回填）</div>
+                        <div style="font-size:12px;color:var(--shell-text-secondary,#8b95a7);margin-top:6px;">配置的是本应用需要打开的域名地址，不配置应用无法打开</div>
+                        <div style="font-size:12px;color:var(--shell-text-secondary,#8b95a7);margin-top:4px;">最多可配置 5 个白名单地址（含默认回填）</div>
                       </div>
                     </el-form-item>
                   </div>
@@ -1209,11 +1213,14 @@
                         </el-checkbox-group>
                       </el-form-item>
                       
-                      <!-- 其他机构：模糊筛选机构下拉，最多50条，可多选 -->
+                      <!-- 其他机构：精确搜索（须输入完整机构名称），查询范围为全平台机构数据，最多分享 200 个；下方只读文本区域回显已选机构名称 -->
                       <el-form-item label="其他机构" v-if="shelfConfig.shareScope.includes('other')" style="width:50%;padding:0 8px;">
-                        <el-select v-model="shelfConfig.targetOrgs" multiple filterable remote :remote-method="onOrgRemoteSearch" :loading="orgSearching" placeholder="输入机构名称模糊搜索（最多50条，可多选）" no-match-text="无匹配机构" style="width:100%;">
-                          <el-option v-for="o in orgOptions" :key="o.value" :label="o.label" :value="o.value"></el-option>
-                        </el-select>
+                        <div style="width:100%;">
+                          <el-select v-model="shelfConfig.targetOrgs" multiple filterable remote :remote-method="onOrgRemoteSearch" :loading="orgSearching" :multiple-limit="200" placeholder="输入完整机构名称精确搜索（最多分享 200 个机构）" no-match-text="无匹配机构，请输入完整机构名称" style="width:100%;">
+                            <el-option v-for="o in orgOptions" :key="o.value" :label="o.label" :value="o.value"></el-option>
+                          </el-select>
+                          <el-input class="org-picked-readonly" type="textarea" readonly resize="none" :rows="4" :model-value="shelfConfig.targetOrgs.join('、')" placeholder="已选机构名称将在此只读显示（最多 200 个）" style="margin-top:8px;"></el-input>
+                        </div>
                       </el-form-item>
                     </template>
                   </div>
@@ -1514,7 +1521,7 @@
             <!-- ===== P11 应用审批操作页（审批模式） ===== -->
             <div v-show="currentPage === 'P11'" class="shell-workbench" v-if="currentReview">
               <el-card class="shell-block-card" shadow="never">
-                <div style="margin-bottom:16px;font-weight:600;font-size:15px;">应用信息</div>
+                <div style="margin-bottom:18px;font-weight:600;font-size:15px;">应用信息</div>
                 <div style="display:flex;gap:20px;align-items:flex-start;padding-bottom:16px;border-bottom:1px solid var(--shell-line);margin-bottom:16px;">
                   <div style="width:64px;height:64px;border-radius:12px;background:linear-gradient(135deg,#e8f0fe,#d4e4fc);display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--shell-primary);flex:0 0 auto;">A</div>
                   <div style="flex:1;">
@@ -1588,7 +1595,7 @@
             <!-- ===== 审批详情查看模式（从 P10 查看按钮进入） ===== -->
             <div v-show="currentPage === 'P11v'" class="shell-workbench" v-if="currentReview">
               <el-card class="shell-block-card" shadow="never">
-                <div style="margin-bottom:16px;font-weight:600;font-size:15px;">应用信息</div>
+                <div style="margin-bottom:18px;font-weight:600;font-size:15px;">应用信息</div>
                 <div style="display:flex;gap:20px;align-items:flex-start;padding-bottom:16px;border-bottom:1px solid var(--shell-line);margin-bottom:16px;">
                   <div style="width:64px;height:64px;border-radius:12px;background:linear-gradient(135deg,#e8f0fe,#d4e4fc);display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--shell-primary);flex:0 0 auto;">A</div>
                   <div style="flex:1;">
@@ -2966,9 +2973,9 @@
 
   </div>
 
-  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
-  <script src="https://unpkg.com/element-plus/dist/index.full.min.js"></script>
-  <script src="https://unpkg.com/@element-plus/icons-vue/dist/index.iife.min.js"></script>
+  <script src="lib/vue.global.prod.js"></script>
+  <script src="lib/element-plus.js"></script>
+  <script src="lib/element-plus-icons.js"></script>
   <script>
     const { Operation, Close, Plus } = ElementPlusIconsVue;
     const app = Vue.createApp({
@@ -4340,11 +4347,12 @@
           this.targetTenantSearching = false;
         },
         onOrgRemoteSearch(query) {
-          // 其他机构：输入机构名称模糊筛选，最多返回 50 条，结果可多选
+          // 其他机构：精确搜索，须输入完整机构名称才可检索；查询范围为全平台机构数据（不限当前机构管辖范围），结果可多选，最多 200 个
           this.orgSearching = true;
           const q = (query || '').trim().toLowerCase();
+          if (!q) { this.orgOptions = []; this.orgSearching = false; return; }
           const pool = ['南宁市第一中学', '南宁市第二中学', '南宁市第三中学', '南宁市第八中学', '柳州市高级中学', '柳州市铁一中学', '桂林市育才小学', '桂林市桂林中学', '北海市实验学校', '北海市北海中学', '梧州市第一中学', '梧州市高级中学', '钦州市第二中学', '钦州市第一中学', '贵港市江南中学', '贵港市高级中学', '玉林市第一中学', '玉林市玉林高中', '百色市右江民族中学', '百色市百色高中', '贺州市外国语学校', '贺州市贺州高中', '河池市金城江中学', '河池市河池高中', '来宾市第一中学', '来宾市来宾高中', '崇左市民族中学', '崇左市崇左高中', '南宁市青秀区教育局', '南宁市兴宁区教育局', '南宁市西乡塘区教育局', '柳州市城中区教育局', '柳州市柳北区教育局', '桂林市秀峰区教育局', '北海市海城区教育局', '梧州市万秀区教育局', '钦州市钦南区教育局', '玉林市玉州区教育局', '南宁市滨湖路小学', '南宁市民主路小学', '南宁市天桃实验学校', '柳州市景行小学', '桂林市乐群小学', '北海市海城区第一小学', '梧州市万秀区第一小学', '玉林市玉州区第一小学', '南宁市第三十七中学', '柳州市第十二中学', '桂林市第十三中学', '北海市第五中学'];
-          const filtered = pool.filter(o => o.toLowerCase().includes(q)).slice(0, 50);
+          const filtered = pool.filter(o => o.toLowerCase() === q);
           this.orgOptions = filtered.map(o => ({ label: o, value: o }));
           this.orgSearching = false;
         },
@@ -4573,6 +4581,7 @@
             }
             if (this.shelfConfig.shareScope.length === 0) { this.$message.warning('请至少选择一个分享范围'); return; }
             if (this.shelfConfig.shareScope.includes('other') && this.shelfConfig.targetOrgs.length === 0) { this.$message.warning('请选择其他机构'); return; }
+            if (this.shelfConfig.targetOrgs.length > 200) { this.$message.warning('分享机构最多 200 个，请先移除多余机构'); return; }
             const targets = [];
             if (this.shelfConfig.shareScope.includes('guide')) targets.push('桂教通平台');
             if (this.shelfConfig.shareScope.includes('other')) targets.push(...this.shelfConfig.targetOrgs);
@@ -4587,8 +4596,9 @@
           const zones = this.shelfConfig.scopeType === 'all'
             ? [isPlatform ? '全平台' : '当前机构及所有下级机构']
             : this.shelfConfig.selectedZones.slice();
-          // 分享范围（机构管理员，非必填）；勾选“其他机构”时需选择机构
+          // 分享范围（机构管理员，非必填）；勾选“其他机构”时需选择机构，最多 200 个
           if (this.shelfConfig.shareScope.includes('other') && this.shelfConfig.targetOrgs.length === 0) { this.$message.warning('请选择其他机构'); return; }
+          if (this.shelfConfig.targetOrgs.length > 200) { this.$message.warning('分享机构最多 200 个，请先移除多余机构'); return; }
           const shareLabels = [];
           if (this.shelfConfig.shareScope.includes('guide')) shareLabels.push('桂教通平台');
           if (this.shelfConfig.shareScope.includes('other')) {
