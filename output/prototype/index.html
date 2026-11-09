@@ -103,6 +103,25 @@
 
     /* 其他机构：已选机构只读回显区 */
     .org-picked-readonly .el-textarea__inner { background: #f5f7fa; border-color: #e4e7ed; box-shadow: none; color: var(--shell-text); font-size: 13px; line-height: 22px; }
+
+    /* 白名单配置：输入 + 标签列表 */
+    .wl-wrap { width: 100%; }
+    .wl-input-row { display: flex; gap: 8px; align-items: center; }
+    .wl-scheme { width: 96px; flex-shrink: 0; }
+    .wl-input { flex: 1; min-width: 0; }
+    .wl-list { margin-top: 10px; padding: 10px 12px; background: #fafcff; border: 1px solid var(--shell-line); border-radius: 6px; }
+    .wl-list-head { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--shell-text-secondary); margin-bottom: 8px; }
+    .wl-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .wl-tag { background: #fff; border-color: var(--shell-line); color: var(--shell-text); max-width: 100%; cursor: pointer; }
+    .wl-tag:hover { border-color: var(--shell-primary, #3b6ef6); color: var(--shell-primary, #3b6ef6); }
+    .wl-tag.wl-tag-auto { background: var(--shell-primary-light, #eef3ff); border-color: var(--shell-primary, #3b6ef6); color: var(--shell-primary, #3b6ef6); }
+    .wl-tag.wl-tag-editing { background: #fdf6ec; border-color: #e6a23c; color: #b88230; }
+    .wl-empty { font-size: 13px; color: var(--shell-text-secondary); }
+    .wl-tips { margin-top: 8px; font-size: 12px; line-height: 20px; color: var(--shell-text-secondary); }
+    .wl-tips b { color: var(--shell-primary); font-weight: 600; }
+
+    /* 修改审批状态提示 */
+    .edit-state-tip { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; padding: 10px 12px; border: 1px solid #faecd8; background: #fdf6ec; border-radius: 6px; font-size: 13px; line-height: 20px; color: #b88230; }
     
     
     
@@ -547,15 +566,19 @@
                     <td><span :title="app.name" style="max-width:100px;display:inline-block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ app.name }}</span></td>
                     <td>{{ app.appId }}</td>
                     <td v-if="currentRole==='platform_admin'">{{ app.appOpenId }}</td>
-                    <td>{{ app.cat }}</td>
+                    <td>
+                      <div>{{ app.cat.split('/')[0] }}</div>
+                      <div v-if="app.cat.split('/')[1]" style="font-size:12px;color:var(--shell-text-secondary);line-height:16px;">{{ app.cat.split('/')[1] }}</div>
+                    </td>
                     <td v-if="currentRole==='platform_admin'">{{ app.appTypeLabel || '—' }}</td>
                     <td>{{ app.type }}{{ app.native_type ? ' / ' + app.native_type : '' }}</td>
                     <td>{{ app.scope }}</td>
                     <td>{{ app.level }}</td>
-                    <td><el-tag size="small" :type="app.status==='online'?'success':(app.status==='rejected'?'danger':(hasPendingReview(app)?'warning':'info'))">{{ app.status==='online'?'已上线':(app.status==='rejected'?'已驳回':(hasPendingReview(app)?'待审批':'未上线')) }}</el-tag></td>
+                    <td><el-tag size="small" :type="appStatusType(app)">{{ appStatusText(app) }}</el-tag></td>
                     <td>
                       <el-button text size="small" @click="onManageApp(app)">管理</el-button>
-                      <el-button text size="small" v-if="(app.status==='offline' || app.status==='rejected') && !hasPendingReview(app)" @click="onOnlineApp(app)">上线</el-button>
+                      <el-button text size="small" v-if="app.editState==='pending_submit'" @click="onOnlineApp(app)">提交上线申请</el-button>
+                      <el-button text size="small" v-else-if="(app.status==='offline' || app.status==='rejected') && !hasPendingReview(app)" @click="onOnlineApp(app)">上线</el-button>
                       <el-button text size="small" v-if="app.status==='online' && app.listing==='unlisted'" @click="onOfflineApp(app)">下线</el-button>
                     </td>
                   </tr>
@@ -569,6 +592,9 @@
               <el-card class="shell-block-card" shadow="never">
                 <el-form style="padding:8px 0;">
                   <div style="display:flex;flex-direction:column;align-items:flex-start;width:100%;">
+                    <div v-if="editMode && currentApp && (currentApp.status==='online' || currentApp.listing==='listed')" class="edit-state-tip" style="width:100%;">
+                      当前应用已{{ currentApp.listing==='listed' ? '上架' : '上线' }}，修改后需重新提交上线申请，审批通过后修改信息才会生效；未上线应用的修改保存后直接生效，不产生审批记录。
+                    </div>
                     <el-divider content-position="left" style="font-weight:600;width:100%;">基础信息</el-divider>
                     <el-form-item label="应用 Logo" required style="width:50%;padding:0 8px;">
                       <el-upload action="#" :auto-upload="false" list-type="picture-card">
@@ -660,7 +686,8 @@
                     <el-form-item label="适用机构" required style="width:50%;padding:0 8px;">
                       <el-checkbox-group v-model="institutionScope">
                         <el-checkbox value="school">学校</el-checkbox>
-                        <el-checkbox value="superior">上级单位</el-checkbox>
+                        <el-checkbox value="education_bureau">教育局</el-checkbox>
+                        <el-checkbox value="platform_console" v-if="currentRole === 'platform_admin'">超管后台</el-checkbox>
                       </el-checkbox-group>
                     </el-form-item>
                     <el-form-item label="适用学段" required v-show="institutionScope.includes('school')" style="width:50%;padding:0 8px;">
@@ -690,44 +717,46 @@
                       <el-input v-model="lowcodeAppId" placeholder="请输入低代码应用ID" />
                     </el-form-item>
                     <el-divider content-position="left" style="font-weight:600;width:100%;">可见性配置</el-divider>
-                    <el-form-item label="移动端角色" required v-show="openWay.includes('mini_standalone')" style="width:50%;padding:0 8px;">
-                      <el-checkbox-group :model-value="['edu_staff','student','school_staff']">
+                    <el-form-item label="小程序可见身份" required v-show="openWay.includes('mini_standalone')" style="width:50%;padding:0 8px;">
+                      <el-checkbox-group v-model="visibleMini">
                         <el-checkbox value="edu_staff">教育局职工</el-checkbox>
                         <el-checkbox value="student">学生</el-checkbox>
                         <el-checkbox value="school_staff">学校教职工</el-checkbox>
                         <el-checkbox value="parent">家长</el-checkbox>
                         <el-checkbox value="graduate">毕业生</el-checkbox>
                         <el-checkbox value="retired_staff">退休教职工</el-checkbox>
-                        <el-checkbox value="tenant_admin">机构管理员</el-checkbox>
                         <el-checkbox value="temp_member">临时成员</el-checkbox>
                         <el-checkbox value="public_account">公共账号</el-checkbox>
                         <el-checkbox value="developer">开发者</el-checkbox>
+                        <el-checkbox value="guest">访客</el-checkbox>
+                        <el-checkbox v-if="currentRole === 'platform_admin'" value="platform_admin">平台管理员</el-checkbox>
                       </el-checkbox-group>
                     </el-form-item>
-                    <el-form-item label="移动端地址" required v-show="openWay.includes('mini_standalone')" style="width:50%;padding:0 8px;">
+                    <el-form-item label="小程序地址" required v-show="openWay.includes('mini_standalone')" style="width:50%;padding:0 8px;">
                       <div style="display:flex;gap:6px;width:100%;">
-                        <el-select v-model="mobileUrlScheme" style="width:100px;">
+                        <!-- <el-select v-model="mobileUrlScheme" style="width:100px;">
                           <el-option label="https" value="https"></el-option>
                           <el-option label="http" value="http"></el-option>
-                        </el-select>
+                        </el-select> -->
                         <el-input v-model="mobileUrlHost" placeholder="app.example.com/m" />
                       </div>
                     </el-form-item>
-                    <el-form-item label="微信 appid" v-show="openWay.includes('mini_standalone')" style="width:50%;padding:0 8px;">
+                    <el-form-item label="小程序ppID" v-show="openWay.includes('mini_standalone')" style="width:50%;padding:0 8px;">
                       <el-input placeholder="wx..." />
                     </el-form-item>
-                    <el-form-item label="PC 端角色" required v-show="openWay.includes('pcweb')" style="width:50%;padding:0 8px;">
-                      <el-checkbox-group :model-value="['edu_staff','student','school_staff']">
+                    <el-form-item label="PC可见身份" required v-show="openWay.includes('pcweb')" style="width:50%;padding:0 8px;">
+                      <el-checkbox-group v-model="visiblePc">
                         <el-checkbox value="edu_staff">教育局职工</el-checkbox>
                         <el-checkbox value="student">学生</el-checkbox>
                         <el-checkbox value="school_staff">学校教职工</el-checkbox>
                         <el-checkbox value="parent">家长</el-checkbox>
                         <el-checkbox value="graduate">毕业生</el-checkbox>
                         <el-checkbox value="retired_staff">退休教职工</el-checkbox>
-                        <el-checkbox value="tenant_admin">机构管理员</el-checkbox>
                         <el-checkbox value="temp_member">临时成员</el-checkbox>
                         <el-checkbox value="public_account">公共账号</el-checkbox>
                         <el-checkbox value="developer">开发者</el-checkbox>
+                        <el-checkbox value="guest">访客</el-checkbox>
+                        <el-checkbox v-if="currentRole === 'platform_admin'" value="platform_admin">平台管理员</el-checkbox>
                       </el-checkbox-group>
                     </el-form-item>
                     <el-form-item label="PC 端地址" required v-show="openWay.includes('pcweb')" style="width:50%;padding:0 8px;">
@@ -739,18 +768,19 @@
                         <el-input v-model="pcUrlHost" placeholder="app.example.com" />
                       </div>
                     </el-form-item>
-                    <el-form-item label="H5 角色" required v-show="openWay.includes('h5')" style="width:50%;padding:0 8px;">
-                      <el-checkbox-group :model-value="['edu_staff','student','school_staff']">
+                    <el-form-item label="H5可见身份" required v-show="openWay.includes('h5')" style="width:50%;padding:0 8px;">
+                      <el-checkbox-group v-model="visibleH5">
                         <el-checkbox value="edu_staff">教育局职工</el-checkbox>
                         <el-checkbox value="student">学生</el-checkbox>
                         <el-checkbox value="school_staff">学校教职工</el-checkbox>
                         <el-checkbox value="parent">家长</el-checkbox>
                         <el-checkbox value="graduate">毕业生</el-checkbox>
                         <el-checkbox value="retired_staff">退休教职工</el-checkbox>
-                        <el-checkbox value="tenant_admin">机构管理员</el-checkbox>
                         <el-checkbox value="temp_member">临时成员</el-checkbox>
                         <el-checkbox value="public_account">公共账号</el-checkbox>
                         <el-checkbox value="developer">开发者</el-checkbox>
+                        <el-checkbox value="guest">访客</el-checkbox>
+                        <el-checkbox v-if="currentRole === 'platform_admin'" value="platform_admin">平台管理员</el-checkbox>
                       </el-checkbox-group>
                     </el-form-item>
                     <el-form-item label="H5 地址" required v-show="openWay.includes('h5')" style="width:50%;padding:0 8px;">
@@ -762,30 +792,31 @@
                         <el-input v-model="h5UrlHost" placeholder="app.example.com/h5" />
                       </div>
                     </el-form-item>
-                    <!-- 白名单配置：默认回填移动端/PC/H5 地址，点击新增一条白名单输入行，最多 5 个 -->
+                    <!-- 白名单配置：输入框添加 + 标签列表展示，支持 * 通配符，最多 20 条（含默认回填） -->
                     <el-form-item label="白名单配置" style="width:50%;padding:0 8px;">
-                      <div style="width:100%;">
-                        <div v-if="whitelistAuto.length" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px;">
-                          <span style="font-size:12px;color:var(--shell-text-secondary,#8b95a7);">默认回填：</span>
-                          <el-tag v-for="(w, i) in whitelistAuto" :key="'a'+i" closable :disable-transitions="true" @close="removeWhitelistAuto(w)" style="background:var(--shell-primary-light,#eef3ff);border-color:var(--shell-primary,#3b6ef6);color:var(--shell-primary,#3b6ef6);">{{ w }}</el-tag>
-                        </div>
-                        <div v-for="(item, i) in whitelist" :key="'m'+i" style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">
-                          <el-select v-model="item.scheme" style="width:90px;flex-shrink:0;">
+                      <div class="wl-wrap">
+                        <div class="wl-input-row">
+                          <el-select v-model="whitelistInput.scheme" class="wl-scheme">
                             <el-option label="https" value="https"></el-option>
                             <el-option label="http" value="http"></el-option>
                           </el-select>
-                          <div style="flex:1;min-width:0;display:flex;gap:6px;align-items:center;">
-                            <el-input v-model="item.host" placeholder="请输入域名/地址" style="flex:1;min-width:0;" @keyup.enter="addWhitelistRow" />
-                            
+                          <el-input v-model="whitelistInput.host" class="wl-input" clearable :placeholder="editingWhitelist ? '修改后点「保存修改」' : '如 app.example.com'" @keyup.enter="addWhitelist" />
+                          <el-button type="primary" plain :disabled="!editingWhitelist && whitelistItems.length >= 20" @click="addWhitelist">{{ editingWhitelist ? '保存修改' : '添加' }}</el-button>
+                          <el-button v-if="editingWhitelist" text @click="cancelEditWhitelist">取消</el-button>
+                        </div>
+                        <div class="wl-list">
+                          <div class="wl-list-head">
+                            <span>已添加 {{ whitelistItems.length }}/20</span>
+                            <span>蓝色为默认回填；点击标签可修改</span>
                           </div>
-                          <el-button type="danger" size="small" style="flex-shrink:0;width:48px;padding:0;font-size:12px;white-space:nowrap;" @click="removeWhitelist(i)">删除</el-button>
+                          <div class="wl-tags" v-if="whitelistItems.length">
+                            <el-tag v-for="w in whitelistItems" :key="w" closable :disable-transitions="true" class="wl-tag" :class="{ 'wl-tag-auto': isAutoWhitelist(w), 'wl-tag-editing': editingWhitelist === w }" @close="removeWhitelistItem(w)" @click="editWhitelistItem(w)">{{ w }}</el-tag>
+                          </div>
+                          <div v-else class="wl-empty">暂无白名单，默认根据移动端/PC/H5 地址自动回填</div>
                         </div>
-                        <div style="display:flex;gap:8px;align-items:center;">
-                          <el-button type="primary" plain :disabled="whitelistItems.length >= 5" @click="addWhitelistRow">新增白名单</el-button>
-                          <span v-if="!whitelistItems.length" style="color:var(--shell-text-secondary,#8b95a7);font-size:13px;">暂无白名单，默认根据移动端/PC/H5 地址自动回填</span>
+                        <div class="wl-tips">
+                          <div>配置的是本应用需要打开的域名地址，不配置应用无法打开。</div>
                         </div>
-                        <div style="font-size:12px;color:var(--shell-text-secondary,#8b95a7);margin-top:6px;">配置的是本应用需要打开的域名地址，不配置应用无法打开</div>
-                        <div style="font-size:12px;color:var(--shell-text-secondary,#8b95a7);margin-top:4px;">最多可配置 5 个白名单地址（含默认回填）</div>
                       </div>
                     </el-form-item>
                   </div>
@@ -804,15 +835,21 @@
                 <div style="display:flex;gap:20px;align-items:flex-start;padding-bottom:16px;border-bottom:1px solid var(--shell-line);margin-bottom:16px;">
                   <div style="width:64px;height:64px;border-radius:12px;background:linear-gradient(135deg,#e8f0fe,#d4e4fc);display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--shell-primary);flex:0 0 auto;">{{ currentApp.logo }}</div>
                   <div style="flex:1;">
-                    <div style="font-size:16px;font-weight:700;margin-bottom:8px;">{{ currentApp.name }} · {{ currentApp.cat }}</div>
+                    <div style="font-size:16px;font-weight:700;margin-bottom:8px;">{{ currentApp.name }} · {{ currentApp.cat.split('/')[0] }}</div>
                     <div style="font-size:13px;color:var(--shell-text-secondary);margin-bottom:4px;"><b>SuiteId：</b>sys_app_7f8e3a2b</div>
                     <div style="font-size:13px;color:var(--shell-text-secondary);display:flex;align-items:center;gap:8px;"><b>SuiteKey：</b>sk_3a8f2c9e1b7d4f6a <el-button text size="small" style="color:var(--shell-primary);" @click="onCopySuiteKey">复制</el-button></div>
                   </div>
                 </div>
                 <div style="margin-bottom:12px;">
-                  <span style="font-weight:600;font-size:14px;" v-if="detailMode==='manage'">基本信息（修改的信息需要重新上架审批后生效）</span>
+                  <span style="font-weight:600;font-size:14px;" v-if="detailMode==='manage'">基本信息（修改的信息需要重新上线审批后生效）</span>
                   <span style="font-weight:600;font-size:14px;" v-if="detailMode==='online'">应用信息确认</span>
                   <el-button text size="small" style="color:var(--shell-primary);margin-left:12px;" @click="onEditApp" v-if="detailMode==='manage'">修改</el-button>
+                </div>
+                <!-- 修改审批状态提示：已上线/已上架应用的修改需重新提交上线申请，审批通过后生效 -->
+                <div v-if="detailMode==='manage' && currentApp.editState" class="edit-state-tip">
+                  <span v-if="currentApp.editState==='pending_submit'">该应用已上线，当前修改已保存为「待提交」，尚未生成审批信息。请重新提交上线申请，审批通过后修改才会生效。</span>
+                  <span v-else>修改信息正在审批中，审批通过后自动生效；审批通过前列表仍按原信息展示。</span>
+                  <el-button v-if="currentApp.editState==='pending_submit'" text type="primary" size="small" @click="onOnlineApp(currentApp)">立即提交上线申请</el-button>
                 </div>
                 <div style="display:flex;flex-direction:column;align-items:flex-start;width:100%;">
                   <el-form-item label="应用名称" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentApp.name }}</span></el-form-item>
@@ -841,19 +878,20 @@
                   <el-form-item label="推送地址" v-show="appDataSync === 'yes'" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ pushUrl || '-' }}</span></el-form-item>
                   <el-form-item label="TOKEN" v-show="appDataSync === 'yes'" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ syncToken || '-' }}</span></el-form-item>
                   <el-form-item label="EncodingAesKey" v-show="appDataSync === 'yes'" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ syncAesKey || '-' }}</span></el-form-item>
-                  <el-form-item label="移动端角色" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教育局职工、学生、学校教职工</span></el-form-item>
-                  <el-form-item label="移动端地址" style="width:50%;padding:0 8px;"><span style="line-height:32px;">https://app.example.com/m</span></el-form-item>
-                  <el-form-item label="微信 appid" style="width:50%;padding:0 8px;"><span style="line-height:32px;">wx_7f8e3a2b</span></el-form-item>
-                  <el-form-item label="PC 端角色" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教育局职工、学生、学校教职工</span></el-form-item>
+                  <el-form-item label="小程序可见身份" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教育局职工、学生、学校教职工、访客<span v-if="currentRole === 'platform_admin'">、平台管理员</span></span></el-form-item>
+                  <el-form-item label="小程序地址" style="width:50%;padding:0 8px;"><span style="line-height:32px;">https://app.example.com/m</span></el-form-item>
+                  <el-form-item label="小程序ppID" style="width:50%;padding:0 8px;"><span style="line-height:32px;">wx_7f8e3a2b</span></el-form-item>
+                  <el-form-item label="PC端可见身份" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教育局职工、学生、学校教职工、访客<span v-if="currentRole === 'platform_admin'">、平台管理员</span></span></el-form-item>
                   <el-form-item label="PC 端地址" style="width:50%;padding:0 8px;"><span style="line-height:32px;">https://app.example.com</span></el-form-item>
-                  <el-form-item label="H5 角色" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教育局职工、学生、学校教职工</span></el-form-item>
+                  <el-form-item label="H5可见身份" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教育局职工、学生、学校教职工、访客<span v-if="currentRole === 'platform_admin'">、平台管理员</span></span></el-form-item>
                   <el-form-item label="H5 地址" style="width:50%;padding:0 8px;"><span style="line-height:32px;">https://app.example.com/h5</span></el-form-item>
                   <el-form-item label="白名单" style="width:50%;padding:0 8px;">
                     <div style="display:flex;flex-wrap:wrap;gap:6px;line-height:24px;">
                       <el-tag size="small" style="background:var(--shell-primary-light,#eef3ff);border-color:var(--shell-primary,#3b6ef6);color:var(--shell-primary,#3b6ef6);">https://app.example.com/m</el-tag>
                       <el-tag size="small" style="background:var(--shell-primary-light,#eef3ff);border-color:var(--shell-primary,#3b6ef6);color:var(--shell-primary,#3b6ef6);">https://app.example.com</el-tag>
                       <el-tag size="small" style="background:var(--shell-primary-light,#eef3ff);border-color:var(--shell-primary,#3b6ef6);color:var(--shell-primary,#3b6ef6);">https://app.example.com/h5</el-tag>
-                      <span style="font-size:12px;color:var(--shell-text-secondary);">（最多 5 个）</span>
+                      <el-tag size="small" style="background:var(--shell-primary-light,#eef3ff);border-color:var(--shell-primary,#3b6ef6);color:var(--shell-primary,#3b6ef6);">https://*.example.com</el-tag>
+                      <span style="font-size:12px;color:var(--shell-text-secondary);">（最多 20 个）</span>
                     </div>
                   </el-form-item>
                 </div>
@@ -924,6 +962,9 @@
                 <div v-if="detailMode==='manage' && currentAppRejection" style="margin-top:24px;padding-top:24px;border-top:1px solid var(--shell-line);">
                   <div style="margin-bottom:16px;font-weight:600;font-size:15px;">审批信息</div>
                   <div style="display:flex;flex-direction:column;align-items:flex-start;width:100%;">
+                    <el-form-item label="申请类型" style="width:50%;padding:0 8px;">
+                      <el-tag size="small" :type="currentAppRejection.typeTag==='修改'?'warning':'primary'">{{ currentAppRejection.typeTag || '上线' }}</el-tag>
+                    </el-form-item>
                     <el-form-item label="申请时间" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentAppRejection.time || '---' }}</span></el-form-item>
                     <el-form-item label="申请人" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentAppRejection.dev || '---' }}</span></el-form-item>
                     <el-form-item label="审批人" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentAppRejection.reviewer || '---' }}</span></el-form-item>
@@ -1142,7 +1183,7 @@
                 <div style="display:flex;gap:20px;align-items:flex-start;padding-bottom:16px;border-bottom:1px solid var(--shell-line);margin-bottom:16px;">
                   <div style="width:56px;height:56px;border-radius:10px;background:linear-gradient(135deg,#e8f0fe,#d4e4fc);display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--shell-primary);flex:0 0 auto;">{{ currentApp.logo }}</div>
                   <div style="flex:1;">
-                    <div style="font-size:15px;font-weight:700;margin-bottom:6px;">{{ currentApp.name }} · {{ currentApp.cat }}</div>
+                    <div style="font-size:15px;font-weight:700;margin-bottom:6px;">{{ currentApp.name }} · {{ currentApp.cat.split('/')[0] }}</div>
                     <div style="font-size:12px;color:var(--shell-text-secondary);"><b>SuiteId：</b>sys_app_7f8e3a2b</div>
                     <div style="font-size:12px;color:var(--shell-text-secondary);"><b>SuiteKey：</b>sk_3a8f2c9e1b7d4f6a</div>
                   </div>
@@ -1537,7 +1578,7 @@
                   <el-form-item label="二级分类" style="width:50%;padding:0 8px;"><span style="line-height:32px;">课堂工具</span></el-form-item>
                   <el-form-item label="打开方式" style="width:50%;padding:0 8px;"><span style="line-height:32px;">PCweb、H5、独立小程序</span></el-form-item>
                   <el-form-item label="跳转登录限制" style="width:50%;padding:0 8px;"><span style="line-height:32px;">仅持有账号登录</span></el-form-item>
-                  <el-form-item label="适用机构" style="width:50%;padding:0 8px;"><span style="line-height:32px;">学校、上级单位</span></el-form-item>
+                  <el-form-item label="适用机构" style="width:50%;padding:0 8px;"><span style="line-height:32px;">学校、教育局、超管后台</span></el-form-item>
                   <el-form-item label="适用学段" style="width:50%;padding:0 8px;"><span style="line-height:32px;">所有学段</span></el-form-item>
                   <el-form-item label="应用详情介绍" style="width:50%;padding:0 8px;">
                     <div style="border:1px solid var(--shell-line);border-radius:6px;padding:10px 12px;width:100%;font-size:13px;background:#fafcff;">
@@ -1553,19 +1594,20 @@
                     </div>
                   </el-form-item>
                   <el-form-item label="应用属性" style="width:50%;padding:0 8px;"><span style="line-height:32px;">原生应用</span></el-form-item>
-                  <el-form-item label="移动端角色" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教育局职工、学生、学校教职工</span></el-form-item>
-                  <el-form-item label="移动端地址" style="width:50%;padding:0 8px;"><span style="line-height:32px;">https://app.example.com/m</span></el-form-item>
-                  <el-form-item label="微信 appid" style="width:50%;padding:0 8px;"><span style="line-height:32px;">wx_7f8e3a2b</span></el-form-item>
-                  <el-form-item label="PC 端角色" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教育局职工、学生、学校教职工</span></el-form-item>
+                  <el-form-item label="小程序可见身份" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教育局职工、学生、学校教职工、访客<span v-if="currentRole === 'platform_admin'">、平台管理员</span></span></el-form-item>
+                  <el-form-item label="小程序地址" style="width:50%;padding:0 8px;"><span style="line-height:32px;">https://app.example.com/m</span></el-form-item>
+                  <el-form-item label="小程序ppID" style="width:50%;padding:0 8px;"><span style="line-height:32px;">wx_7f8e3a2b</span></el-form-item>
+                  <el-form-item label="PC可见身份" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教育局职工、学生、学校教职工、访客<span v-if="currentRole === 'platform_admin'">、平台管理员</span></span></el-form-item>
                   <el-form-item label="PC 端地址" style="width:50%;padding:0 8px;"><span style="line-height:32px;">https://app.example.com</span></el-form-item>
-                  <el-form-item label="H5 角色" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教育局职工、学生、学校教职工</span></el-form-item>
+                  <el-form-item label="H5可见身份" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教育局职工、学生、学校教职工、访客<span v-if="currentRole === 'platform_admin'">、平台管理员</span></span></el-form-item>
                   <el-form-item label="H5 地址" style="width:50%;padding:0 8px;"><span style="line-height:32px;">https://app.example.com/h5</span></el-form-item>
                   <el-form-item label="白名单" style="width:50%;padding:0 8px;">
                     <div style="display:flex;flex-wrap:wrap;gap:6px;line-height:24px;">
                       <el-tag size="small" style="background:var(--shell-primary-light,#eef3ff);border-color:var(--shell-primary,#3b6ef6);color:var(--shell-primary,#3b6ef6);">https://app.example.com/m</el-tag>
                       <el-tag size="small" style="background:var(--shell-primary-light,#eef3ff);border-color:var(--shell-primary,#3b6ef6);color:var(--shell-primary,#3b6ef6);">https://app.example.com</el-tag>
                       <el-tag size="small" style="background:var(--shell-primary-light,#eef3ff);border-color:var(--shell-primary,#3b6ef6);color:var(--shell-primary,#3b6ef6);">https://app.example.com/h5</el-tag>
-                      <span style="font-size:12px;color:var(--shell-text-secondary);">（最多 5 个）</span>
+                      <el-tag size="small" style="background:var(--shell-primary-light,#eef3ff);border-color:var(--shell-primary,#3b6ef6);color:var(--shell-primary,#3b6ef6);">https://*.example.com</el-tag>
+                      <span style="font-size:12px;color:var(--shell-text-secondary);">（最多 20 个）</span>
                     </div>
                   </el-form-item>
                 </div>
@@ -1611,7 +1653,7 @@
                   <el-form-item label="二级分类" style="width:50%;padding:0 8px;"><span style="line-height:32px;">课堂工具</span></el-form-item>
                   <el-form-item label="打开方式" style="width:50%;padding:0 8px;"><span style="line-height:32px;">PCweb、H5、独立小程序</span></el-form-item>
                   <el-form-item label="跳转登录限制" style="width:50%;padding:0 8px;"><span style="line-height:32px;">仅持有账号登录</span></el-form-item>
-                  <el-form-item label="适用机构" style="width:50%;padding:0 8px;"><span style="line-height:32px;">学校、上级单位</span></el-form-item>
+                  <el-form-item label="适用机构" style="width:50%;padding:0 8px;"><span style="line-height:32px;">学校、教育局、超管后台</span></el-form-item>
                   <el-form-item label="适用学段" style="width:50%;padding:0 8px;"><span style="line-height:32px;">所有学段</span></el-form-item>
                   <el-form-item label="应用详情介绍" style="width:50%;padding:0 8px;">
                     <div style="border:1px solid var(--shell-line);border-radius:6px;padding:10px 12px;width:100%;font-size:13px;background:#fafcff;">
@@ -1627,19 +1669,20 @@
                     </div>
                   </el-form-item>
                   <el-form-item label="应用属性" style="width:50%;padding:0 8px;"><span style="line-height:32px;">原生应用</span></el-form-item>
-                  <el-form-item label="移动端角色" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教育局职工、学生、学校教职工</span></el-form-item>
-                  <el-form-item label="移动端地址" style="width:50%;padding:0 8px;"><span style="line-height:32px;">https://app.example.com/m</span></el-form-item>
-                  <el-form-item label="微信 appid" style="width:50%;padding:0 8px;"><span style="line-height:32px;">wx_7f8e3a2b</span></el-form-item>
-                  <el-form-item label="PC 端角色" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教育局职工、学生、学校教职工</span></el-form-item>
+                  <el-form-item label="小程序可见身份" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教育局职工、学生、学校教职工、访客<span v-if="currentRole === 'platform_admin'">、平台管理员</span></span></el-form-item>
+                  <el-form-item label="小程序地址" style="width:50%;padding:0 8px;"><span style="line-height:32px;">https://app.example.com/m</span></el-form-item>
+                  <el-form-item label="小程序ppID" style="width:50%;padding:0 8px;"><span style="line-height:32px;">wx_7f8e3a2b</span></el-form-item>
+                  <el-form-item label="PC可见身份" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教育局职工、学生、学校教职工、访客<span v-if="currentRole === 'platform_admin'">、平台管理员</span></span></el-form-item>
                   <el-form-item label="PC 端地址" style="width:50%;padding:0 8px;"><span style="line-height:32px;">https://app.example.com</span></el-form-item>
-                  <el-form-item label="H5 角色" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教育局职工、学生、学校教职工</span></el-form-item>
+                  <el-form-item label="H5可见身份" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教育局职工、学生、学校教职工、访客<span v-if="currentRole === 'platform_admin'">、平台管理员</span></span></el-form-item>
                   <el-form-item label="H5 地址" style="width:50%;padding:0 8px;"><span style="line-height:32px;">https://app.example.com/h5</span></el-form-item>
                   <el-form-item label="白名单" style="width:50%;padding:0 8px;">
                     <div style="display:flex;flex-wrap:wrap;gap:6px;line-height:24px;">
                       <el-tag size="small" style="background:var(--shell-primary-light,#eef3ff);border-color:var(--shell-primary,#3b6ef6);color:var(--shell-primary,#3b6ef6);">https://app.example.com/m</el-tag>
                       <el-tag size="small" style="background:var(--shell-primary-light,#eef3ff);border-color:var(--shell-primary,#3b6ef6);color:var(--shell-primary,#3b6ef6);">https://app.example.com</el-tag>
                       <el-tag size="small" style="background:var(--shell-primary-light,#eef3ff);border-color:var(--shell-primary,#3b6ef6);color:var(--shell-primary,#3b6ef6);">https://app.example.com/h5</el-tag>
-                      <span style="font-size:12px;color:var(--shell-text-secondary);">（最多 5 个）</span>
+                      <el-tag size="small" style="background:var(--shell-primary-light,#eef3ff);border-color:var(--shell-primary,#3b6ef6);color:var(--shell-primary,#3b6ef6);">https://*.example.com</el-tag>
+                      <span style="font-size:12px;color:var(--shell-text-secondary);">（最多 20 个）</span>
                     </div>
                   </el-form-item>
                 </div>
@@ -2993,6 +3036,10 @@
           syncAesKey: '',
 
           openWay: ['pcweb','h5'],
+          // 可见身份：小程序 / PC / H5 各自独立（访客固定可选；平台管理员仅桂教通超级管理员登录时展示）
+          visibleMini: ['edu_staff','student','school_staff'],
+          visiblePc: ['edu_staff','student','school_staff'],
+          visibleH5: ['edu_staff','student','school_staff'],
           mobileUrlScheme: 'https',
           mobileUrlHost: '',
           pcUrlScheme: 'https',
@@ -3001,6 +3048,10 @@
           h5UrlHost: '',
           whitelist: [],
           whitelistRemoved: [],
+          // 白名单输入区：前缀 + 地址（支持 * 通配符）
+          whitelistInput: { scheme: 'https', host: '' },
+          // 正在修改的白名单项（完整地址），null 表示新增
+          editingWhitelist: null,
           appAttrOptions: [
             { value:'native', label:'原生应用', children:[{value:'lowcode',label:'低代码应用'},{value:'selfbuilt',label:'自建应用'}] },
             { value:'ecosystem', label:'生态应用' },
@@ -3229,17 +3280,17 @@
           dialogTitle: '',
           dialogType: '',
           appList: [
-            { id:1, appId:1001, lowcodeAppId:'lc_ketang_app01', appOpenId:'lc_ketang_app01', name:'课堂互动助手', cat:'教学管理/课堂工具', appTypeLabel:'平台型', type:'原生应用', native_type:'低代码应用', scope:'学校', level:'所有学段', source:'本机构', status:'offline', listing:'unlisted', logo:'课' },
-            { id:2, appId:1002, appOpenId:'eco_xiaoyuan012', name:'校园通', cat:'校园办公', appTypeLabel:'非平台型', type:'生态应用', scope:'学校、上级单位', level:'所有学段', source:'本机构', status:'online', listing:'listed', logo:'校' },
-            { id:3, appId:1003, appOpenId:'sb_yyting_train', name:'英语听说训练', cat:'教学管理', appTypeLabel:'非平台型', type:'原生应用', native_type:'自建应用', scope:'学校', level:'初中、高中', source:'本机构', status:'offline', listing:'unlisted', logo:'英' },
-            { id:4, appId:1004, appOpenId:'eco_tushuguan01', name:'图书管理', cat:'教务管理', appTypeLabel:'非平台型', type:'生态应用', scope:'学校', level:'所有学段', source:'本机构', status:'offline', listing:'unlisted', logo:'图' },
-            { id:5, appId:1005, lowcodeAppId:'lc_paike_app053', appOpenId:'lc_paike_app053', name:'排课系统', cat:'教学管理', appTypeLabel:'平台型', type:'原生应用', native_type:'低代码应用', scope:'学校', level:'小学、初中', source:'本机构', status:'online', listing:'unlisted', logo:'排' },
-            { id:6, appId:1006, appOpenId:'sb_chengji_ana1', name:'成绩分析', cat:'教务管理', appTypeLabel:'非平台型', type:'原生应用', native_type:'自建应用', scope:'学校、上级单位', level:'初中、高中', source:'本机构', status:'online', listing:'listed', logo:'成' },
-            { id:7, appId:1007, appOpenId:'eco_xiaoyuanOA0', name:'校园OA', cat:'校园办公', appTypeLabel:'非平台型', type:'生态应用', scope:'学校', level:'所有学段', source:'本机构', status:'offline', listing:'unlisted', logo:'OA' },
-            { id:8, appId:1008, appOpenId:'sb_jiaxiao_hud1', name:'家校互动', cat:'校园办公', appTypeLabel:'非平台型', type:'原生应用', native_type:'自建应用', scope:'学校', level:'小学、初中', source:'本机构', status:'online', listing:'unlisted', logo:'家' },
-            { id:9, appId:1009, appOpenId:'sb_kaoshi_gl01', name:'考试管理', cat:'教务管理', appTypeLabel:'非平台型', type:'原生应用', native_type:'自建应用', scope:'学校、上级单位', level:'初中、高中', source:'本机构', status:'offline', listing:'dismissed', logo:'考' },
-            { id:11, appId:1011, appOpenId:'eco_xuanke_app1', name:'选课系统', cat:'教务管理', appTypeLabel:'非平台型', type:'生态应用', scope:'学校', level:'高中', source:'本机构', status:'rejected', listing:'unlisted', logo:'选' },
-            { id:10, appId:1010, appOpenId:'sb_dianzibanpa1', name:'电子班牌', cat:'教学管理', appTypeLabel:'平台型', type:'原生应用', native_type:'自建应用', scope:'学校', level:'所有学段', source:'本机构', status:'online', listing:'listed', logo:'电' },
+            { id:1, appId:1001, lowcodeAppId:'lc_ketang_app01', appOpenId:'lc_ketang_app01', name:'课堂互动助手', cat:'教学管理/课堂工具', appTypeLabel:'平台型', type:'原生应用', native_type:'低代码应用', scope:'学校', level:'所有学段', source:'本机构', status:'offline', listing:'unlisted', logo:'课', jumpLoginLimit:'account_only' },
+            { id:2, appId:1002, appOpenId:'eco_xiaoyuan012', name:'校园通', cat:'校园办公/家校互动', appTypeLabel:'非平台型', type:'生态应用', scope:'学校、教育局', level:'所有学段', source:'本机构', status:'online', listing:'listed', logo:'校', jumpLoginLimit:'account_only' },
+            { id:3, appId:1003, appOpenId:'sb_yyting_train', name:'英语听说训练', cat:'教学管理/课堂工具', appTypeLabel:'非平台型', type:'原生应用', native_type:'自建应用', scope:'学校', level:'初中、高中', source:'本机构', status:'offline', listing:'unlisted', logo:'英', jumpLoginLimit:'register_or_login' },
+            { id:4, appId:1004, appOpenId:'eco_tushuguan01', name:'图书管理', cat:'教学管理/作业管理', appTypeLabel:'非平台型', type:'生态应用', scope:'学校', level:'所有学段', source:'本机构', status:'offline', listing:'unlisted', logo:'图', jumpLoginLimit:'account_only' },
+            { id:5, appId:1005, lowcodeAppId:'lc_paike_app053', appOpenId:'lc_paike_app053', name:'排课系统', cat:'排课管理/课表查询', appTypeLabel:'平台型', type:'原生应用', native_type:'低代码应用', scope:'学校', level:'小学、初中', source:'本机构', status:'online', listing:'unlisted', logo:'排', jumpLoginLimit:'account_only' },
+            { id:6, appId:1006, appOpenId:'sb_chengji_ana1', name:'成绩分析', cat:'教学管理/作业管理', appTypeLabel:'非平台型', type:'原生应用', native_type:'自建应用', scope:'学校、教育局', level:'初中、高中', source:'本机构', status:'online', listing:'listed', logo:'成', jumpLoginLimit:'account_only' },
+            { id:7, appId:1007, appOpenId:'eco_xiaoyuanOA0', name:'校园OA', cat:'校园办公/通知公告', appTypeLabel:'非平台型', type:'生态应用', scope:'学校', level:'所有学段', source:'本机构', status:'offline', listing:'unlisted', logo:'OA', jumpLoginLimit:'account_only' },
+            { id:8, appId:1008, appOpenId:'sb_jiaxiao_hud1', name:'家校互动', cat:'校园办公/家校互动', appTypeLabel:'非平台型', type:'原生应用', native_type:'自建应用', scope:'学校', level:'小学、初中', source:'本机构', status:'online', listing:'unlisted', logo:'家', jumpLoginLimit:'none' },
+            { id:9, appId:1009, appOpenId:'sb_kaoshi_gl01', name:'考试管理', cat:'教学管理/作业管理', appTypeLabel:'非平台型', type:'原生应用', native_type:'自建应用', scope:'学校、教育局', level:'初中、高中', source:'本机构', status:'offline', listing:'dismissed', logo:'考', jumpLoginLimit:'account_only' },
+            { id:11, appId:1011, appOpenId:'eco_xuanke_app1', name:'选课系统', cat:'排课管理/课表查询', appTypeLabel:'非平台型', type:'生态应用', scope:'学校', level:'高中', source:'本机构', status:'rejected', listing:'unlisted', logo:'选', jumpLoginLimit:'account_only' },
+            { id:10, appId:1010, appOpenId:'sb_dianzibanpa1', name:'电子班牌', cat:'校园办公/通知公告', appTypeLabel:'平台型', type:'原生应用', native_type:'自建应用', scope:'学校', level:'所有学段', source:'本机构', status:'online', listing:'listed', logo:'电', jumpLoginLimit:'none' },
           ],
           shelfList: [
             { initial:'课', name:'课堂互动助手', cat:'教学管理', dev:'南宁市教育局', zoneList:['南宁市教育局'], time:'2026-07-10', status:'unlisted', source:'南宁市教育局', type:'原生应用', native_type:'低代码应用', appTypeLabel:'平台型' },
@@ -3271,11 +3322,11 @@
           platformAppList: [
             { logo:'校', name:'校园通',       appId:'2001', appOpenId:'eco_xiaoyuantong', tenantName:'南宁市教育局',   cat:'校园办公', appTypeLabel:'非平台型', type:'生态应用', native_type:'',           scope:'学校',        level:'所有学段' },
             { logo:'排', name:'排课系统',     appId:'2002', appOpenId:'lc_paike00000001',  tenantName:'南宁市教育局',   cat:'教学管理', appTypeLabel:'平台型',   type:'原生应用', native_type:'低代码应用', scope:'学校',        level:'高中' },
-            { logo:'成', name:'成绩分析',     appId:'2003', appOpenId:'sb_chengji_ana001', tenantName:'柳州市教育局',   cat:'教务管理', appTypeLabel:'非平台型', type:'原生应用', native_type:'自建应用',   scope:'学校、上级单位', level:'初中、高中' },
+            { logo:'成', name:'成绩分析',     appId:'2003', appOpenId:'sb_chengji_ana001', tenantName:'柳州市教育局',   cat:'教务管理', appTypeLabel:'非平台型', type:'原生应用', native_type:'自建应用',   scope:'学校、教育局', level:'初中、高中' },
             { logo:'选', name:'选课系统',     appId:'2004', appOpenId:'eco_xuanke_sys002', tenantName:'自治区教育厅',   cat:'教务管理', appTypeLabel:'非平台型', type:'生态应用', native_type:'',           scope:'学校',        level:'高中' },
             { logo:'电', name:'电子班牌',     appId:'2005', appOpenId:'sb_dianzibanpai01', tenantName:'桂林市教育局',   cat:'教学管理', appTypeLabel:'平台型',   type:'原生应用', native_type:'自建应用',   scope:'学校',        level:'所有学段' },
             { logo:'课', name:'课堂互动助手', appId:'2006', appOpenId:'lc_ketang_helper01', tenantName:'南宁市教育局',   cat:'教学管理', appTypeLabel:'平台型',   type:'原生应用', native_type:'低代码应用', scope:'学校',        level:'小学、初中' },
-            { logo:'图', name:'图书管理',     appId:'2007', appOpenId:'eco_tushu_manage01', tenantName:'北海市教育局',   cat:'教务管理', appTypeLabel:'非平台型', type:'生态应用', native_type:'',           scope:'学校、上级单位', level:'所有学段' },
+            { logo:'图', name:'图书管理',     appId:'2007', appOpenId:'eco_tushu_manage01', tenantName:'北海市教育局',   cat:'教务管理', appTypeLabel:'非平台型', type:'生态应用', native_type:'',           scope:'学校、教育局', level:'所有学段' },
           ],
           pendingReviews: [
             { id:'APP-001', name:'图书管理', type:'生态应用', native_type:'', org:'北海市教育局', dev:'李芳', time:'2026-07-16 09:30', logo:'图', cat:'教务管理', attr:'非平台型', typeTag:'上线' },
@@ -3518,11 +3569,13 @@
         },
         currentApp() { return this.appList.find(a => a.id === this.editAppId) || null; },
         currentAppRejection() {
-          // 应用上线被驳回时，返回最近一条驳回的上线审批记录，供 P02b 管理模式下方展示审批信息
+          // 上线申请被驳回，或修改审批被驳回时，返回最近一条被驳回的审批记录，供 P02b 管理模式展示审批信息
           const a = this.currentApp;
-          if (!a || a.status !== 'rejected') return null;
+          if (!a) return null;
           const rid = 'APP-' + (a.appId || 1000);
-          return this.doneReviews.find(r => r.id === rid && r.result === '驳回') || null;
+          if (a.status === 'rejected') return this.doneReviews.find(r => r.id === rid && r.result === '驳回') || null;
+          if (a.modifyRejected) return this.doneReviews.find(r => r.id === rid && r.result === '驳回' && r.typeTag === '修改') || null;
+          return null;
         },
         currentAppIsLowcode() { return !!this.currentApp && this.currentApp.native_type === '低代码应用'; },
         whitelistAuto() {
@@ -3534,9 +3587,9 @@
           return auto.filter(w => !this.whitelistRemoved.includes(w));
         },
         whitelistItems() {
-          // 默认回填 + 手动添加行（前缀+host 拼接、去空），去重、最多 5 个
+          // 默认回填 + 手动添加（前缀+host 拼接、去空），去重、最多 20 条
           const manual = this.whitelist.filter(x => x.host && x.host.trim()).map(x => x.scheme + '://' + x.host.trim());
-          return [...new Set([...this.whitelistAuto, ...manual])].slice(0, 5);
+          return [...new Set([...this.whitelistAuto, ...manual])].slice(0, 20);
         },
         currentRoleLabel() { return this.currentRole === 'platform_admin' ? '桂教通超级管理员' : '机构管理员'; },
         filteredOrgList() {
@@ -3967,6 +4020,9 @@
           this.syncToken = '';
           this.syncAesKey = '';
           this.openWay = ['pcweb','h5'];
+          this.visibleMini = ['edu_staff','student','school_staff'];
+          this.visiblePc = ['edu_staff','student','school_staff'];
+          this.visibleH5 = ['edu_staff','student','school_staff'];
           this.appAttr = ['native','selfbuilt'];
           this.lowcodeAppId = '';
           this.institutionScope = ['school'];
@@ -4001,21 +4057,80 @@
           this.syncToken = '';
           this.syncAesKey = '';
           this.openWay = ['pcweb','h5'];
+          this.visibleMini = ['edu_staff','student','school_staff'];
+          this.visiblePc = ['edu_staff','student','school_staff'];
+          this.visibleH5 = ['edu_staff','student','school_staff'];
           this.whitelist = [];
           this.whitelistRemoved = [];
+          this.editingWhitelist = null;
+          this.whitelistInput = { scheme: 'https', host: '' };
           this.appAttr = a && a.type === '原生应用' ? ['native','selfbuilt'] : (a ? ['ecosystem'] : ['native','selfbuilt']);
           this.lowcodeAppId = a && a.lowcodeAppId ? a.lowcodeAppId : '';
-          this.institutionScope = a && a.scope && a.scope.includes('学校') ? ['school'] : (a && a.scope ? [] : ['school']);
+          const scopeMap = { '学校':'school', '教育局':'education_bureau', '超管后台':'platform_console' };
+          this.institutionScope = a && a.scope
+            ? a.scope.split('、').map(s => scopeMap[s.trim()]).filter(Boolean)
+            : ['school'];
           this.schoolLevelsMode = a && a.level && a.level !== '所有学段' ? 'partial' : 'all';
           this.schoolLevels = a && a.level && a.level !== '所有学段' ? a.level.split('/') : [];
           this.goPage('P02');
         },
-        addWhitelistRow() {
-          if (this.whitelistItems.length >= 5) { this.$message.warning('白名单最多 5 个'); return; }
-          this.whitelist.push({ scheme: 'https', host: '' });
+        isValidWhitelistHost(host) {
+          // 域名/地址校验：允许 * 通配符（每条最多一个），支持仅一个 *（匹配全部地址），不允许空格与中文
+          if (!host) return false;
+          if (host === '*') return true;
+          const starCount = (host.match(/\*/g) || []).length;
+          if (starCount > 1) return false;
+          if (/\s/.test(host)) return false;
+          if (!/[A-Za-z0-9]/.test(host)) return false;
+          const probe = host.replace(/\*/g, 'wildcard');
+          return /^[A-Za-z0-9._~:/?#[\]@!$&'()+,;=%-]+$/.test(probe);
         },
-        removeWhitelist(i) {
-          this.whitelist.splice(i, 1);
+        addWhitelist() {
+          const host = (this.whitelistInput.host || '').trim();
+          if (!host) { this.$message.warning('请输入域名/地址'); return; }
+          if (!this.isValidWhitelistHost(host)) { this.$message.warning('地址格式不正确，支持 * 通配符，如 * 或 *.example.com'); return; }
+          const full = this.whitelistInput.scheme + '://' + host;
+          const others = this.whitelistItems.filter(w => w !== this.editingWhitelist);
+          if (others.includes(full)) { this.$message.warning('该白名单地址已存在'); return; }
+          if (!this.editingWhitelist && this.whitelistItems.length >= 20) { this.$message.warning('白名单最多 20 条（含默认回填）'); return; }
+          if (this.editingWhitelist) {
+            const idx = this.whitelist.findIndex(x => x.host && x.host.trim() && (x.scheme + '://' + x.host.trim()) === this.editingWhitelist);
+            if (idx > -1) {
+              this.whitelist.splice(idx, 1, { scheme: this.whitelistInput.scheme, host });
+            } else {
+              // 默认回填项被修改：压制原回填，转为手动项
+              this.removeWhitelistAuto(this.editingWhitelist);
+              this.whitelist.push({ scheme: this.whitelistInput.scheme, host });
+            }
+            this.editingWhitelist = null;
+            this.whitelistInput.host = '';
+            this.$message.success('白名单已修改');
+            return;
+          }
+          this.whitelist.push({ scheme: this.whitelistInput.scheme, host });
+          this.whitelistInput.host = '';
+        },
+        editWhitelistItem(w) {
+          const seg = w.split('://');
+          const hasScheme = seg.length > 1;
+          this.whitelistInput = {
+            scheme: hasScheme && seg[0] === 'http' ? 'http' : 'https',
+            host: hasScheme ? seg.slice(1).join('://') : w,
+          };
+          this.editingWhitelist = w;
+        },
+        cancelEditWhitelist() {
+          this.editingWhitelist = null;
+          this.whitelistInput.host = '';
+        },
+        isAutoWhitelist(w) {
+          return this.whitelistAuto.includes(w);
+        },
+        removeWhitelistItem(w) {
+          const idx = this.whitelist.findIndex(x => x.host && x.host.trim() && (x.scheme + '://' + x.host.trim()) === w);
+          if (idx > -1) this.whitelist.splice(idx, 1);
+          if (this.whitelistAuto.includes(w)) this.removeWhitelistAuto(w);
+          if (this.editingWhitelist === w) this.cancelEditWhitelist();
         },
         removeWhitelistAuto(w) {
           if (!this.whitelistRemoved.includes(w)) this.whitelistRemoved.push(w);
@@ -4092,25 +4207,47 @@
           }
           const finalAppType = this.currentRole === 'tenant_admin' ? 'non_platform' : this.appType;
           const label = finalAppType === 'platform' ? '平台型' : '非平台型';
+          const submittingOnline = this.detailMode === 'online';
+          let saveTip = '';
           if (this.editAppId) {
             const t = this.appList.find(x => x.id === this.editAppId);
             if (t) {
-              t.appTypeLabel = label;
-              t.lowcodeAppId = this.lowcodeAppId;
-              t.jumpLoginLimit = this.appJumpLoginLimit;
-              // 机构管理员提交上线申请：生成审批记录，由桂教通超级管理员审批
-              if (this.currentRole === 'tenant_admin') {
-                // 已驳回的应用重新提交上线申请：回到未上线（列表展示待审批）
+              // 已上线（online）或已上架（listed）的应用，修改需重新提交上线申请，审批通过后才生效
+              const needReReview = (t.status === 'online' || t.listing === 'listed');
+              if (!submittingOnline) {
+                // 编辑保存：此步不生成审批信息
+                if (this.currentRole === 'tenant_admin' && needReReview) {
+                  // 暂存修改内容，等待用户重新提交上线申请
+                  t.pendingEdit = { appTypeLabel: label, lowcodeAppId: this.lowcodeAppId, jumpLoginLimit: this.appJumpLoginLimit };
+                  // 审批中再次修改：保持「修改待审批」，避免已有待审批记录与状态不一致
+                  if (t.editState !== 'pending_review') t.editState = 'pending_submit';
+                  saveTip = t.editState === 'pending_review' ? '修改已更新，审批通过后生效' : '修改已保存为待提交，请重新提交上线申请，审批通过后生效';
+                } else {
+                  // 未上线应用：修改直接生效，不生成审批流程
+                  t.appTypeLabel = label;
+                  t.lowcodeAppId = this.lowcodeAppId;
+                  t.jumpLoginLimit = this.appJumpLoginLimit;
+                  t.editState = '';
+                  t.pendingEdit = null;
+                  saveTip = '保存成功';
+                }
+              } else if (this.currentRole === 'tenant_admin') {
+                // 提交上线申请：此时才生成审批记录，由桂教通超级管理员审批
                 if (t.status === 'rejected') t.status = 'offline';
+                const hasPendingChange = t.editState === 'pending_submit' && !!t.pendingEdit;
                 const rid = 'APP-' + (t.appId || 1000);
                 const exist = this.pendingReviews.find(r => r.id === rid);
                 const rec = {
                   id: rid, name: t.name, type: t.type || '原生应用', org: '南宁市教育局', dev: '管理员',
                   time: this.nowTime(), cat: t.cat || '教务管理', zone: '—', source: '本机构',
-                  native_type: t.native_type || '自建应用', attr: label, typeTag: '上线'
+                  native_type: t.native_type || '自建应用', attr: label, typeTag: hasPendingChange ? '修改' : '上线'
                 };
                 if (exist) Object.assign(exist, rec);
                 else this.pendingReviews.unshift(rec);
+                if (hasPendingChange) t.editState = 'pending_review';
+                saveTip = hasPendingChange ? '上线申请已提交，修改信息待审批通过后生效' : '上线申请已提交，待桂教通超级管理员审批';
+              } else {
+                saveTip = '上线申请已提交';
               }
             }
           } else {
@@ -4122,10 +4259,8 @@
           }
           if (!this.editAppId) {
             this.$message.success('应用创建成功');
-          } else if (this.currentRole === 'tenant_admin') {
-            this.$message.success(this.editMode ? '提交成功，需重新上架审批后生效' : '上线申请已提交，待桂教通超级管理员审批');
           } else {
-            this.$message.success(this.editMode ? '提交成功，需重新上架审批后生效' : '上线申请已提交');
+            this.$message.success(saveTip || '保存成功');
           }
           this.goPage('P01');
         },
@@ -4541,6 +4676,22 @@
           const rid = 'APP-' + (app.appId || 1000);
           return this.pendingReviews.some(r => r.id === rid);
         },
+        appStatusText(app) {
+          if (!app) return '未上线';
+          if (app.editState === 'pending_submit') return '修改待提交';
+          if (app.editState === 'pending_review') return '修改待审批';
+          if (app.status === 'online') return '已上线';
+          if (app.status === 'rejected') return '已驳回';
+          return this.hasPendingReview(app) ? '待审批' : '未上线';
+        },
+        appStatusType(app) {
+          if (!app) return 'info';
+          if (app.editState === 'pending_submit') return 'info';
+          if (app.editState === 'pending_review') return 'warning';
+          if (app.status === 'online') return 'success';
+          if (app.status === 'rejected') return 'danger';
+          return this.hasPendingReview(app) ? 'warning' : 'info';
+        },
         today() {
           const d = new Date();
           const p = n => (n < 10 ? '0' : '') + n;
@@ -4671,29 +4822,41 @@
           r.reviewComment = this.reviewComment || '';
           this.doneReviews.unshift(r);
           if (this.reviewResult==='approve') {
-            // 审批通过：应用状态变为已上线，并进入机构管理员的应用上架列表（未上架）
             const appIdNum = parseInt(String(r.id || '').replace('APP-', ''), 10);
-            if (!isNaN(appIdNum)) {
-              const t = this.appList.find(x => x.appId === appIdNum);
+            const t = !isNaN(appIdNum) ? this.appList.find(x => x.appId === appIdNum) : null;
+            if (t && t.editState === 'pending_review' && t.pendingEdit) {
+              // 修改审批通过：修改内容此时才生效，应用保持原有上线/上架状态，不重复进入上架列表
+              Object.assign(t, t.pendingEdit);
+              t.pendingEdit = null;
+              t.editState = '';
+              t.modifyRejected = false;
+              this.$message.success('审批通过，应用修改已生效');
+            } else {
+              // 上线审批通过：应用状态变为已上线，并进入机构管理员的应用上架列表（未上架）
               if (t) { t.status = 'online'; t.listing = t.listing || 'unlisted'; }
+              const name = r.name || '新应用';
+              const cat = r.cat || '教务管理';
+              const dev = r.dev || '南宁市教育局';
+              this.shelfList.unshift({
+                initial: name.slice(0, 1), name, cat, dev, zone: '—', time: this.nowTime(),
+                status: 'unlisted', source: dev, type: '原生应用',
+                native_type: r.native_type || '自建应用', appTypeLabel: r.appTypeLabel || '非平台型'
+              });
+              this.$message.success('审批通过，应用已进入机构管理员上架列表（未上架）');
             }
-            const name = r.name || '新应用';
-            const cat = r.cat || '教务管理';
-            const dev = r.dev || '南宁市教育局';
-            this.shelfList.unshift({
-              initial: name.slice(0, 1), name, cat, dev, zone: '—', time: this.nowTime(),
-              status: 'unlisted', source: dev, type: '原生应用',
-              native_type: r.native_type || '自建应用', appTypeLabel: r.appTypeLabel || '非平台型'
-            });
-            this.$message.success('审批通过，应用已进入机构管理员上架列表（未上架）');
           } else {
-            // 审批驳回：应用上线状态改为已驳回，机构管理员可在 P02b 管理模式查看审批信息
             const appIdNum = parseInt(String(r.id || '').replace('APP-', ''), 10);
-            if (!isNaN(appIdNum)) {
-              const t = this.appList.find(x => x.appId === appIdNum);
-              if (t) t.status = 'rejected';
+            const t = !isNaN(appIdNum) ? this.appList.find(x => x.appId === appIdNum) : null;
+            if (t && t.editState === 'pending_review') {
+              // 修改驳回：修改内容不生效，保留待提交内容，便于修改后重新提交上线申请
+              t.editState = 'pending_submit';
+              t.modifyRejected = true;
+              this.$message.success('已驳回，修改内容未生效，可调整后重新提交上线申请');
+            } else if (t) {
+              // 上线驳回：应用上线状态改为已驳回，机构管理员可在 P02b 管理模式查看审批信息
+              t.status = 'rejected';
+              this.$message.success('已驳回，应用上线状态为已驳回');
             }
-            this.$message.success('已驳回，应用上线状态为已驳回');
           }
           this.goPage('P10');
         },

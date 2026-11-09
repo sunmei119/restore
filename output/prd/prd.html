@@ -36,10 +36,30 @@
   p code,li code,td code,th code{background:#eef1f6;color:#d6336c;padding:1px 5px;border-radius:4px;font-size:12.5px}
   hr{border:none;border-top:1px solid var(--line);margin:24px 0}
   a{color:var(--primary)}
+  .flowchart{margin:16px 0 22px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fbfcfe;overflow-x:auto}
+  .flowchart svg{display:block;width:100%;min-width:660px;height:auto}
+  .fc-node{fill:#fff;stroke:#c8d5f0;stroke-width:1.2}
+  .fc-node-ok{fill:#f0f9eb;stroke:#bfdfa8}
+  .fc-node-warn{fill:#fdf6ec;stroke:#f0d3a4}
+  .fc-node-bad{fill:#fef0f0;stroke:#f5c2c2}
+  .fc-node-key{fill:#eef3ff;stroke:#a9c0ee;stroke-width:1.5}
+  .fc-term{fill:#f1f3f7;stroke:#c4ccd9;stroke-width:1.2}
+  .fc-decision{fill:#eef4ff;stroke:#8fa9d8;stroke-width:1.4}
+  .fc-edge{fill:none;stroke:#9aa6bd;stroke-width:1.4}
+  .fc-edge-ok{stroke:#84c163}
+  .fc-edge-bad{stroke:#de8c8c}
+  .fc-text{font-size:13px;fill:#1f2329;text-anchor:middle;dominant-baseline:middle}
+  .fc-text-s{font-size:11.5px;fill:#6b7793;text-anchor:middle;dominant-baseline:middle}
+  .fc-label{font-size:11.5px;fill:#6b7793}
   @media(max-width:900px){.toc{display:none}.content{padding:16px}.content-inner{padding:24px 18px}}
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <marker id="fc-arw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#9aa6bd"/></marker>
+  <marker id="fc-arw-ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#84c163"/></marker>
+  <marker id="fc-arw-bad" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#de8c8c"/></marker>
+</defs></svg>
 <div class="layout">
   <nav class="toc">
     <div class="toc-title">目录</div>
@@ -60,14 +80,189 @@
 <ul><li>实体商品购物车功能（从原商城页面移除）</li><li>商城支付流程改造（保持商城现有支付流程不变）</li><li>库存管理、对账结算</li></ul>
 <h2 id="h-6">三、业务流程</h2>
 <h3 id="h-7">3.1 应用上线申请审批流程</h3>
-<p>此处管理员指的是桂教通超级管理员，只有桂教通超级管理员具有审批权限。机构管理员新增应用、上线申请、桂教通超级管理员审批、结果归档三个阶段。</p>
-<ol><li>机构管理员在应用申请管理页对已创建但未上线（app.status = offline）的应用提交上线申请。提交前确认应用基本信息完整，提交后系统生成一条审批记录（review.status = pending）。此时应用不可编辑基本信息。</li><li>桂教通超级管理员在审批列表的"待审批"Tab 中看到该记录，查看应用详情后选择"通过"或"驳回"。通过后 app.status 变为 online，应用进入机构管理员的应用上架管理列表（P04），状态为未上架（listing_status = unlisted）；驳回时需填写驳回原因，review.status 变为 rejected，app.status 变为 rejected（已驳回）。</li><li>审批通过后应用可进入上架流程。审批驳回后回到上线申请人，修改后可重新提交上线申请（重新提交时 app.status 回到 offline、列表展示待审批）。审批记录永久保留。</li></ol>
+<p>此处管理员指的是桂教通超级管理员，只有桂教通超级管理员具有审批权限。机构管理员新增应用、修改应用、上线申请、桂教通超级管理员审批、结果归档五个环节。应用未上线时修改直接生效、不产生审批流程；已上线或已上架应用的修改需重新提交上线申请，审批通过后才生效。</p>
+<div class="flowchart">
+<svg viewBox="0 0 900 700" role="img" aria-label="应用上线申请审批流程图">
+  <rect class="fc-term" x="300" y="10" width="300" height="42" rx="21"/>
+  <text class="fc-text" x="450" y="31">机构管理员：新增 / 编辑应用</text>
+  <path class="fc-edge" d="M450 52 V72" marker-end="url(#fc-arw)"/>
+
+  <polygon class="fc-decision" points="450,76 578,118 450,160 322,118"/>
+  <text class="fc-text" x="450" y="112">应用当前状态</text>
+  <text class="fc-text-s" x="450" y="130">offline / online / listed</text>
+
+  <path class="fc-edge" d="M322 118 H170 V178" marker-end="url(#fc-arw)"/>
+  <text class="fc-label" x="246" y="108" text-anchor="middle">未上线 offline</text>
+  <rect class="fc-node-ok" x="25" y="182" width="290" height="54" rx="6"/>
+  <text class="fc-text" x="170" y="203">保存修改直接生效</text>
+  <text class="fc-text-s" x="170" y="223">不生成审批记录</text>
+  <path class="fc-edge" d="M170 236 V258" marker-end="url(#fc-arw)"/>
+  <rect class="fc-term" x="70" y="262" width="200" height="40" rx="20"/>
+  <text class="fc-text" x="170" y="282">结束：返回应用列表</text>
+
+  <path class="fc-edge" d="M450 160 V186" marker-end="url(#fc-arw)"/>
+  <text class="fc-label" x="460" y="176">已上线 / 已上架</text>
+  <rect class="fc-node-warn" x="300" y="190" width="300" height="54" rx="6"/>
+  <text class="fc-text" x="450" y="211">修改暂存为「修改待提交」</text>
+  <text class="fc-text-s" x="450" y="231">不生成审批记录</text>
+  <path class="fc-edge" d="M450 244 V268" marker-end="url(#fc-arw)"/>
+
+  <rect class="fc-node" x="300" y="272" width="300" height="54" rx="6"/>
+  <text class="fc-text" x="450" y="293">提交上线申请</text>
+  <text class="fc-text-s" x="450" y="313">首次上线 / 修改后重新提交</text>
+  <path class="fc-edge" d="M450 326 V352" marker-end="url(#fc-arw)"/>
+
+  <rect class="fc-node" x="300" y="356" width="300" height="44" rx="6"/>
+  <text class="fc-text" x="450" y="371">生成审批记录</text>
+  <text class="fc-text-s" x="450" y="389">review.status = pending</text>
+  <path class="fc-edge" d="M450 400 V426" marker-end="url(#fc-arw)"/>
+
+  <polygon class="fc-decision" points="450,430 582,472 450,514 318,472"/>
+  <text class="fc-text" x="450" y="472">桂教通超级管理员审批</text>
+
+  <path class="fc-edge fc-edge-bad" d="M582 472 H742 V300 H592" marker-end="url(#fc-arw-bad)"/>
+  <text class="fc-label" x="596" y="462">驳回</text>
+  <text class="fc-label" x="750" y="392">修改不生效</text>
+  <text class="fc-label" x="750" y="410">调整后重新提交</text>
+
+  <path class="fc-edge fc-edge-ok" d="M450 514 V540" marker-end="url(#fc-arw-ok)"/>
+  <text class="fc-label" x="460" y="532">通过</text>
+  <polygon class="fc-decision" points="450,544 566,584 450,624 334,584"/>
+  <text class="fc-text" x="450" y="584">是否首次上线</text>
+
+  <path class="fc-edge" d="M334 584 H180 V630" marker-end="url(#fc-arw)"/>
+  <text class="fc-label" x="326" y="574" text-anchor="end">是</text>
+  <rect class="fc-node-ok" x="35" y="634" width="290" height="56" rx="6"/>
+  <text class="fc-text" x="180" y="656">app.status = online</text>
+  <text class="fc-text-s" x="180" y="676">进入上架列表（unlisted）</text>
+
+  <path class="fc-edge" d="M566 584 H760 V630" marker-end="url(#fc-arw)"/>
+  <text class="fc-label" x="574" y="574">否</text>
+  <rect class="fc-node" x="615" y="634" width="270" height="56" rx="6"/>
+  <text class="fc-text" x="750" y="656">修改内容此时才生效</text>
+  <text class="fc-text-s" x="750" y="676">保持原有上线 / 上架状态</text>
+</svg>
+</div>
+<ol><li>机构管理员在应用申请管理页对已创建但未上线（app.status = offline）的应用提交上线申请。提交前确认应用基本信息完整，提交后系统生成一条审批记录（review.status = pending）。此时应用不可编辑基本信息。</li><li>桂教通超级管理员在审批列表的"待审批"Tab 中看到该记录，查看应用详情后选择"通过"或"驳回"。通过后 app.status 变为 online，应用进入机构管理员的应用上架管理列表（P04），状态为未上架（listing_status = unlisted）；驳回时需填写驳回原因，review.status 变为 rejected，app.status 变为 rejected（已驳回）。</li><li>审批通过后应用可进入上架流程。审批驳回后回到上线申请人，修改后可重新提交上线申请（重新提交时 app.status 回到 offline、列表展示待审批）。审批记录永久保留。</li><li>已上线 / 已上架应用的修改：机构管理员在 P02 修改已上线（online）或已上架（listed）应用的信息并保存时，系统仅标记为「修改待提交」，<strong>不生成审批记录</strong>；用户再次点击「提交上线申请」后才生成审批记录（review.type = 修改）。审批通过后修改内容才生效，应用保持原有上线 / 上架状态，不重复进入上架列表；审批驳回时修改不生效，可调整后重新提交。未上线（offline）应用的修改保存后直接生效，不进入审批流程。</li><li>修改待提交期间，列表状态标签显示"修改待提交"，操作列提供"提交上线申请"；提交后状态标签显示"修改待审批"，审批通过或驳回后恢复为应用本身的上下线状态。</li></ol>
 <p>审批期间网络中断时，当前审批结果不落库，已填写意见保留并允许重试。</p>
 <p>下线为独立路径，不经过审批：应用创建人或管理员对 app.status = online 且 app.listing_status = unlisted 的应用点击"下线"，弹窗确认后直接变为 offline；已上架（listing_status = listed）的应用不允许下线，按钮直接隐藏。</p>
 <h3 id="h-8">3.2 应用上架及安装流程</h3>
 <p>管理员上架应用、配置范围、安装三个环节。</p>
+<div class="flowchart">
+<svg viewBox="0 0 900 580" role="img" aria-label="应用上架及安装流程图">
+  <rect class="fc-term" x="290" y="10" width="320" height="42" rx="21"/>
+  <text class="fc-text" x="450" y="31">已上线且未上架（online + unlisted）</text>
+  <path class="fc-edge" d="M450 52 V74" marker-end="url(#fc-arw)"/>
+
+  <rect class="fc-node" x="300" y="78" width="300" height="50" rx="6"/>
+  <text class="fc-text" x="450" y="103">P05 配置上架范围 + 勾选承诺书</text>
+  <path class="fc-edge" d="M450 128 V152" marker-end="url(#fc-arw)"/>
+
+  <rect class="fc-node-ok" x="300" y="156" width="300" height="44" rx="6"/>
+  <text class="fc-text" x="450" y="178">app.listing_status = listed</text>
+  <path class="fc-edge" d="M450 200 V224" marker-end="url(#fc-arw)"/>
+
+  <rect class="fc-node-key" x="300" y="228" width="300" height="48" rx="6"/>
+  <text class="fc-text" x="450" y="245">P04b 应用上架管理</text>
+  <text class="fc-text-s" x="450" y="264">选择安装方式</text>
+  <path class="fc-edge" d="M450 276 V304" marker-end="url(#fc-arw)"/>
+
+  <polygon class="fc-decision" points="450,308 570,350 450,392 330,350"/>
+  <text class="fc-text" x="450" y="350">选择操作</text>
+
+  <path class="fc-edge" d="M330 350 H160 V400" marker-end="url(#fc-arw)"/>
+  <text class="fc-label" x="322" y="342" text-anchor="end">单个安装</text>
+  <rect class="fc-node" x="20" y="404" width="280" height="46" rx="6"/>
+  <text class="fc-text" x="160" y="427">安装到指定机构</text>
+  <path class="fc-edge" d="M160 450 V474" marker-end="url(#fc-arw)"/>
+
+  <rect class="fc-node-warn" x="20" y="478" width="280" height="82" rx="6"/>
+  <text class="fc-text-s" x="160" y="500">非低代码：装到应用中心即对机构可见</text>
+  <text class="fc-text-s" x="160" y="520">低代码：先装应用中心，再装低代码平台</text>
+  <text class="fc-text-s" x="160" y="540">两步均成功才算安装成功</text>
+
+  <path class="fc-edge fc-edge-bad" d="M300 519 H332 V427 H292" marker-end="url(#fc-arw-bad)"/>
+  <text class="fc-label" x="340" y="474">安装失败可重试</text>
+
+  <path class="fc-edge" d="M450 392 V400" marker-end="url(#fc-arw)"/>
+  <text class="fc-label" x="458" y="386">全部安装</text>
+  <rect class="fc-node" x="332" y="404" width="236" height="46" rx="6"/>
+  <text class="fc-text" x="450" y="427">安装到列表全部机构</text>
+
+  <path class="fc-edge" d="M570 350 H750 V400" marker-end="url(#fc-arw)"/>
+  <text class="fc-label" x="578" y="342">下架 / 卸载</text>
+  <rect class="fc-node-warn" x="600" y="404" width="280" height="82" rx="6"/>
+  <text class="fc-text-s" x="740" y="428">下架：二次确认后用户不可用</text>
+  <text class="fc-text-s" x="740" y="448">卸载：二次确认后仅从该机构移除</text>
+  <text class="fc-text-s" x="740" y="468">不删除低代码应用</text>
+</svg>
+</div>
 <ol><li>管理员对已上线（online）且未上架（unlisted）的应用发起上架，进入 P05 配置上架范围（全平台/按范围），勾选上架承诺书后确认，app.listing_status 变为 listed。点击任意上架范围进入 P04b：单个安装为安装到对应机构，全部安装为安装到当前列表所有机构，卸载/全部卸载同理。</li><li>安装：非低代码应用只装到应用中心即对机构可见；低代码应用跨机构安装同此流程，不跨机构需先装应用中心（失败则「安装失败」可重试），成功后再装低代码平台（失败同样「安装失败」可重试），两步均成功才算安装成功。</li><li>下架和卸载均需二次确认。下架后用户无法使用，卸载仅从指定机构移除，不删除低代码应用。已上架的应用不允许直接下线，必须先下架方可下线。</li></ol>
 <h3 id="h-9">3.3 应用付费购买流程</h3>
+<div class="flowchart">
+<svg viewBox="0 0 900 720" role="img" aria-label="应用付费购买流程图">
+  <rect class="fc-term" x="280" y="10" width="340" height="50" rx="25"/>
+  <text class="fc-text" x="450" y="27">用户在教育服务中心 / 我的应用中心</text>
+  <text class="fc-text" x="450" y="45">点击应用</text>
+  <path class="fc-edge" d="M450 60 V82" marker-end="url(#fc-arw)"/>
+
+  <polygon class="fc-decision" points="450,86 578,128 450,170 322,128"/>
+  <text class="fc-text" x="450" y="128">是否免费应用</text>
+
+  <path class="fc-edge fc-edge-ok" d="M322 128 H160 V180" marker-end="url(#fc-arw-ok)"/>
+  <text class="fc-label" x="314" y="120" text-anchor="end">免费</text>
+  <rect class="fc-node-ok" x="20" y="184" width="280" height="44" rx="6"/>
+  <text class="fc-text" x="160" y="206">直接打开使用（结束）</text>
+
+  <path class="fc-edge" d="M450 170 V196" marker-end="url(#fc-arw)"/>
+  <text class="fc-label" x="458" y="186">付费</text>
+  <rect class="fc-node" x="300" y="200" width="300" height="44" rx="6"/>
+  <text class="fc-text" x="450" y="222">进入应用购买详情页</text>
+
+  <path class="fc-edge" d="M450 244 V266 H160 V292" marker-end="url(#fc-arw)"/>
+  <rect class="fc-node" x="20" y="296" width="280" height="52" rx="6"/>
+  <text class="fc-text" x="160" y="316">免费试用</text>
+  <text class="fc-text-s" x="160" y="336">生成试用订单记录（结束）</text>
+
+  <path class="fc-edge" d="M450 266 V292" marker-end="url(#fc-arw)"/>
+  <rect class="fc-node" x="300" y="296" width="300" height="52" rx="6"/>
+  <text class="fc-text" x="450" y="316">立即购买</text>
+  <text class="fc-text-s" x="450" y="336">订单确认 + 开票信息填写</text>
+  <path class="fc-edge" d="M450 348 V372" marker-end="url(#fc-arw)"/>
+
+  <rect class="fc-node" x="300" y="376" width="300" height="44" rx="6"/>
+  <text class="fc-text" x="450" y="398">提交订单</text>
+  <path class="fc-edge" d="M450 420 V444" marker-end="url(#fc-arw)"/>
+
+  <rect class="fc-node-key" x="290" y="448" width="320" height="50" rx="6"/>
+  <text class="fc-text" x="450" y="473">展示惠缴费二维码，手机扫码半屏支付</text>
+  <path class="fc-edge" d="M450 498 V522" marker-end="url(#fc-arw)"/>
+
+  <polygon class="fc-decision" points="450,526 570,568 450,610 330,568"/>
+  <text class="fc-text" x="450" y="568">支付结果</text>
+
+  <path class="fc-edge fc-edge-ok" d="M450 610 V636" marker-end="url(#fc-arw-ok)"/>
+  <text class="fc-label" x="458" y="626">已支付</text>
+  <rect class="fc-node-ok" x="300" y="640" width="300" height="66" rx="6"/>
+  <text class="fc-text-s" x="450" y="662">惠缴费回调校验通过，更新订单为已支付</text>
+  <text class="fc-text-s" x="450" y="682">生成订单记录 / 套餐授权 / 接收记录</text>
+
+  <path class="fc-edge fc-edge-bad" d="M330 568 H160 V600" marker-end="url(#fc-arw-bad)"/>
+  <text class="fc-label" x="322" y="560" text-anchor="end">失败</text>
+  <rect class="fc-node-bad" x="20" y="604" width="280" height="64" rx="6"/>
+  <text class="fc-text-s" x="160" y="626">提示支付失败</text>
+  <text class="fc-text-s" x="160" y="646">展示「返回订单」按钮（结束）</text>
+
+  <path class="fc-edge fc-edge-bad" d="M570 568 H750 V600" marker-end="url(#fc-arw-bad)"/>
+  <text class="fc-label" x="578" y="560">超时 15 分钟</text>
+  <rect class="fc-node-warn" x="600" y="604" width="280" height="64" rx="6"/>
+  <text class="fc-text-s" x="740" y="626">提示支付超时，二维码失效</text>
+  <text class="fc-text-s" x="740" y="646">可点击「刷新二维码」</text>
+
+  <path class="fc-edge" d="M880 636 H890 V473 H604" marker-end="url(#fc-arw)"/>
+  <text class="fc-label" x="790" y="500">刷新后重新支付</text>
+</svg>
+</div>
 <p>用户在教育服务中心或我的应用中心点击应用：免费应用直接打开使用；付费应用打开详情界面，可试用时显示「免费试用」+「立即购买」，否则仅显示「立即购买」。点击免费试用，生成一条试用订单记录；点击立即购买打开订单确认 &amp; 开票信息填写界面，发票信息录入右上角提供"历史发票记录"入口，点击可查看当前人员历史发票记录，选择一条后自动回填至发票信息表单，也可手动填写发票信息；点击提交订单跳转到付费界面，展示跟惠缴费对接的二维码，手机扫码唤起惠缴费半屏支付，支付成功后PC端支付状态同步提示支付成功，支付失败则提示失败，同时出现返回订单的按钮点击返回我的订单界面。PC 端支付状态同步机制：惠缴费完成支付后通过异步回调通知平台后端（回调含签名校验、幂等处理），后端校验通过后更新订单状态为已支付，并触发订单记录、套餐授权、接收记录生成；PC 端支付界面每 3 秒轮询一次订单支付状态接口，检测到已支付即自动提示"支付成功"并进入成功页，检测到失败则提示失败并展示"返回订单"按钮，超过支付有效期（15 分钟，与二维码有效期一致）未支付则提示支付超时、二维码失效可点击"刷新二维码"；不做 WebSocket/SSE 服务端推送</p>
 <h2 id="h-10">四、详细需求说明</h2>
 <h3 id="h-11">（一）应用管理模块</h3>
@@ -75,17 +270,17 @@
 <h4 id="h-12">P01 应用申请管理页</h4>
 <p>页面由筛选区、结果列表和行内操作组成。筛选区提供应用名称、分类、状态的检索条件；列表按创建时间倒序排列，每页 20 条，展示应用关键信息和状态标签。</p>
 <p>（1）查询和查看应用列表</p>
-<p>用户进入页面后首先看到当前筛选条件下的应用列表，可以直接判断每条应用的上下线状态和基本属性。列表默认展示：应用 Logo（32×32 圆角图标）、应用名称（超 20 字符末尾截断，悬停显示全文）、应用ID（业务应用ID，置于应用名称之后）、应用openId（仅桂教通超级管理员列展示，置于应用ID之后）、应用分类（一级分类为主标，二级分类为副标灰字）、是否平台应用（平台型/非平台型，仅桂教通超级管理员列展示）、应用属性（完整属性文本，如"原生应用""原生应用/低代码应用""生态应用"）、适用机构（多值枚举展示，如"学校""上级单位"）、适用学段（多值徽标展示，仅适用机构包含学校时显示）、状态标签（已上线绿色徽标，待审批黄色徽标，已驳回红色徽标，未上线灰色徽标）。</p>
+<p>用户进入页面后首先看到当前筛选条件下的应用列表，可以直接判断每条应用的上下线状态和基本属性。列表默认展示：应用 Logo（32×32 圆角图标）、应用名称（超 20 字符末尾截断，悬停显示全文）、应用ID（业务应用ID，置于应用名称之后）、应用openId（仅桂教通超级管理员列展示，置于应用ID之后）、应用分类（一级分类为主标，二级分类为副标灰字）、是否平台应用（平台型/非平台型，仅桂教通超级管理员列展示）、应用属性（完整属性文本，如"原生应用""原生应用/低代码应用""生态应用"）、适用机构（多值枚举展示，如"学校""教育局""超管后台"）、适用学段（多值徽标展示，仅适用机构包含学校时显示）、状态标签（已上线绿色徽标，待审批/修改待审批黄色徽标，修改待提交灰色徽标，已驳回红色徽标，未上线灰色徽标）。</p>
 <ul><li>修改筛选条件后点击"搜索"，列表按当前条件刷新；点击"重置"清空所有条件恢复默认视图。</li><li>查询无匹配数据时，列表区域显示"暂无应用"。</li><li>查询失败时列表区域显示"加载失败，请重试"和刷新按钮。</li></ul>
 <p>（2）新增应用</p>
 <p>tenant_admin 可在任意状态下点击列表页右上角"新增应用"按钮，跳转 P02 应用申请编辑页（新建模式，底部按钮为"新建"）。</p>
 <p>（3）上线应用</p>
-<p>仅 app.status = offline 或 app.status = rejected（已驳回）的应用行显示"上线"按钮。点击后进入 P02b 应用详情页（上线申请模式），页面底部呈现"确认上线"主按钮和"取消"次按钮。</p>
-<p>点击"确认上线"前系统校验应用的 Logo、名称、分类等必填项是否完整。校验不通过时顶部红色提示"应用信息不完整，请先完善"，阻止提交。校验通过后系统生成一条审批记录（review.type = 上线，review.status = pending，review.applicant = 当前登录人），toast 提示"上线申请已提交，待桂教通超级管理员审批"，返回列表页。</p>
+<p>仅 app.status = offline 或 app.status = rejected（已驳回）的应用行显示"上线"按钮；已上线 / 已上架应用存在「修改待提交」标记时，操作列改为显示"提交上线申请"按钮。点击后进入 P02b 应用详情页（上线申请模式），页面底部呈现"确认上线"主按钮和"取消"次按钮。</p>
+<p>点击"确认上线"前系统校验应用的 Logo、名称、分类等必填项是否完整。校验不通过时顶部红色提示"应用信息不完整，请先完善"，阻止提交。校验通过后系统生成一条审批记录（首次上线 review.type = 上线；存在待提交修改时 review.type = 修改），review.status = pending，review.applicant = 当前登录人；toast 在首次上线时为"上线申请已提交，待桂教通超级管理员审批"，在提交修改时为"上线申请已提交，修改信息待审批通过后生效"，返回列表页。</p>
 <p>网络异常导致提交失败时，顶部红色提示"提交失败，请检查网络后重试"。</p>
 <p>（4）管理应用</p>
 <p>所有状态（已上线/未上线/待审批/已驳回）的应用行均显示"管理"按钮。点击后进入 P02b 应用详情页（管理模式），可查看凭证区和完整信息，并通过"修改"链接跳转 P02 编辑模式。</p>
-<p>应用上线申请被驳回（app.status = rejected）时，管理模式页面下方额外展示「审批信息」区，字段为：申请时间、申请人、审批人、审批时间、审批结果（驳回红色标签）、审批意见；审批意见缺失时展示"---"。</p>
+<p>应用上线申请被驳回（app.status = rejected）或存在修改审批记录（修改待审批 / 已驳回）时，管理模式页面下方额外展示「审批信息」区，字段为：申请类型（上线/修改）、申请时间、申请人、审批人、审批时间、审批结果（驳回红色标签）、审批意见；审批意见缺失时展示"---"。</p>
 <p>审批中的应用"管理"按钮不置灰，可正常点击进入 P02b 管理模式；编辑应用与更新 SuiteKey 不受审批状态限制，审批中亦可操作。</p>
 <p>（5）下线应用</p>
 <p>仅 app.status = online 且 app.listing_status = unlisted 时显示"下线"按钮。已上架（listing_status = listed）时该按钮直接隐藏。</p>
@@ -96,15 +291,16 @@
 <p>页面采用垂直单列表单布局，从上至下依次排列字段。所有标记 * 的字段为必填，未通过校验时对应字段红框提示并阻止提交。</p>
 <p>（1）新建应用（新建模式）</p>
 <p>从 P01"新增应用"入口进入，页面底部按钮为"新建"和"取消"。表单字段及其规则如下：</p>
-<table><thead><tr><th>字段</th><th>必填</th><th>控件</th><th>规则</th></tr></thead><tbody><tr><td>应用 Logo</td><td>*</td><td>图片上传</td><td>jpg/png/jpeg，推荐 140×140 圆角 24px，≤200KB；缺失提示"请上传应用 Logo"；格式/大小不符时在区域下方红字提示原因</td></tr><tr><td>应用名称</td><td>*</td><td>单行文本框</td><td>最大 20 字符，右侧实时显示"已输入字数/20"；超限禁止继续输入；名称在同机构内唯一，重复时字段下方红字"该应用名称已存在，请更换"</td></tr><tr><td>应用简介</td><td>*</td><td>多行文本框</td><td>最大 100 字符，右下实时显示"已输入字数/100"</td></tr><tr><td>所属分类</td><td>*</td><td>级联选择</td><td>先选一级分类，再级联选择对应二级分类</td></tr><tr><td>是否平台应用</td><td>*</td><td>单选</td><td>平台型 / 非平台型，默认选中非平台型；仅桂教通超级管理员展示且必填，机构管理员新增应用固定为非平台型（不展示此字段）。字段下方展示说明文案：平台型指的是不需要上架能用的应用，比如：桂教通门户；非平台型指的是需要上架使用的原生应用、生态应用等。</td></tr><tr><td>是否数据同步</td><td>*</td><td>单选</td><td>否 / 是，默认否</td></tr><tr><td>用户个人信息授权</td><td>*</td><td>单选</td><td>否 / 是，默认否</td></tr><tr><td>推送地址</td><td>*</td><td>文本框</td><td>仅是否数据同步=是时展示；校验格式为 http:// 或 https://，必填</td></tr><tr><td>TOKEN</td><td>*</td><td>只读文本框</td><td>仅是否数据同步=是时展示；点击右侧「随机生成Token」按钮生成 UUID，最大 50 字符，必填</td></tr><tr><td>EncodingAesKey</td><td>*</td><td>只读文本框</td><td>仅是否数据同步=是时展示；点击右侧「随机生成AesKey」按钮生成 32 字节 AES-256 密钥后 Base64 编码（去掉 = 填充），固定 43 字符，必填</td></tr><tr><td>打开方式</td><td>*</td><td>多选复选框</td><td>PCweb / H5 / 独立小程序，至少 1 项</td></tr><tr><td>跳转登录限制</td><td>*</td><td>下拉选择</td><td>无需登录 / 仅持有账号登录 / 可注册或登录，必填</td></tr><tr><td>适用机构</td><td>*</td><td>多选复选框</td><td>学校 / 上级单位，至少 1 项</td></tr><tr><td>适用学段</td><td>*</td><td>单选+多选</td><td>范围模式为单选（所有学段/部分学段，默认所有学段）；仅适用机构含"学校"时展示与校验；选"部分学段"时下方展开学段多选：幼儿园/小学/初中/高中/中职/高职/本科/研究生，支持多选，至少 1 项</td></tr><tr><td>应用详情介绍</td><td>*</td><td>富文本编辑器</td><td>支持粗体/斜体/下划线/删除线/引用/代码/列表/字号/颜色/对齐/超链接/图片/视频/清除格式；占位提示"请上传应用图文介绍、操作文档、演示视频…"；≤5MB HTML；必填</td></tr><tr><td>应用视频介绍</td><td></td><td>上传组件</td><td>附件上传，支持多选，accept="video/*"，最多 5 个视频，单个 ≤10MB</td></tr><tr><td>应用属性</td><td>*</td><td>级联选择</td><td>一级：原生应用/生态应用（默认原生）；选原生应用时级联二级：低代码应用/自建应用</td></tr><tr><td>应用ID</td><td>*</td><td>单行文本框</td><td>仅应用属性=低代码应用时展示；输入低代码应用ID，必填，缺失提示"低代码应用请填写应用ID"</td></tr><tr><td>可见性-移动端角色</td><td>*</td><td>多选</td><td>仅打开方式含独立小程序时展示；10 类角色：教育局职工/学生/学校教职工/家长/毕业生/退休教职工/机构管理员/临时成员/公共账号/开发者，至少 1 项</td></tr><tr><td>可见性-移动端地址</td><td>*</td><td>前缀下拉+文本框</td><td>仅打开方式含独立小程序时展示，展示时必填；前缀下拉选择 http/https，文本框填写域名或路径，地址最大 500 字符（不含前缀）</td></tr><tr><td>可见性-微信 appid</td><td>*</td><td>文本框</td><td>仅打开方式含独立小程序时展示，最大 64 字符</td></tr><tr><td>可见性-PC 端角色</td><td>*</td><td>多选</td><td>仅打开方式含 PCweb 时展示；同移动端角色枚举，至少 1 项</td></tr><tr><td>可见性-PC 端地址</td><td>*</td><td>前缀下拉+文本框</td><td>仅打开方式含 PCweb 时展示，展示时必填；前缀下拉选择 http/https，文本框填写域名或路径，地址最大 500 字符（不含前缀）</td></tr><tr><td>可见性-H5 角色</td><td>*</td><td>多选</td><td>仅打开方式含 H5 时展示；同移动端角色枚举，至少 1 项</td></tr><tr><td>可见性-H5 地址</td><td>*</td><td>前缀下拉+文本框</td><td>仅打开方式含 H5 时展示，展示时必填；前缀下拉选择 http/https，文本框填写域名或路径，地址最大 500 字符（不含前缀）</td></tr><tr><td>白名单配置</td><td></td><td>默认回填标签+新增按钮+白名单输入行列表</td><td>默认根据已填写的移动端/PC端/H5 地址自动回填（标签展示完整地址，标签带删除按钮，删除后不再自动回填展示）；点击"新增白名单"按钮新增一条白名单输入行（前缀下拉 http/https + 文本框 + 删除按钮，文本框宽度与表单其他字段一致），输入完成后自动拼入白名单；重复地址去重；最多 5 个（含默认回填），达到上限禁用新增；手动行支持删除；字段下方展示两行提示：「配置的是本应用需要打开的域名地址，不配置应用无法打开」「最多可配置 5 个白名单地址（含默认回填）」</td></tr><tr><td>查看接入文档</td><td></td><td>链接</td><td>蓝色文字链接，点击新窗口打开接入文档 URL</td></tr></tbody></table>
+<table><thead><tr><th>字段</th><th>必填</th><th>控件</th><th>规则</th></tr></thead><tbody><tr><td>应用 Logo</td><td>*</td><td>图片上传</td><td>jpg/png/jpeg，推荐 140×140 圆角 24px，≤200KB；缺失提示"请上传应用 Logo"；格式/大小不符时在区域下方红字提示原因</td></tr><tr><td>应用名称</td><td>*</td><td>单行文本框</td><td>最大 20 字符，右侧实时显示"已输入字数/20"；超限禁止继续输入；名称在同机构内唯一，重复时字段下方红字"该应用名称已存在，请更换"</td></tr><tr><td>应用简介</td><td>*</td><td>多行文本框</td><td>最大 100 字符，右下实时显示"已输入字数/100"</td></tr><tr><td>所属分类</td><td>*</td><td>级联选择</td><td>先选一级分类，再级联选择对应二级分类</td></tr><tr><td>是否平台应用</td><td>*</td><td>单选</td><td>平台型 / 非平台型，默认选中非平台型；仅桂教通超级管理员展示且必填，机构管理员新增应用固定为非平台型（不展示此字段）。字段下方展示说明文案：平台型指的是不需要上架能用的应用，比如：桂教通门户；非平台型指的是需要上架使用的原生应用、生态应用等。</td></tr><tr><td>是否数据同步</td><td>*</td><td>单选</td><td>否 / 是，默认否</td></tr><tr><td>用户个人信息授权</td><td>*</td><td>单选</td><td>否 / 是，默认否</td></tr><tr><td>推送地址</td><td>*</td><td>文本框</td><td>仅是否数据同步=是时展示；校验格式为 http:// 或 https://，必填</td></tr><tr><td>TOKEN</td><td>*</td><td>只读文本框</td><td>仅是否数据同步=是时展示；点击右侧「随机生成Token」按钮生成 UUID，最大 50 字符，必填</td></tr><tr><td>EncodingAesKey</td><td>*</td><td>只读文本框</td><td>仅是否数据同步=是时展示；点击右侧「随机生成AesKey」按钮生成 32 字节 AES-256 密钥后 Base64 编码（去掉 = 填充），固定 43 字符，必填</td></tr><tr><td>打开方式</td><td>*</td><td>多选复选框</td><td>PCweb / H5 / 独立小程序，至少 1 项</td></tr><tr><td>跳转登录限制</td><td>*</td><td>下拉选择</td><td>无需登录 / 仅持有账号登录 / 可注册或登录，必填</td></tr><tr><td>适用机构</td><td>*</td><td>多选复选框</td><td>学校 / 教育局 / 超管后台，至少 1 项；「超管后台」仅桂教通超级管理员登录时展示该选项</td></tr><tr><td>适用学段</td><td>*</td><td>单选+多选</td><td>范围模式为单选（所有学段/部分学段，默认所有学段）；仅适用机构含"学校"时展示与校验；选"部分学段"时下方展开学段多选：幼儿园/小学/初中/高中/中职/高职/本科/研究生，支持多选，至少 1 项</td></tr><tr><td>应用详情介绍</td><td>*</td><td>富文本编辑器</td><td>支持粗体/斜体/下划线/删除线/引用/代码/列表/字号/颜色/对齐/超链接/图片/视频/清除格式；占位提示"请上传应用图文介绍、操作文档、演示视频…"；≤5MB HTML；必填</td></tr><tr><td>应用视频介绍</td><td></td><td>上传组件</td><td>附件上传，支持多选，accept="video/*"，最多 5 个视频，单个 ≤10MB</td></tr><tr><td>应用属性</td><td>*</td><td>级联选择</td><td>一级：原生应用/生态应用（默认原生）；选原生应用时级联二级：低代码应用/自建应用</td></tr><tr><td>应用ID</td><td>*</td><td>单行文本框</td><td>仅应用属性=低代码应用时展示；输入低代码应用ID，必填，缺失提示"低代码应用请填写应用ID"</td></tr><tr><td>可见性-移动端角色</td><td>*</td><td>多选</td><td>仅打开方式含独立小程序时展示；10 类角色：教育局职工/学生/学校教职工/家长/毕业生/退休教职工/临时成员/公共账号/开发者/访客，至少 1 项；当前登录角色为桂教通超级管理员时额外展示「平台管理员」选项，可勾选</td></tr><tr><td>可见性-移动端地址</td><td>*</td><td>前缀下拉+文本框</td><td>仅打开方式含独立小程序时展示，展示时必填；前缀下拉选择 http/https，文本框填写域名或路径，地址最大 500 字符（不含前缀）</td></tr><tr><td>可见性-微信 appid</td><td>*</td><td>文本框</td><td>仅打开方式含独立小程序时展示，最大 64 字符</td></tr><tr><td>可见性-PC 端角色</td><td>*</td><td>多选</td><td>仅打开方式含 PCweb 时展示；同移动端角色枚举（含访客；仅桂教通超级管理员登录时额外展示平台管理员），至少 1 项</td></tr><tr><td>可见性-PC 端地址</td><td>*</td><td>前缀下拉+文本框</td><td>仅打开方式含 PCweb 时展示，展示时必填；前缀下拉选择 http/https，文本框填写域名或路径，地址最大 500 字符（不含前缀）</td></tr><tr><td>可见性-H5 角色</td><td>*</td><td>多选</td><td>仅打开方式含 H5 时展示；同移动端角色枚举（含访客；仅桂教通超级管理员登录时额外展示平台管理员），至少 1 项</td></tr><tr><td>可见性-H5 地址</td><td>*</td><td>前缀下拉+文本框</td><td>仅打开方式含 H5 时展示，展示时必填；前缀下拉选择 http/https，文本框填写域名或路径，地址最大 500 字符（不含前缀）</td></tr><tr><td>白名单配置</td><td></td><td>地址输入区（前缀下拉+输入框+添加按钮）+ 标签列表回显区</td><td>默认根据已填写的移动端/PC端/H5 地址自动回填（蓝色标签展示完整地址，标签带删除按钮，删除后不再自动回填展示）；手动添加改为输入区：前缀下拉 http/https + 地址输入框 + 「添加」按钮（输入框回车亦可添加），添加后与自动回填项统一以标签列表展示在输入区下方，标签可点击 × 删除；点击标签进入修改态：该地址回填到输入区，按钮变为「保存修改」并出现「取消」，保存后原位更新（重复校验排除自身），默认回填项被修改后转为手动项；列表头部展示「已添加 n/20」计数；地址支持 * 通配符（每条最多一个，如 https://*.example.com 匹配该域名下全部子域名；单独一个 * 如 https://* 表示匹配全部地址）；重复地址去重；最多 20 条（含默认回填），达到上限禁用添加按钮（修改态不受限）；字段下方展示两行提示：「配置的是本应用需要打开的域名地址，不配置应用无法打开」「支持 * 通配符：https://*.example.com 匹配该域名下全部子域名，https://* 匹配全部地址；最多 20 条（含默认回填）」</td></tr><tr><td>查看接入文档</td><td></td><td>链接</td><td>蓝色文字链接，点击新窗口打开接入文档 URL</td></tr></tbody></table>
 <p>点击"新建"触发全量校验，未通过时页面滚动定位到首个错误字段。校验通过后写入 app 记录，系统自动生成 app.system_suite_id（当前最大应用ID +1，全局唯一，不可修改）与 app.system_suite_key）与应用 openId（app.app_open_id：非低代码应用生成长度 15 的英文/数字/下划线串，低代码应用取填写的低代码应用ID），返回 P01 列表。toast 提示"应用创建成功"（新建仅创建应用，上线申请由 P01「上线」按钮触发，不在此处生成审批记录）。</p>
 <ul><li>单字段失焦触发即时校验（Logo/名称/简介/分类/打开方式/机构/学段/属性/suiteID）。</li><li>网络异常时已填写内容通过 localStorage 保留 24 小时。</li><li>网络异常提交失败时顶部红条"提交失败，请检查网络后重试"。</li><li>若表单未修改直接点击"取消"，直接返回来源页；若已修改，弹出二次确认"当前编辑未保存，确认离开？"。</li></ul>
 <p>（2）编辑应用（编辑模式）</p>
 <p>从 P02b 应用详情页的"修改"链接进入，字段按当前值回填，底部按钮为"提交"和"取消"。</p>
-<p>提交时全量校验必填项。校验通过后覆盖写入 app 记录（app.system_suite_id 不变）。如属于已上架应用（app.status = online），同步生成一条待审批 review 记录（review.type = 修改，review.status = pending，review.applicant = 当前登录人），该记录进入「应用审批管理（P10）」待审批列表，toast 提示"提交成功，需重新上架审批后生效"，返回 P02b。</p>
-<blockquote>编辑生效规则（重新上架审核）：审批通过前，对外（门户端、机构管理员应用上架管理等）仍展示修改前的旧值；review.status 变为 approved 后，系统将新值切换为对外展示版本，应用进入机构管理员应用上架管理列表（listing_status = unlisted）。此过程即"重新上架审核"，含义为：已上架应用经编辑后，需经桂教通超级管理员审批方能在线上生效新值。</blockquote>
+<p>提交时全量校验必填项。校验通过后按应用当前状态分流处理：</p>
+<ul><li><strong>未上线（app.status = offline）</strong>：修改内容直接覆盖写入 app 记录（app.system_suite_id 不变），立即生效，<strong>不生成审批记录</strong>，toast 提示"保存成功"，返回 P01。</li><li><strong>已上线（app.status = online）或已上架（listing_status = listed）</strong>：修改内容暂存为「修改待提交」，<strong>此时不生成审批记录</strong>，应用原信息继续对外展示；列表状态标签变为"修改待提交"，操作列出现"提交上线申请"按钮，toast 提示"修改已保存为待提交，请重新提交上线申请，审批通过后生效"，返回 P01。</li><li><strong>提交上线申请（P02b 上线申请模式下点击「确认上线」）</strong>：此时才生成审批记录（review.type = 修改，review.status = pending），状态标签变为"修改待审批"，toast 提示"上线申请已提交，修改信息待审批通过后生效"。</li></ul>
+<blockquote>修改生效规则：审批通过前，对外（门户端、机构管理员应用上架管理等）仍展示修改前的旧值；审批通过后系统将暂存的修改内容合并生效，应用保持原有上线 / 上架状态，不重复进入上架列表（listing_status 不变）；审批驳回时修改内容不生效、不清除，机构管理员可调整后重新提交。</blockquote>
 <h4 id="h-14">P02b 应用详情页</h4>
-<p>页面由面包屑、头部凭证区、基本信息区（上线申请模式下基本信息区下方嵌入「上线配置」区，二者同属一个模块）和底部操作区组成。根据进入入口分为四种模式：管理模式（P01"管理"进入，全部状态应用，应用上线被驳回时展示审批信息）、上线申请模式（P01"上线"进入，offline 或 rejected 应用）、只读查看模式（P01 其他用户"查看"进入）、审批详情模式（P10"详情"进入）。</p>
+<p>页面由面包屑、头部凭证区、基本信息区（上线申请模式下基本信息区下方嵌入「上线配置」区，二者同属一个模块）和底部操作区组成。根据进入入口分为四种模式：管理模式（P01"管理"进入，全部状态应用，上线被驳回或存在修改审批时展示审批信息）、上线申请模式（P01"上线"/"提交上线申请"进入，offline 或 rejected 或存在修改待提交的应用）、只读查看模式（P01 其他用户"查看"进入）、审批详情模式（P10"详情"进入）。</p>
 <p>（1）查看头部凭证区</p>
 <table><thead><tr><th>展示项</th><th>字段</th><th>形式</th></tr></thead><tbody><tr><td>应用 Logo</td><td>app.logo</td><td>大尺寸圆角图标，与凭证区左右布局</td></tr><tr><td>应用标题</td><td>app.name + 分类拼接</td><td>加粗标题</td></tr><tr><td>SuiteId</td><td>app.system_suite_id</td><td>标签+值两栏，纯只读，全局唯一不可修改</td></tr><tr><td>SuiteKey</td><td>app.system_suite_key</td><td>标签+值两栏 + 右侧"复制"链接按钮</td></tr></tbody></table>
 <p>管理模式、上线申请模式显示 SuiteKey「复制」链接；只读查看、审批详情模式展示凭证区但不显示「复制」。凭证创建应用时生成，只读不可更新。</p>
@@ -112,16 +308,16 @@
 <p>点击 SuiteKey 右侧"复制"链接，系统将 app.system_suite_key 值写入剪贴板，toast 提示"SuiteKey 已复制"。复制失败（如浏览器权限限制）时 toast 红色提示"复制失败，请手动复制"，页面无其它变更。</p>
 <p>（3）查看基本信息区</p>
 <p>板块标题为"基本信息（修改的信息需要重新上架审批后生效）"，右侧提供"修改"链接按钮（仅管理模式显示）。点击"修改"跳转 P02 编辑模式，字段全部回填。</p>
-<p>基本信息区按 P02 字段分组只读展示：基础信息（Logo 大图/名称/介绍/分类）、打开方式（中文全称，顿号分隔）、跳转登录限制、适用范围（mode=all 显示"所有学段"）、详情介绍（富文本滚动）、应用视频（无则隐藏）、应用属性（生态应用附 suiteID）、数据与授权（数据同步=是时展示推送地址/TOKEN/EncodingAesKey）、收费与可见（按打开方式展示移动端/PC/H5 角色+地址+微信 appid；白名单默认回填三地址、最多 5 个）。超长名称截断悬停，介绍富文本自带滚动。</p>
+<p>基本信息区按 P02 字段分组只读展示：基础信息（Logo 大图/名称/介绍/分类）、打开方式（中文全称，顿号分隔）、跳转登录限制、适用范围（mode=all 显示"所有学段"）、详情介绍（富文本滚动）、应用视频（无则隐藏）、应用属性（生态应用附 suiteID）、数据与授权（数据同步=是时展示推送地址/TOKEN/EncodingAesKey）、收费与可见（按打开方式展示移动端/PC/H5 角色+地址+微信 appid；白名单默认回填三地址、最多 20 个且支持 * 通配符）。超长名称截断悬停，介绍富文本自带滚动。</p>
 <p>（4）底部按钮</p>
 <p>所有底部按钮居中显示。</p>
 <p><strong>管理模式</strong>：仅显示"返回"按钮，操作通过头部 SuiteKey「更新」与基本信息区「修改」入口执行。</p>
-<p><strong>上线申请模式</strong>：应用基本信息区下方（同一模块内）新增可编辑「上线配置」区，提交/返回按钮统一置于模块最下方，显示「提交」（主）+「返回」（次）。点击"提交"前系统核对应用必填字段完整性及上线配置必填项，且须勾选上架承诺书（未勾选时"提交"置灰）；缺项时顶部红色提示"应用信息不完整，请先完善"，阻止提交。校验通过后系统生成 review 记录（review.type = 上线，review.status = pending），toast 提示"上线申请已提交，待桂教通超级管理员审批"，返回 P01 列表。</p>
+<p><strong>上线申请模式</strong>：应用基本信息区下方（同一模块内）新增可编辑「上线配置」区，提交/返回按钮统一置于模块最下方，显示「提交」（主）+「返回」（次）。点击"提交"前系统核对应用必填字段完整性及上线配置必填项，且须勾选上架承诺书（未勾选时"提交"置灰）；缺项时顶部红色提示"应用信息不完整，请先完善"，阻止提交。校验通过后系统生成 review 记录：首次上线 review.type = 上线；应用存在「修改待提交」内容时 review.type = 修改。review.status = pending，toast 分别为"上线申请已提交，待桂教通超级管理员审批"与"上线申请已提交，修改信息待审批通过后生效"，返回 P01 列表。</p>
 <p>上线配置区（上线申请模式）字段及显示逻辑：</p>
 <ul><li>是否跨机构（radio 是/否，*）：仅低代码应用展示；桂教通超级管理员选"是"时联动展示跨机构层级与所属机构，机构管理员选"是"时不展示这两项。</li><li>跨机构层级（radio 厅/市/区县，*）：仅桂教通超级管理员 + 低代码应用 + 是否跨机构=是 时显示。</li><li>所属机构（可搜索多选输入框，*）：仅桂教通超级管理员 + 低代码应用 + 是否跨机构=是 时显示；根据输入机构名称模糊搜索（最多查询 50 条），支持多选；数据来源按跨机构层级获取——层级为厅→获取所有教育行政部门，为市→获取所有市级教育行政部门，为区县→获取所有区县教育行政部门；跨机构层级切换时清空已选并重新加载候选。</li><li>收费方式（radio 收费/免费，*）：仅非低代码应用展示；选"收费"时联动展示是否可试用、试用套餐、授权套餐。</li><li>是否可试用（radio 是/否，*）：仅非低代码应用 + 收费方式=收费 时显示；选"是"时展示试用套餐。</li><li>试用套餐（下拉，*）：仅非低代码应用 + 收费方式=收费 + 是否可试用=是 时显示。</li><li>授权套餐（下拉多选，*）：仅非低代码应用 + 收费方式=收费 时显示；数据来源应用套餐配置（套餐管理），可多选多条套餐。</li><li>版本号（下拉搜索框，单选）：仅低代码应用展示；是否跨机构 = 否 时必填（*），是否跨机构 = 是 时非必填；按当前低代码应用ID远程获取版本列表，未获取到则提示"需要上架应用到低代码应用市场"。</li><li>上架承诺书（checkbox，必勾选）：文案与免责声明弹窗同 P05（禁止点遮罩关闭，仅「我知道了」关闭）；未勾选时「提交」置灰。</li></ul>
 <p>该应用已被删除或不属于当前机构时，页面顶部提示"应用不存在或无查看权限"，隐藏所有操作按钮。</p>
 <p>（5）查看审批信息</p>
-<p>审批详情模式：展示当前应用最近一条上线审批记录（申请类型、审批状态徽标、申请人/时间、审批人/时间、审批备注；字段同 P11v），无记录时整块隐藏。管理模式在 app.status = rejected 时展示最近一条驳回记录，字段相同；其余状态不展示。</p>
+<p>审批详情模式：展示当前应用最近一条上线审批记录（申请类型、审批状态徽标、申请人/时间、审批人/时间、审批备注；字段同 P11v），无记录时整块隐藏。管理模式在 app.status = rejected（上线申请被驳回）或存在修改审批记录（修改待审批 / 修改被驳回）时展示最近一条对应记录，字段相同；其余状态不展示。</p>
 <h4 id="h-15">P04 应用上架管理页</h4>
 <p>页面由筛选区、结果列表和行内操作组成。</p>
 <p>（1）查询上架应用列表</p>
@@ -406,7 +602,7 @@
 <p>推送地址 / TOKEN / EncodingAesKey（是否数据同步=是）、suiteID（应用属性=生态应用）、应用ID（应用属性=低代码应用）、可见性地址（打开方式含对应方式）等属字段间业务联动，非角色权限差异，不在此列。</p>
 <h2 id="h-43">六、数据字典</h2>
 <h3 id="h-44">6.1 应用（Application）</h3>
-<table><thead><tr><th>字段</th><th>类型</th><th>必填</th><th>说明</th></tr></thead><tbody><tr><td>app.id</td><td>string</td><td>是</td><td>应用唯一标识，系统生成 UUID</td></tr><tr><td>app.name</td><td>string</td><td>是</td><td>应用名称，最大 20 字符</td></tr><tr><td>app.logo</td><td>string</td><td>是</td><td>应用 Logo URL，jpg/png/jpeg，推荐 140×140 圆角 24px，≤200KB</td></tr><tr><td>app.category</td><td>string</td><td>是</td><td>所属分类，级联路径（一级/二级，如"教学管理/课堂工具"）</td></tr><tr><td>app.app_type</td><td>enum</td><td>是</td><td>non_platform（非平台型，默认）/ platform（平台型）；是否平台应用，平台型仅桂教通超级管理员可选，机构管理员新增固定为非平台型（不展示该字段）</td></tr><tr><td>app.data_sync</td><td>enum</td><td>是</td><td>no / yes，默认 no；选 yes 时必填推送地址、TOKEN、EncodingAesKey</td></tr><tr><td>app.user_auth</td><td>enum</td><td>是</td><td>no / yes，默认 no；是否授权平台获取用户个人信息</td></tr><tr><td>app.push_url</td><td>string</td><td>否</td><td>数据同步推送地址，格式 http:// 或 https://，data_sync=yes 时必填</td></tr><tr><td>app.sync_token</td><td>string</td><td>否</td><td>数据同步 TOKEN，UUID 生成，最大 50 字符，data_sync=yes 时必填</td></tr><tr><td>app.encoding_aes_key</td><td>string</td><td>否</td><td>数据同步 EncodingAesKey，32 字节 AES-256 密钥 Base64 编码（去填充=），固定 43 字符，data_sync=yes 时必填</td></tr><tr><td>app.form_types</td><td>string</td><td>是</td><td>多值枚举：pcweb / h5 / mini_standalone</td></tr><tr><td>app.jump_login_limit</td><td>enum</td><td>是</td><td>none（无需登录）/ account_only（仅持有账号登录）/ register_or_login（可注册或登录）</td></tr><tr><td>app.type</td><td>enum</td><td>是</td><td>native / ecosystem</td></tr><tr><td>app.native_type</td><td>enum</td><td>否</td><td>lowcode / selfbuilt；应用属性=原生应用时级联必填</td></tr><tr><td>app.lowcode_app_id</td><td>string</td><td>否</td><td>低代码应用ID，仅 native_type=lowcode 时必填</td></tr><tr><td>app.app_id</td><td>integer</td><td>是</td><td>业务应用ID，新增应用时由系统在当前最大业务应用ID基础上 +1 自动生成，全局唯一、不可修改</td></tr><tr><td>app.app_open_id</td><td>string</td><td>是</td><td>应用 openId；非低代码应用由系统自动生成（长度固定 15，仅英文/数字/下划线，全局唯一）；低代码应用取创建时填写的低代码应用ID</td></tr><tr><td>app.summary</td><td>text</td><td>是</td><td>应用简介，最大 100 字符</td></tr><tr><td>app.description</td><td>text</td><td>是</td><td>应用详情介绍，富文本 HTML，≤5MB；必填</td></tr><tr><td>app.video_urls</td><td>string</td><td>否</td><td>应用视频介绍 URL 列表 JSON；最多 5 个视频，单个 ≤10MB</td></tr><tr><td>app.institution_scope</td><td>string</td><td>是</td><td>多值枚举：school / superior</td></tr><tr><td>app.school_levels_mode</td><td>enum</td><td>是</td><td>all / partial</td></tr><tr><td>app.school_levels</td><td>string</td><td>否</td><td>school_levels_mode=partial 时必填；多值枚举：kindergarten / primary / junior / senior / vocational_secondary / vocational_higher / undergraduate / graduate</td></tr><tr><td>app.visibility_mobile_roles</td><td>string</td><td>是</td><td>多值枚举：edu_staff / student / school_staff / parent / graduate / retired_staff / tenant_admin / temp_member / public_account / developer</td></tr><tr><td>app.visibility_mobile_url</td><td>string</td><td>是</td><td>form_types 含 mini_standalone 时必填；存储完整地址（含 http/https 前缀），前端以前缀下拉+文本框录入后拼接</td></tr><tr><td>app.visibility_wechat_appid</td><td>string</td><td>是</td><td>form_types 含 mini_standalone 时必填</td></tr><tr><td>app.visibility_pc_roles</td><td>string</td><td>是</td><td>同 mobile 角色枚举</td></tr><tr><td>app.visibility_pc_url</td><td>string</td><td>是</td><td>form_types 含 pcweb 时必填；存储完整地址（含 http/https 前缀），前端以前缀下拉+文本框录入后拼接</td></tr><tr><td>app.visibility_h5_roles</td><td>string</td><td>是</td><td>同 mobile 角色枚举</td></tr><tr><td>app.visibility_h5_url</td><td>string</td><td>是</td><td>form_types 含 h5 时必填；存储完整地址（含 http/https 前缀），前端以前缀下拉+文本框录入后拼接</td></tr><tr><td>app.visibility_whitelist</td><td>string</td><td>否</td><td>应用白名单，多值地址列表（完整地址含前缀，JSON 数组存储）；默认回填移动端/PC端/H5 地址（可删除，删除后不再自动回填），点击"新增白名单"按钮新增输入行手动添加（可删除），去重，最多 5 个</td></tr><tr><td>app.status</td><td>enum</td><td>是</td><td>online / offline / rejected（rejected=已驳回：上线申请被驳回，可重新提交）</td></tr><tr><td>app.listing_status</td><td>enum</td><td>是</td><td>listed / unlisted / dismissed</td></tr><tr><td>app.tenant_id</td><td>string</td><td>是</td><td>归属机构</td></tr><tr><td>app.tenant_name</td><td>string</td><td>是</td><td>归属机构名称；由 app.tenant_id 反查组织中心带出，冗余展示（P06 全平台应用页"上架机构"列）</td></tr><tr><td>app.suite_id</td><td>string</td><td>否</td><td>生态应用 suiteID，最大 64 字符</td></tr><tr><td>app.system_suite_id</td><td>string</td><td>是</td><td>系统级 SuiteId，全局唯一，创建后不可修改</td></tr><tr><td>app.system_suite_key</td><td>string</td><td>是</td><td>系统级 SuiteKey，创建应用时自动生成，可在 P02b 凭证区通过"复制"复制其值，不可手动更新</td></tr><tr><td>app.system_suite_key_updated_at</td><td>datetime</td><td>否</td><td>SuiteKey 最近一次更新时间，用于旧 Key 2 天失效期计算</td></tr><tr><td>app.created_at</td><td>datetime</td><td>是</td><td>创建时间</td></tr><tr><td>app.updated_at</td><td>datetime</td><td>是</td><td>最后更新时间</td></tr></tbody></table>
+<table><thead><tr><th>字段</th><th>类型</th><th>必填</th><th>说明</th></tr></thead><tbody><tr><td>app.id</td><td>string</td><td>是</td><td>应用唯一标识，系统生成 UUID</td></tr><tr><td>app.name</td><td>string</td><td>是</td><td>应用名称，最大 20 字符</td></tr><tr><td>app.logo</td><td>string</td><td>是</td><td>应用 Logo URL，jpg/png/jpeg，推荐 140×140 圆角 24px，≤200KB</td></tr><tr><td>app.category</td><td>string</td><td>是</td><td>所属分类，级联路径（一级/二级，如"教学管理/课堂工具"）</td></tr><tr><td>app.app_type</td><td>enum</td><td>是</td><td>non_platform（非平台型，默认）/ platform（平台型）；是否平台应用，平台型仅桂教通超级管理员可选，机构管理员新增固定为非平台型（不展示该字段）</td></tr><tr><td>app.data_sync</td><td>enum</td><td>是</td><td>no / yes，默认 no；选 yes 时必填推送地址、TOKEN、EncodingAesKey</td></tr><tr><td>app.user_auth</td><td>enum</td><td>是</td><td>no / yes，默认 no；是否授权平台获取用户个人信息</td></tr><tr><td>app.push_url</td><td>string</td><td>否</td><td>数据同步推送地址，格式 http:// 或 https://，data_sync=yes 时必填</td></tr><tr><td>app.sync_token</td><td>string</td><td>否</td><td>数据同步 TOKEN，UUID 生成，最大 50 字符，data_sync=yes 时必填</td></tr><tr><td>app.encoding_aes_key</td><td>string</td><td>否</td><td>数据同步 EncodingAesKey，32 字节 AES-256 密钥 Base64 编码（去填充=），固定 43 字符，data_sync=yes 时必填</td></tr><tr><td>app.form_types</td><td>string</td><td>是</td><td>多值枚举：pcweb / h5 / mini_standalone</td></tr><tr><td>app.jump_login_limit</td><td>enum</td><td>是</td><td>none（无需登录）/ account_only（仅持有账号登录）/ register_or_login（可注册或登录）</td></tr><tr><td>app.type</td><td>enum</td><td>是</td><td>native / ecosystem</td></tr><tr><td>app.native_type</td><td>enum</td><td>否</td><td>lowcode / selfbuilt；应用属性=原生应用时级联必填</td></tr><tr><td>app.lowcode_app_id</td><td>string</td><td>否</td><td>低代码应用ID，仅 native_type=lowcode 时必填</td></tr><tr><td>app.app_id</td><td>integer</td><td>是</td><td>业务应用ID，新增应用时由系统在当前最大业务应用ID基础上 +1 自动生成，全局唯一、不可修改</td></tr><tr><td>app.app_open_id</td><td>string</td><td>是</td><td>应用 openId；非低代码应用由系统自动生成（长度固定 15，仅英文/数字/下划线，全局唯一）；低代码应用取创建时填写的低代码应用ID</td></tr><tr><td>app.summary</td><td>text</td><td>是</td><td>应用简介，最大 100 字符</td></tr><tr><td>app.description</td><td>text</td><td>是</td><td>应用详情介绍，富文本 HTML，≤5MB；必填</td></tr><tr><td>app.video_urls</td><td>string</td><td>否</td><td>应用视频介绍 URL 列表 JSON；最多 5 个视频，单个 ≤10MB</td></tr><tr><td>app.institution_scope</td><td>string</td><td>是</td><td>多值枚举：school（学校）/ education_bureau（教育局）/ platform_console（超管后台，仅桂教通超级管理员可选择）</td></tr><tr><td>app.school_levels_mode</td><td>enum</td><td>是</td><td>all / partial</td></tr><tr><td>app.school_levels</td><td>string</td><td>否</td><td>school_levels_mode=partial 时必填；多值枚举：kindergarten / primary / junior / senior / vocational_secondary / vocational_higher / undergraduate / graduate</td></tr><tr><td>app.visibility_mobile_roles</td><td>string</td><td>是</td><td>多值枚举：edu_staff / student / school_staff / parent / graduate / retired_staff / temp_member / public_account / developer / guest（访客）；可含 platform_admin（平台管理员），该选项仅桂教通超级管理员登录时展示与勾选</td></tr><tr><td>app.visibility_mobile_url</td><td>string</td><td>是</td><td>form_types 含 mini_standalone 时必填；存储完整地址（含 http/https 前缀），前端以前缀下拉+文本框录入后拼接</td></tr><tr><td>app.visibility_wechat_appid</td><td>string</td><td>是</td><td>form_types 含 mini_standalone 时必填</td></tr><tr><td>app.visibility_pc_roles</td><td>string</td><td>是</td><td>同 mobile 角色枚举（含 guest；可含 platform_admin，仅桂教通超级管理员登录时展示与勾选）</td></tr><tr><td>app.visibility_pc_url</td><td>string</td><td>是</td><td>form_types 含 pcweb 时必填；存储完整地址（含 http/https 前缀），前端以前缀下拉+文本框录入后拼接</td></tr><tr><td>app.visibility_h5_roles</td><td>string</td><td>是</td><td>同 mobile 角色枚举（含 guest；可含 platform_admin，仅桂教通超级管理员登录时展示与勾选）</td></tr><tr><td>app.visibility_h5_url</td><td>string</td><td>是</td><td>form_types 含 h5 时必填；存储完整地址（含 http/https 前缀），前端以前缀下拉+文本框录入后拼接</td></tr><tr><td>app.visibility_whitelist</td><td>string</td><td>否</td><td>应用白名单，多值地址列表（完整地址含前缀，JSON 数组存储）；默认回填移动端/PC端/H5 地址（可删除，删除后不再自动回填）；手动添加通过输入区（前缀下拉 + 地址输入框 + 添加按钮）录入，已添加项以标签列表回显、可删除，点击标签可修改（保存后原位更新，默认回填项改后转手动项）；支持 * 通配符（每条最多一个，单个 * 表示匹配全部地址）；去重，最多 20 条（含默认回填）</td></tr><tr><td>app.status</td><td>enum</td><td>是</td><td>online / offline / rejected（rejected=已驳回：上线申请被驳回，可重新提交）</td></tr><tr><td>app.listing_status</td><td>enum</td><td>是</td><td>listed / unlisted / dismissed</td></tr><tr><td>app.tenant_id</td><td>string</td><td>是</td><td>归属机构</td></tr><tr><td>app.tenant_name</td><td>string</td><td>是</td><td>归属机构名称；由 app.tenant_id 反查组织中心带出，冗余展示（P06 全平台应用页"上架机构"列）</td></tr><tr><td>app.suite_id</td><td>string</td><td>否</td><td>生态应用 suiteID，最大 64 字符</td></tr><tr><td>app.system_suite_id</td><td>string</td><td>是</td><td>系统级 SuiteId，全局唯一，创建后不可修改</td></tr><tr><td>app.system_suite_key</td><td>string</td><td>是</td><td>系统级 SuiteKey，创建应用时自动生成，可在 P02b 凭证区通过"复制"复制其值，不可手动更新</td></tr><tr><td>app.system_suite_key_updated_at</td><td>datetime</td><td>否</td><td>SuiteKey 最近一次更新时间，用于旧 Key 2 天失效期计算</td></tr><tr><td>app.created_at</td><td>datetime</td><td>是</td><td>创建时间</td></tr><tr><td>app.updated_at</td><td>datetime</td><td>是</td><td>最后更新时间</td></tr></tbody></table>
 <h3 id="h-45">6.2 应用分类（Category）</h3>
 <table><thead><tr><th>字段</th><th>类型</th><th>必填</th><th>说明</th></tr></thead><tbody><tr><td>category.id</td><td>string</td><td>是</td><td>分类唯一标识</td></tr><tr><td>category.name</td><td>string</td><td>是</td><td>分类名称，最大 30 字符</td></tr><tr><td>category.code</td><td>string</td><td>是</td><td>分类编码，最大 20 字符，仅限数字和英文字母，同一层级不可重复</td></tr><tr><td>category.parent_id</td><td>string</td><td>否</td><td>父分类 ID，空为一级分类；最多 2 级</td></tr><tr><td>category.sort_order</td><td>integer</td><td>是</td><td>排序号，默认 1；层级内升序，相同时更新时间优先</td></tr><tr><td>category.status</td><td>enum</td><td>是</td><td>enabled / disabled</td></tr><tr><td>category.tenant_id</td><td>string</td><td>是</td><td>归属机构</td></tr><tr><td>category.created_at</td><td>datetime</td><td>是</td><td>创建时间</td></tr><tr><td>category.updated_at</td><td>datetime</td><td>是</td><td>更新时间</td></tr></tbody></table>
 <h3 id="h-46">6.3 范围（Zone）</h3>
@@ -433,9 +629,10 @@
 <h3 id="h-57">7.2 应用上架状态</h3>
 <table><thead><tr><th>状态</th><th>含义</th><th>操作人</th><th>触发动作</th><th>下一状态</th><th>限制条件</th></tr></thead><tbody><tr><td>unlisted</td><td>未上架，范围中不可见</td><td>tenant_admin</td><td>上架配置</td><td>listed</td><td>app.status 必须为 online；需配置上架范围；须勾选上架承诺书（未勾选时确认上架置灰）</td></tr><tr><td>listed</td><td>已上架，范围中可见</td><td>tenant_admin</td><td>下架</td><td>dismissed</td><td>二次确认："下架后全区用户将无法使用此应用，已安装的应用不会被卸载"</td></tr><tr><td>listed</td><td>已上架，范围中可见</td><td>platform_admin</td><td>强制下架（P06）</td><td>dismissed</td><td>二次确认："确定要强制下架【{app.name}】吗？下架后该应用在【{app.tenant_name}】的上架列表将变为已下架状态，已安装的应用不卸载。"；仅超管可操作；写 OperationLog（force_delist）</td></tr><tr><td>dismissed</td><td>已下架，范围中不可见，已安装应用不受影响</td><td>tenant_admin</td><td>上架配置</td><td>listed</td><td>可重新上架，且重新上架时保留原上架范围（P05 默认回填下架前的范围配置）</td></tr></tbody></table>
 <p>应用必须先上线（online）后才可上架（listed）。已上架不允许直接下线，必须先下架方可下线。</p>
+<blockquote>修改态标记（editState，仅用于列表展示，不改变 app.status）：已上线 / 已上架应用编辑保存后 editState = pending_submit（修改待提交），此时不生成审批记录；重新提交上线申请后 editState = pending_review（修改待审批）；审批通过后清除标记并将修改内容合并生效，驳回后回到 pending_submit。未上线应用的编辑不产生该标记，保存即生效。</blockquote>
 <blockquote>范围动态引用不影响状态：标签或范围内机构的增删仅改变应用的上架范围（可见机构集合），应用上架状态（listing_status）不变，仍在范围内的机构继续可见，不在范围内的机构不可见该应用；已安装应用不卸载、无需重新审核。</blockquote>
 <h3 id="h-58">7.3 审批记录状态机</h3>
-<table><thead><tr><th>状态</th><th>含义</th><th>操作人</th><th>触发动作</th><th>下一状态</th><th>限制条件</th></tr></thead><tbody><tr><td>pending</td><td>待审批（上线）</td><td>tenant_admin</td><td>提交上线申请</td><td>—</td><td>app 信息完整方可提交</td></tr><tr><td>pending</td><td>待审批（修改）</td><td>tenant_admin</td><td>编辑已上架应用并提交</td><td>—</td><td>app.status = online；审批通过前对外仍展示旧值</td></tr><tr><td>pending</td><td></td><td>platform_admin（桂教通超级管理员）</td><td>审批通过</td><td>approved</td><td>—</td></tr><tr><td>pending</td><td></td><td>platform_admin（桂教通超级管理员）</td><td>驳回</td><td>rejected</td><td>驳回原因必填</td></tr><tr><td>approved</td><td>审批通过，应用进入机构管理员上架列表（未上架）；修改类型审批通过后新值对外生效</td><td>—</td><td>—</td><td>—</td><td>终态；app.status 自动变为 online，应用进入机构管理员应用上架管理列表（listing_status = unlisted）</td></tr><tr><td>rejected</td><td>审批驳回</td><td>tenant_admin</td><td>重新提交</td><td>pending</td><td>修改后可重新提交上线/修改申请</td></tr></tbody></table>
+<table><thead><tr><th>状态</th><th>含义</th><th>操作人</th><th>触发动作</th><th>下一状态</th><th>限制条件</th></tr></thead><tbody><tr><td>pending</td><td>待审批（上线）</td><td>tenant_admin</td><td>提交上线申请</td><td>—</td><td>仅 app.status = offline / rejected 且无待提交修改时生成</td></tr><tr><td>pending</td><td>待审批（修改）</td><td>tenant_admin</td><td>已上线 / 已上架应用编辑保存后，重新提交上线申请</td><td>—</td><td>编辑保存本身不生成记录，提交上线申请时才生成；审批通过前对外仍展示旧值</td></tr><tr><td>pending</td><td></td><td>platform_admin（桂教通超级管理员）</td><td>审批通过</td><td>approved</td><td>—</td></tr><tr><td>pending</td><td></td><td>platform_admin（桂教通超级管理员）</td><td>驳回</td><td>rejected</td><td>驳回原因必填</td></tr><tr><td>approved</td><td>审批通过；上线类型进入上架列表，修改类型的新值此时生效</td><td>—</td><td>—</td><td>—</td><td>终态；上线：app.status 变为 online 并进入上架列表（listing_status = unlisted）；修改：保持原有上线 / 上架状态，不重复进入上架列表</td></tr><tr><td>rejected</td><td>审批驳回</td><td>tenant_admin</td><td>重新提交</td><td>pending</td><td>上线类型 app.status 变为 rejected；修改类型修改内容不生效，回到「修改待提交」可再次提交</td></tr></tbody></table>
 <h3 id="h-59">7.4 订单状态机</h3>
 <table><thead><tr><th>状态</th><th>含义</th><th>操作人</th><th>触发动作</th><th>下一状态</th><th>限制条件</th></tr></thead><tbody><tr><td>pending</td><td>待支付</td><td>系统生成</td><td>用户下单</td><td>—</td><td>用户在商城完成下单时生成</td></tr><tr><td>pending</td><td></td><td>商城系统</td><td>支付回调</td><td>paid</td><td>商城支付完成回调后自动变更</td></tr><tr><td>pending</td><td></td><td>系统</td><td>超时取消</td><td>cancelled</td><td>超过支付有效期未支付时自动变更</td></tr><tr><td>paid</td><td>已支付</td><td>系统</td><td>授权到期</td><td>expired</td><td>授权有效期到达后自动变更（套餐有效期到期）</td></tr><tr><td>expired</td><td>已过期</td><td>—</td><td>—</td><td>—</td><td>终态；授权有效期到达后从 paid 自动流转</td></tr><tr><td>cancelled</td><td>已取消</td><td>用户</td><td>取消订单</td><td>—</td><td>仅 pending 状态下可取消；paid 状态不可取消</td></tr><tr><td>paid</td><td>已支付</td><td>tenant_admin（机构管理员）</td><td>申请退款</td><td>refund_pending</td><td>仅 paid 状态可申请；退款工单提交后同步至桂教通超级管理员待审批队列</td></tr><tr><td>refund_pending</td><td>退款中</td><td>platform_admin（桂教通超级管理员）</td><td>审批通过</td><td>refund_success</td><td>审批意见选填；通过后触发原路退款，订单状态置为退款成功</td></tr><tr><td>refund_pending</td><td>退款中</td><td>platform_admin（桂教通超级管理员）</td><td>审批驳回</td><td>refund_rejected</td><td>驳回原因必填；驳回后订单回到 paid，可重新发起退款</td></tr><tr><td>refund_rejected</td><td>退款驳回</td><td>tenant_admin（机构管理员）</td><td>重新申请退款</td><td>refund_pending</td><td>修改后可重新发起退款申请</td></tr></tbody></table>
 <blockquote>退款通过后应用回到购买前状态：refund_pending 经审批通过（→ refund_success）后，对应应用回到购买前状态——购买前已安装则保持已安装状态，未安装则保持未安装状态，不强制从「我的应用中心」移除，点击应用打开应用详情页（P22），根据状态展示「购买/安装」按钮，即整体回到用户购买前的可使用状态；订单保留 refund_success 终态以留痕审计。</blockquote>
