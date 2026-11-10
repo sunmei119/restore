@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>移动端门户原型 - 应用中心</title>
+  <style>
+    :root {
+      --bg: #ECEDEF;
+      --surface: #ffffff;
+      --surface-2: #e9e9eb;
+      --line: #e5e5ea;
+      --text: #1c1c1e;
+      --text-2: #3c3c43;
+      --text-3: #8e8e93;
+      --primary: #007aff;
+      --radius: 16px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 48px;
+      padding: 32px;
+      background: #14161a;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: var(--text);
+    }
+
+    /* ===== 手机外壳 ===== */
+    .phone { width: 390px; height: 844px; flex: 0 0 390px; border-radius: 46px; background: #2c2c2e; padding: 12px; box-shadow: 0 30px 70px rgba(0,0,0,.55); }
+    .phone-screen { width: 100%; height: 100%; border-radius: 36px; overflow: hidden; background: var(--bg); display: flex; flex-direction: column; position: relative; }
+
+    .status-bar { height: 44px; flex: 0 0 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 28px; font-size: 14px; font-weight: 600; background: var(--bg); }
+    .status-icons { display: flex; align-items: center; gap: 5px; }
+    .sig { display: flex; align-items: flex-end; gap: 1.5px; height: 10px; }
+    .sig i { width: 3px; background: var(--text); border-radius: 1px; }
+    .sig i:nth-child(1) { height: 4px; }
+    .sig i:nth-child(2) { height: 6px; }
+    .sig i:nth-child(3) { height: 8px; }
+    .sig i:nth-child(4) { height: 10px; }
+    .bat { width: 22px; height: 11px; border: 1px solid var(--text); border-radius: 3px; padding: 1.5px; position: relative; }
+    .bat::after { content: ''; position: absolute; right: -3px; top: 3px; width: 2px; height: 4px; background: var(--text); border-radius: 0 1px 1px 0; }
+    .bat i { display: block; height: 100%; width: 78%; background: var(--text); border-radius: 1px; }
+
+    .nav-bar { height: 44px; flex: 0 0 44px; display: flex; align-items: center; justify-content: center; background: var(--bg); font-size: 17px; font-weight: 600; }
+    .page-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 8px; background: var(--bg); }
+    .page-body::-webkit-scrollbar { display: none; }
+
+    /* ===== 搜索 ===== */
+    .svc-search { padding: 4px 16px 10px; background: var(--bg); }
+    .svc-search-box { height: 36px; border-radius: 18px; background: var(--surface); display: flex; align-items: center; gap: 6px; padding: 0 14px; color: var(--text-3); font-size: 13px; }
+
+    /* ===== 分组 ===== */
+    .svc-groups { padding: 4px 12px 8px; }
+    .svc-group { background: var(--surface); border-radius: var(--radius); padding: 14px 4px 16px; margin-bottom: 12px; }
+    .svc-group-head { display: flex; align-items: center; gap: 8px; padding: 0 12px; margin-bottom: 14px; }
+    .svc-group-bar { width: 4px; height: 16px; border-radius: 2px; flex: 0 0 4px; }
+    .svc-group-name { font-size: 15px; font-weight: 600; flex: 1; min-width: 0; }
+    .svc-group-more { font-size: 12px; color: var(--text-3); flex: 0 0 auto; display: flex; align-items: center; gap: 2px; }
+
+    /* 二级分类分组（展开态） */
+    .svc-subcats { padding: 0 4px; }
+    .svc-subcat { margin-bottom: 16px; }
+    .svc-subcat:last-child { margin-bottom: 0; }
+    .svc-subcat-title { display: flex; align-items: center; gap: 6px; padding: 0 12px; margin-bottom: 12px; font-size: 12px; color: var(--text-3); }
+    .svc-subcat-count { font-size: 11px; color: var(--text-3); }
+    /* 新界面内的二级分类标题 */
+    .all-subcat { margin-bottom: 20px; }
+    .all-subcat-title { display: flex; align-items: center; gap: 6px; padding: 0 16px; margin-bottom: 12px; font-size: 13px; font-weight: 600; color: var(--text-2); }
+
+    /* 应用网格：一行 4 个 */
+    .svc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px 8px; padding: 0 8px; }
+    .svc-app { display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 0; }
+    .svc-app:active .svc-app-logo { transform: scale(.9); }
+    .svc-app-logo { width: 44px; height: 44px; border-radius: 13px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 15px; font-weight: 600; transition: transform .18s; flex: 0 0 44px; }
+    .svc-app-name { font-size: 13px; color: var(--text-2); text-align: center; line-height: 1.3; max-width: 100%; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; }
+
+    /* ===== 首页工作台（按教师端首页截图还原） ===== */
+    .home-head { background: linear-gradient(180deg,#2C74BB 0%,#4D99E7 22%,#7787E6 50%,#97A4E0 72%,#8291E6 100%); display: flex; flex-direction: column; padding: 14px 16px 20px; min-height: 190px; }
+    .home-search { display: flex; align-items: center; gap: 8px; background: #fff; border-radius: 18px; padding: 10px 14px; color: #9aa0a6; font-size: 13px; margin-bottom: 20px; }
+    .home-head-title { color: #fff; font-size: 17px; font-weight: 700; margin-top: auto; }
+    .home-head-sub { color: rgba(255,255,255,.92); font-size: 12px; margin-top: 6px; }
+    .home-quick { display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px 8px; background: var(--surface); border-radius: var(--radius); margin: 0 12px 12px; padding: 18px 8px; border-left: 1px solid #279FF6; border-right: 1px solid #57A8E2; }
+    .home-quick-item { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; }
+    .home-quick-icon { width: 40px; height: 40px; border-radius: 12px; flex: 0 0 40px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 15px; font-weight: 600; }
+    .home-quick-name { font-size: 12px; color: var(--text-2); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .home-card { background: var(--surface); border-radius: var(--radius); padding: 14px; margin: 0 12px 12px; }
+    .home-card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .home-card-title { font-size: 15px; font-weight: 600; }
+    .home-card-more { font-size: 12px; color: var(--text-3); }
+    .home-card-sub-title { font-size: 13px; font-weight: 600; color: var(--text-2); margin-bottom: 10px; }
+    .home-todo { display: flex; flex-direction: column; }
+    .home-todo-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+    .home-todo-item:last-child { border-bottom: none; }
+    .home-todo-dot { width: 7px; height: 7px; border-radius: 50%; background: #ff453a; flex: 0 0 7px; }
+    .home-todo-title { flex: 1; font-size: 13px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .home-todo-time { font-size: 11px; color: var(--text-3); }
+    .home-apps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px 8px; }
+    .home-app { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; }
+    .home-app-icon { width: 44px; height: 44px; border-radius: 13px; flex: 0 0 44px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 15px; font-weight: 600; }
+    .home-app-name { font-size: 12px; color: var(--text-2); text-align: center; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .home-schedule { display: flex; flex-direction: column; }
+    .home-schedule-item { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+    .home-schedule-item:last-child { border-bottom: none; }
+    .home-schedule-time { flex: 0 0 auto; width: 48px; font-size: 14px; font-weight: 600; color: #8F73FF; }
+    .home-schedule-info { flex: 1; min-width: 0; }
+    .home-schedule-course { font-size: 14px; font-weight: 600; }
+    .home-schedule-place { font-size: 12px; color: var(--text-3); margin-top: 3px; }
+    .home-dist { display: flex; flex-direction: column; gap: 8px; padding: 2px 0 8px; }
+    .home-dist-row { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+    .home-dist-name { flex: 0 0 76px; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .home-dist-bar { flex: 1; height: 8px; border-radius: 4px; background: var(--surface-2); overflow: hidden; }
+    .home-dist-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg,#0090F0,#0050C0); }
+    .home-dist-pct { flex: 0 0 56px; text-align: right; color: var(--text-2); }
+    .home-news { display: flex; flex-direction: column; }
+    .home-news-item { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+    .home-news-item:last-child { border-bottom: none; }
+    .home-news-tag { flex: 0 0 auto; font-size: 11px; padding: 2px 7px; border-radius: 6px; background: var(--surface-2); color: var(--primary); margin-top: 2px; }
+    .home-news-title { font-size: 13px; line-height: 1.5; color: var(--text); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .home-news-time { font-size: 11px; color: var(--text-3); margin-top: 4px; }
+    .home-news-thumb { flex: 0 0 84px; width: 84px; height: 84px; border-radius: 12px; }
+    .home-facts { display: flex; flex-wrap: wrap; background: var(--surface); border-radius: var(--radius); margin: 0 12px 12px; padding: 12px 0; }
+    .home-fact { width: 33.333%; text-align: center; padding: 8px 0; }
+    .home-fact-num { font-size: 17px; font-weight: 700; color: #0090F0; }
+    .home-fact-label { font-size: 11px; color: var(--text-3); margin-top: 3px; }
+    .home-foot { text-align: center; font-size: 11px; color: var(--text-3); padding: 6px 12px 18px; line-height: 1.8; }
+
+    /* ===== 消息 ===== */
+    .msg-list { padding: 12px; }
+    .msg-item { background: var(--surface); border-radius: var(--radius); padding: 14px; margin-bottom: 10px; display: flex; gap: 12px; }
+    .msg-icon { width: 40px; height: 40px; border-radius: 12px; flex: 0 0 40px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 15px; }
+    .msg-body { flex: 1; min-width: 0; }
+    .msg-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+    .msg-dot { width: 7px; height: 7px; border-radius: 50%; background: #ff453a; flex: 0 0 7px; }
+    .msg-desc { font-size: 12px; color: var(--text-3); line-height: 1.5; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+    .msg-time { font-size: 11px; color: var(--text-3); margin-top: 6px; }
+
+    /* ===== 我的 ===== */
+    .profile { padding: 22px 16px 24px; display: flex; align-items: center; gap: 14px; }
+    .profile-avatar { width: 56px; height: 56px; border-radius: 50%; flex: 0 0 56px; background: linear-gradient(135deg,#0a84ff,#5e5ce6); display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 600; }
+    .profile-name { font-size: 17px; font-weight: 600; margin-bottom: 4px; }
+    .profile-org { font-size: 12px; color: var(--text-3); }
+    .profile-role { display: inline-block; margin-top: 7px; padding: 2px 9px; border-radius: 10px; background: var(--surface-2); font-size: 11px; color: var(--text-2); }
+    .me-stats { display: flex; background: var(--surface); border-radius: var(--radius); padding: 14px 0; margin: 0 12px 12px; }
+    .me-stat { flex: 1; text-align: center; }
+    .me-stat-num { font-size: 19px; font-weight: 700; }
+    .me-stat-label { font-size: 11px; color: var(--text-3); margin-top: 3px; }
+    .me-menu { background: var(--surface); border-radius: var(--radius); margin: 0 12px 12px; }
+    .me-menu-item { display: flex; align-items: center; gap: 12px; padding: 15px 16px; border-bottom: 1px solid var(--line); }
+    .me-menu-item:last-child { border-bottom: none; }
+    .me-menu-item:active { background: var(--surface-2); }
+    .me-menu-icon { width: 24px; display: flex; align-items: center; justify-content: center; color: var(--primary); }
+    .me-menu-label { flex: 1; font-size: 14px; }
+    .me-menu-arrow { color: #c7c7cc; font-size: 14px; }
+
+    /* ===== 班级 ===== */
+    .class-list { padding: 12px; }
+    .class-item { background: var(--surface); border-radius: var(--radius); padding: 16px; margin-bottom: 10px; }
+    .class-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .class-avatar { width: 46px; height: 46px; border-radius: 12px; flex: 0 0 46px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 16px; font-weight: 600; }
+    .class-name { font-size: 15px; font-weight: 600; }
+    .class-meta { font-size: 12px; color: var(--text-3); margin-top: 3px; }
+    .class-badge { margin-left: auto; font-size: 11px; padding: 3px 9px; border-radius: 10px; background: var(--surface-2); color: var(--text-2); }
+    .class-stats { display: flex; gap: 10px; }
+    .class-stat { flex: 1; background: var(--surface-2); border-radius: 10px; padding: 10px; text-align: center; }
+    .class-stat-num { font-size: 16px; font-weight: 700; }
+    .class-stat-label { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+
+    /* ===== 底部 TabBar ===== */
+    .tabbar { height: 58px; flex: 0 0 58px; display: flex; background: #fff; border-top: 1px solid var(--line); padding-bottom: 4px; }
+    .tab { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 11px; color: var(--text-3); transition: .18s; position: relative; }
+    .tab.is-active { color: #0A84FF; font-weight: 600; }
+    .tab svg { width: 22px; height: 22px; }
+    .tab-dot { display: none; position: absolute; top: 6px; right: calc(50% - 18px); width: 8px; height: 8px; border-radius: 50%; background: #FF3B30; border: 1.5px solid #fff; }
+    .tab.is-active .tab-dot { display: block; }
+
+    /* ===== 全量页 / 详情页（覆盖层） ===== */
+    .sheet { position: absolute; inset: 0; background: var(--bg); display: flex; flex-direction: column; z-index: 60; transform: translateX(100%); transition: transform .26s cubic-bezier(.4,0,.2,1); }
+    .sheet.is-open { transform: translateX(0); }
+    .sheet-nav { height: 44px; flex: 0 0 44px; display: flex; align-items: center; padding: 0 12px; gap: 6px; font-size: 15px; background: var(--bg); }
+    .sheet-nav-title { flex: 1; text-align: center; font-size: 17px; font-weight: 600; margin-right: 28px; }
+    .sheet-back { display: flex; align-items: center; color: var(--text); }
+    .sheet-body { flex: 1; overflow-y: auto; padding: 12px 12px 16px; }
+    .sheet-body::-webkit-scrollbar { display: none; }
+
+    /* 全量应用网格 */
+    .all-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px 8px; }
+    .all-app { display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 0; }
+    .all-app:active .svc-app-logo { transform: scale(.9); }
+
+    /* 详情 */
+    .detail-hero { padding: 8px 20px 22px; display: flex; gap: 14px; align-items: flex-start; }
+    .detail-logo { width: 60px; height: 60px; border-radius: 16px; flex: 0 0 60px; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 600; color: #fff; }
+    .detail-title { font-size: 20px; font-weight: 600; margin-bottom: 5px; }
+    .detail-sub { font-size: 12px; color: var(--text-3); margin-bottom: 8px; }
+    .detail-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+    .detail-tag { font-size: 11px; padding: 2px 8px; border-radius: 10px; background: var(--surface); color: var(--text-2); }
+    .detail-card { background: var(--surface); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; }
+    .detail-card-title { font-size: 15px; font-weight: 600; margin-bottom: 10px; }
+    .detail-card-text { font-size: 13px; color: var(--text-3); line-height: 1.75; }
+    .detail-metrics { display: flex; }
+    .detail-metric { flex: 1; text-align: center; }
+    .detail-metric-num { font-size: 17px; font-weight: 700; }
+    .detail-metric-label { font-size: 11px; color: var(--text-3); margin-top: 3px; }
+    .detail-footer { flex: 0 0 auto; padding: 10px 16px 20px; background: var(--bg); border-top: 1px solid var(--line); display: flex; gap: 10px; }
+    .detail-btn { flex: 1; height: 44px; border-radius: 22px; border: none; font-size: 15px; font-weight: 600; color: #fff; background: var(--primary); display: flex; align-items: center; justify-content: center; }
+    .detail-btn.is-installed { background: var(--surface-2); color: var(--text-2); }
+    .detail-btn.is-try { flex: 0 0 118px; background: transparent; color: var(--primary); border: 1px solid var(--primary); }
+
+    /* ===== 侧边说明 ===== */
+    .side { max-width: 340px; color: #a1a1a6; }
+    .side h1 { font-size: 24px; color: #fff; margin-bottom: 10px; }
+    .side-sub { font-size: 14px; line-height: 1.7; margin-bottom: 22px; }
+    .side-block { background: #1c1c1e; border-radius: 14px; padding: 16px 18px; margin-bottom: 12px; }
+    .side-block h2 { font-size: 14px; color: #fff; margin-bottom: 8px; }
+    .side-block ul { padding-left: 18px; }
+    .side-block li { font-size: 13px; line-height: 1.8; }
+    .side-back { display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; margin-right: 8px; padding: 9px 16px; border-radius: 10px; background: #2c2c2e; color: #fff; font-size: 13px; text-decoration: none; font-weight: 500; }
+    @media (max-width: 900px) { body { flex-direction: column; gap: 24px; } .side { max-width: 390px; } }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="phone">
+      <div class="phone-screen">
+        <div class="status-bar">
+          <span>{{ nowTime }}</span>
+          <span class="status-icons">
+            <span class="sig"><i></i><i></i><i></i><i></i></span>
+            <span class="bat"><i></i></span>
+          </span>
+        </div>
+
+        <div class="nav-bar" v-if="tab !== 'home'">{{ navTitle }}</div>
+
+        <div class="page-body">
+          <!-- ========== 首页（教师工作台，按教师端首页截图还原） ========== -->
+          <template v-if="tab === 'home'">
+            <div class="home-head">
+              <div class="home-search">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+                搜索应用 / 活动 / 资讯
+              </div>
+              <div class="home-head-title">广西中小学智慧教育平台</div>
+              <div class="home-head-sub">教师交流与教研活动</div>
+            </div>
+
+            <div class="home-quick">
+              <div class="home-quick-item"><div class="home-quick-icon" style="background:#FD9B4D;">生</div><div class="home-quick-name">学生专区</div></div>
+              <div class="home-quick-item"><div class="home-quick-icon" style="background:#46CEFD;">师</div><div class="home-quick-name">教师专区</div></div>
+              <div class="home-quick-item"><div class="home-quick-icon" style="background:#87DD6E;">高</div><div class="home-quick-name">高考专题</div></div>
+              <div class="home-quick-item"><div class="home-quick-icon" style="background:#70B4FD;">中</div><div class="home-quick-name">中考专题</div></div>
+              <div class="home-quick-item"><div class="home-quick-icon" style="background:#FD9B4D;">家</div><div class="home-quick-name">家长专区</div></div>
+              <div class="home-quick-item"><div class="home-quick-icon" style="background:#46CEFD;">证</div><div class="home-quick-name">教师资格证</div></div>
+              <div class="home-quick-item"><div class="home-quick-icon" style="background:#87DD6E;">幼</div><div class="home-quick-name">数智幼教</div></div>
+              <div class="home-quick-item"><div class="home-quick-icon" style="background:#70B4FD;">保</div><div class="home-quick-name">学平保险</div></div>
+              <div class="home-quick-item"><div class="home-quick-icon" style="background:#FD9B4D;">心</div><div class="home-quick-name">心理健康</div></div>
+              <div class="home-quick-item"><div class="home-quick-icon" style="background:#46CEFD;">测</div><div class="home-quick-name">学习力测评</div></div>
+              <div class="home-quick-item"><div class="home-quick-icon" style="background:#87DD6E;">政</div><div class="home-quick-name">政务服务</div></div>
+              <div class="home-quick-item"><div class="home-quick-icon" style="background:#70B4FD;">艺</div><div class="home-quick-name">艺术培训</div></div>
+            </div>
+
+            <div class="home-card">
+              <div class="home-card-head"><span class="home-card-title">待办通知</span><span class="home-card-more">更多 &rsaquo;</span></div>
+              <div class="home-todo">
+                <div class="home-todo-item"><span class="home-todo-dot"></span><span class="home-todo-title">额度申请待审批</span><span class="home-todo-time">19 小时前</span></div>
+                <div class="home-todo-item"><span class="home-todo-dot"></span><span class="home-todo-title">向你发起了兑换订单，待审批</span><span class="home-todo-time">21 小时前</span></div>
+              </div>
+            </div>
+
+            <div class="home-card">
+              <div class="home-card-head"><span class="home-card-title">常用应用</span><span class="home-card-more" @click="tab = 'app'">全部 &rsaquo;</span></div>
+              <div class="home-apps">
+                <div class="home-app"><div class="home-app-icon" style="background:#3A96FC;">AI</div><div class="home-app-name">AI作文批改</div></div>
+                <div class="home-app"><div class="home-app-icon" style="background:#FE6896;">慧</div><div class="home-app-name">华慧教育</div></div>
+                <div class="home-app"><div class="home-app-icon" style="background:#7D67FE;">课</div><div class="home-app-name">智慧课堂</div></div>
+                <div class="home-app"><div class="home-app-icon" style="background:#F06090;">评</div><div class="home-app-name">综合素质评价</div></div>
+              </div>
+            </div>
+
+            <div class="home-card">
+              <div class="home-card-head"><span class="home-card-title">今日课程表</span><span class="home-card-more">更多 &rsaquo;</span></div>
+              <div class="home-schedule">
+                <div class="home-schedule-item">
+                  <div class="home-schedule-time">08:00</div>
+                  <div class="home-schedule-info">
+                    <div class="home-schedule-course">高三（2）班 · 数学</div>
+                    <div class="home-schedule-place">教学楼 3.201</div>
+                  </div>
+                </div>
+                <div class="home-schedule-item">
+                  <div class="home-schedule-time">10:10</div>
+                  <div class="home-schedule-info">
+                    <div class="home-schedule-course">高三（2）班 · 物理</div>
+                    <div class="home-schedule-place">教室 1.10</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="home-card">
+              <div class="home-card-head"><span class="home-card-title">活动专区</span><span class="home-card-more">更多 &rsaquo;</span></div>
+              <div class="home-card-sub-title">教师学科分布</div>
+              <div class="home-dist">
+                <div class="home-dist-row"><span class="home-dist-name">语文</span><div class="home-dist-bar"><div class="home-dist-fill" style="width:16.2%"></div></div><span class="home-dist-pct">16.22%</span></div>
+                <div class="home-dist-row"><span class="home-dist-name">数学</span><div class="home-dist-bar"><div class="home-dist-fill" style="width:8.1%"></div></div><span class="home-dist-pct">8.11%</span></div>
+                <div class="home-dist-row"><span class="home-dist-name">道德与法治</span><div class="home-dist-bar"><div class="home-dist-fill" style="width:8.1%"></div></div><span class="home-dist-pct">8.11%</span></div>
+                <div class="home-dist-row"><span class="home-dist-name">美术</span><div class="home-dist-bar"><div class="home-dist-fill" style="width:4%"></div></div><span class="home-dist-pct">4.05%</span></div>
+                <div class="home-dist-row"><span class="home-dist-name">体育</span><div class="home-dist-bar"><div class="home-dist-fill" style="width:6.8%"></div></div><span class="home-dist-pct">6.76%</span></div>
+                <div class="home-dist-row"><span class="home-dist-name">英语</span><div class="home-dist-bar"><div class="home-dist-fill" style="width:2.8%"></div></div><span class="home-dist-pct">2.76%</span></div>
+                <div class="home-dist-row"><span class="home-dist-name">其他</span><div class="home-dist-bar"><div class="home-dist-fill" style="width:.5%"></div></div><span class="home-dist-pct">0.5%</span></div>
+              </div>
+              <div class="home-news">
+                <div class="home-news-item">
+                  <div class="home-news-thumb" style="background:linear-gradient(135deg,#66C6B8,#2FAF9E);"></div>
+                  <div style="flex:1;min-width:0;">
+                    <span class="home-news-tag">活动</span>
+                    <div class="home-news-title">2026 年百校润心计划 — 心理健康公益进校园</div>
+                  </div>
+                </div>
+                <div class="home-news-item">
+                  <div class="home-news-thumb" style="background:linear-gradient(135deg,#8090F0,#5060E0);"></div>
+                  <div style="flex:1;min-width:0;">
+                    <span class="home-news-tag">大赛</span>
+                    <div class="home-news-title">2026 年广西中小学数智赋能课堂教学创新大赛</div>
+                    <div class="home-news-time">835 人浏览</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="home-facts">
+              <div class="home-fact"><div class="home-fact-num">402</div><div class="home-fact-label">教师总数</div></div>
+              <div class="home-fact"><div class="home-fact-num">160</div><div class="home-fact-label">男教师</div></div>
+              <div class="home-fact"><div class="home-fact-num">115</div><div class="home-fact-label">女教师</div></div>
+              <div class="home-fact"><div class="home-fact-num">7:5</div><div class="home-fact-label">男女比例</div></div>
+              <div class="home-fact"><div class="home-fact-num">41</div><div class="home-fact-label">平均年龄</div></div>
+            </div>
+
+            <div class="home-foot">主办：广西壮族自治区教育厅 · 中国电信</div>
+          </template>
+
+          <!-- ========== 应用（原首页：搜索 + 一级分类分块） ========== -->
+          <template v-else-if="tab === 'app'">
+            <div class="svc-search">
+              <div class="svc-search-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+                搜索应用名称、分类
+              </div>
+            </div>
+
+            <div class="svc-groups">
+              <div v-for="g in groups" :key="g.name" class="svc-group">
+                <div class="svc-group-head">
+                  <span class="svc-group-bar" :style="{ background: g.color }"></span>
+                  <span class="svc-group-name">{{ g.name }}</span>
+                  <!-- 自定义分类：右侧「更多」，点击打开新界面 -->
+                  <span v-if="g.type === 'custom'" class="svc-group-more" @click="openAll(g.name)">更多
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:12px;height:12px;"><path d="M9 18l6-6-6-6"/></svg>
+                  </span>
+                  <!-- 其他类型：点击在当前界面展开/收起 -->
+                  <span v-else-if="flatApps(g).length > 4" class="svc-group-more" @click="toggleExpand(g.name)">{{ isExpanded(g.name) ? '收起' : '展开' }}</span>
+                </div>
+
+                <!-- 收起态：跨二级分类取前 4 个应用，仅一行 -->
+                <div v-if="!isExpanded(g.name)" class="svc-grid">
+                  <div v-for="a in flatApps(g).slice(0, 4)" :key="a.name" class="svc-app" @click="openDetail(a)">
+                    <div class="svc-app-logo" :style="{ background: a.gradient }">{{ a.initial }}</div>
+                    <div class="svc-app-name">{{ a.name }}</div>
+                  </div>
+                </div>
+
+                <!-- 展开态（仅非自定义分类）：按二级分类分组，在当前界面内联展开 -->
+                <div v-else class="svc-subcats">
+                  <div v-for="sc in g.subCats" :key="sc.name" class="svc-subcat">
+                    <div class="svc-subcat-title">
+                      <span>{{ sc.name }}</span>
+                      <span class="svc-subcat-count">{{ sc.apps.length }}</span>
+                    </div>
+                    <div class="svc-grid">
+                      <div v-for="a in sc.apps" :key="a.name" class="svc-app" @click="openDetail(a)">
+                        <div class="svc-app-logo" :style="{ background: a.gradient }">{{ a.initial }}</div>
+                        <div class="svc-app-name">{{ a.name }}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </template>
+
+          <!-- ========== 班级 ========== -->
+          <template v-else-if="tab === 'class'">
+            <div class="class-list">
+              <div v-for="c in classes" :key="c.name" class="class-item">
+                <div class="class-head">
+                  <div class="class-avatar" :style="{ background: c.gradient }">{{ c.initial }}</div>
+                  <div style="flex:1;min-width:0;">
+                    <div class="class-name">{{ c.name }}</div>
+                    <div class="class-meta">{{ c.grade }} · 班主任 {{ c.teacher }}</div>
+                  </div>
+                  <span class="class-badge">{{ c.role }}</span>
+                </div>
+                <div class="class-stats">
+                  <div class="class-stat"><div class="class-stat-num">{{ c.students }}</div><div class="class-stat-label">学生</div></div>
+                  <div class="class-stat"><div class="class-stat-num">{{ c.apps }}</div><div class="class-stat-label">应用</div></div>
+                  <div class="class-stat"><div class="class-stat-num">{{ c.todo }}</div><div class="class-stat-label">待处理</div></div>
+                </div>
+              </div>
+            </div>
+          </template>
+
+          <!-- ========== 消息 ========== -->
+          <template v-else-if="tab === 'message'">
+            <div class="msg-list">
+              <div v-for="m in messages" :key="m.title" class="msg-item">
+                <div class="msg-icon" :style="{ background: m.gradient }">{{ m.icon }}</div>
+                <div class="msg-body">
+                  <div class="msg-title"><span class="msg-dot" v-if="m.unread"></span>{{ m.title }}</div>
+                  <div class="msg-desc">{{ m.desc }}</div>
+                  <div class="msg-time">{{ m.time }}</div>
+                </div>
+              </div>
+            </div>
+          </template>
+
+          <!-- ========== 我的 ========== -->
+          <template v-else-if="tab === 'me'">
+            <div class="profile">
+              <div class="profile-avatar">李</div>
+              <div>
+                <div class="profile-name">李明</div>
+                <div class="profile-org">南宁市教育局 · 教务处</div>
+                <div class="profile-role">机构管理员</div>
+              </div>
+            </div>
+            <div class="me-stats">
+              <div class="me-stat"><div class="me-stat-num">12</div><div class="me-stat-label">已安装</div></div>
+              <div class="me-stat"><div class="me-stat-num">8</div><div class="me-stat-label">我的收藏</div></div>
+              <div class="me-stat"><div class="me-stat-num">3</div><div class="me-stat-label">待处理</div></div>
+            </div>
+            <div class="me-menu">
+              <div class="me-menu-item" v-for="m in meMenus" :key="m.label">
+                <span class="me-menu-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:19px;height:19px;" v-html="m.icon"></svg>
+                </span>
+                <span class="me-menu-label">{{ m.label }}</span>
+                <span class="me-menu-arrow">&rsaquo;</span>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <!-- 底部 TabBar -->
+        <div class="tabbar">
+          <div class="tab" :class="{ 'is-active': tab === 'home' }" @click="tab = 'home'">
+            <span class="tab-dot"></span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+            首页
+          </div>
+          <div class="tab" :class="{ 'is-active': tab === 'app' }" @click="tab = 'app'">
+            <span class="tab-dot"></span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+            应用
+          </div>
+          <div class="tab" :class="{ 'is-active': tab === 'class' }" @click="tab = 'class'">
+            <span class="tab-dot"></span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+            班级
+          </div>
+          <div class="tab" :class="{ 'is-active': tab === 'message' }" @click="tab = 'message'">
+            <span class="tab-dot"></span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 1 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+            消息
+          </div>
+          <div class="tab" :class="{ 'is-active': tab === 'me' }" @click="tab = 'me'">
+            <span class="tab-dot"></span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+            我的
+          </div>
+        </div>
+
+        <!-- 新界面（由自定义分类「更多」进入），按二级分类分组展示 -->
+        <div class="sheet" :class="{ 'is-open': allGroup }">
+          <template v-if="allGroup">
+            <div class="sheet-nav">
+              <span class="sheet-back" @click="allGroup = null">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:22px;height:22px;"><path d="M15 18l-6-6 6-6"/></svg>
+              </span>
+              <span class="sheet-nav-title">{{ allGroup.name }}</span>
+            </div>
+            <div class="sheet-body">
+              <!-- 按二级分类分组展示；仅展示含应用的二级分类 -->
+              <div v-for="sc in visibleSubCats(allGroup)" :key="sc.name" class="all-subcat">
+                <div class="all-subcat-title">
+                  <span>{{ sc.name }}</span>
+                  <span class="svc-subcat-count">{{ sc.apps.length }}</span>
+                </div>
+                <div class="all-grid">
+                  <div v-for="a in sc.apps" :key="a.name" class="all-app" @click="openDetail(a)">
+                    <div class="svc-app-logo" :style="{ background: a.gradient }">{{ a.initial }}</div>
+                    <div class="svc-app-name">{{ a.name }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <!-- 应用详情 -->
+        <div class="sheet" :class="{ 'is-open': detailApp }" style="z-index:70;">
+          <template v-if="detailApp">
+            <div class="sheet-nav">
+              <span class="sheet-back" @click="detailApp = null">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:22px;height:22px;"><path d="M15 18l-6-6 6-6"/></svg>
+              </span>
+              <span class="sheet-nav-title">应用详情</span>
+            </div>
+            <div class="sheet-body">
+              <div class="detail-hero">
+                <div class="detail-logo" :style="{ background: detailApp.gradient }">{{ detailApp.initial }}</div>
+                <div style="flex:1;min-width:0;">
+                  <div class="detail-title">{{ detailApp.name }}</div>
+                  <div class="detail-sub">{{ detailApp.users }} &middot; 评分 {{ detailApp.score }}</div>
+                  <div class="detail-tags">
+                    <span class="detail-tag">{{ detailApp.cat }}</span>
+                    <span class="detail-tag">{{ detailApp.paid ? '收费应用' : '免费应用' }}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="detail-card">
+                <div class="detail-metrics">
+                  <div class="detail-metric"><div class="detail-metric-num">{{ detailApp.likes }}</div><div class="detail-metric-label">点赞</div></div>
+                  <div class="detail-metric"><div class="detail-metric-num">{{ detailApp.favorites }}</div><div class="detail-metric-label">收藏</div></div>
+                  <div class="detail-metric"><div class="detail-metric-num">{{ detailApp.views }}</div><div class="detail-metric-label">浏览</div></div>
+                </div>
+              </div>
+              <div class="detail-card">
+                <div class="detail-card-title">应用简介</div>
+                <div class="detail-card-text">{{ detailApp.desc }}</div>
+              </div>
+              <div class="detail-card">
+                <div class="detail-card-title">应用信息</div>
+                <div class="detail-card-text">
+                  所属分类：{{ detailApp.cat }}<br>
+                  提供机构：{{ detailApp.org }}<br>
+                  适用学段：{{ detailApp.level }}
+                </div>
+              </div>
+            </div>
+            <div class="detail-footer">
+              <template v-if="detailApp.installed">
+                <button class="detail-btn">打开应用</button>
+              </template>
+              <template v-else>
+                <button class="detail-btn" @click="install(detailApp)">{{ detailApp.paid ? '立即购买' : '添加应用' }}</button>
+                <button v-if="detailApp.trial" class="detail-btn is-try" @click="install(detailApp)">免费试用</button>
+              </template>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+
+    <div class="side">
+      <h1>移动端门户原型</h1>
+      <div class="side-sub">
+        亮色主题移动端门户（教师身份）。首页按教师端首页截图（上下两屏）还原：平台栏与搜索、快捷入口、待办通知、常用应用、今日课程表、活动专区（教师学科分布 + 活动资讯）、教师数据与页脚；原首页「搜索 + 一级分类分块」整体移入底部「应用」Tab，每组默认一行 4 个应用，自定义分类「更多」打开新界面，其余分类「展开」内联展开。
+      </div>
+      <div class="side-block">
+        <h2>页面结构</h2>
+        <ul>
+          <li><strong>首页</strong>：平台栏+搜索、快捷入口、待办通知、常用应用、今日课程表、活动专区、教师数据、页脚</li>
+          <li><strong>应用</strong>：搜索 + 一级分类分块，块内二级分类分组</li>
+          <li><strong>班级</strong>：班级列表与学生/应用/待处理统计</li>
+          <li><strong>消息</strong>：系统通知与审批提醒</li>
+          <li><strong>我的</strong>：个人信息与常用入口</li>
+        </ul>
+      </div>
+      <div class="side-block">
+        <h2>交互</h2>
+        <ul>
+          <li>点击应用图标进入应用详情页</li>
+          <li>自定义分类：右侧「更多」，打开新界面（按二级分类展示）</li>
+          <li>其他分类：右侧「展开」，在当前界面内联展开二级分类分组，「收起」还原</li>
+          <li>仅展示含应用的二级分类，空分类不展示</li>
+        </ul>
+      </div>
+      <a class="side-back" href="./index.html">&larr; 返回 PC 端原型</a>
+      <a class="side-back" href="../../index.html">&larr; 返回导航首页</a>
+    </div>
+  </div>
+
+  <script src="lib/vue.global.prod.js"></script>
+  <script>
+    const { createApp, ref } = Vue;
+    createApp({
+      setup() {
+        const tab = ref('home');
+        const nowTime = ref('');
+        const allGroup = ref(null);
+        const detailApp = ref(null);
+        // 在当前界面内联展开的一级分类（手风琴，仅非自定义分类）
+        const expanded = ref([]);
+
+        const groups = ref([
+          {
+            name: '协同管理', desc: '校园协同办公工具', color: '#2b7df6', type: 'system',
+            subCats: [
+              { name: '办公协同', apps: [
+                { initial:'HX', name:'HX2000云图书馆', paid:false, users:'3745在用', score:'5.0', likes:1286, favorites:642, views:23140, cat:'协同管理', org:'南宁市教育局', level:'所有学段', desc:'HX2000云图书馆管理系统，包含 15+ 个业务功能模块，支撑学校全生命周期管理。', gradient:'linear-gradient(135deg,#43a7ff,#2b7df6)' },
+                { initial:'微', name:'微校管智慧校园', paid:false, users:'1720在用', score:'5.0', likes:842, favorites:351, views:12880, cat:'协同管理', org:'南宁市教育局', level:'所有学段', desc:'微校管智慧校园，校园综合管理平台，覆盖家校、考勤、资产管理等全场景。', gradient:'linear-gradient(135deg,#f6ad55,#ed8936)' },
+                { initial:'校', name:'校园OA协同', paid:false, users:'960在用', score:'5.0', likes:512, favorites:198, views:7640, cat:'协同管理', org:'南宁市教育局', level:'所有学段', desc:'校园OA协同办公平台，流程审批、公文流转、任务协作一站式。', gradient:'linear-gradient(135deg,#4fd1c5,#319795)' }
+              ]},
+              { name: '公文流转', apps: [
+                { initial:'通', name:'通知公告', paid:false, users:'1520在用', score:'4.8', likes:620, favorites:240, views:9120, cat:'协同管理', org:'本机构', level:'所有学段', desc:'面向全体教职工的校内通知发布与阅读回执管理。', gradient:'linear-gradient(135deg,#f87171,#ef4444)' },
+                { initial:'公', name:'公文流转', paid:false, users:'510在用', score:'4.7', likes:176, favorites:72, views:3460, cat:'协同管理', org:'本机构', level:'所有学段', desc:'校内公文拟稿、签批与归档全流程电子化。', gradient:'linear-gradient(135deg,#60a5fa,#3b82f6)' }
+              ]},
+              { name: '会议资产', apps: [
+                { initial:'印', name:'用印申请', paid:false, users:'380在用', score:'4.6', likes:124, favorites:48, views:2380, cat:'协同管理', org:'本机构', level:'所有学段', desc:'电子用印申请与审批记录留痕管理。', gradient:'linear-gradient(135deg,#93c5fd,#60a5fa)' },
+                { initial:'会', name:'会议室预约', paid:false, users:'670在用', score:'4.5', likes:210, favorites:88, views:4120, cat:'协同管理', org:'本机构', level:'所有学段', desc:'会议室资源预约、冲突检测与使用统计。', gradient:'linear-gradient(135deg,#fbbf24,#f59e0b)' }
+              ]}
+            ]
+          },
+          {
+            name: '教务管理', desc: '排课、考勤、教务工具', color: '#38a169', type: 'system',
+            subCats: [
+              { name: '排课选课', apps: [
+                { initial:'教', name:'辰知教务', paid:true, price:'¥199/年', trial:true, users:'2885在用', score:'4.9', likes:1530, favorites:720, views:28900, cat:'教务管理', org:'南宁市教育局', level:'初中、高中', desc:'辰知教务 SaaS 管理系统，支持教务排课与日常教学管理。', gradient:'linear-gradient(135deg,#48bb78,#38a169)' },
+                { initial:'排', name:'智能排课系统', paid:true, price:'¥299/年', users:'2010在用', score:'4.8', likes:968, favorites:430, views:15600, cat:'教务管理', org:'南宁市教育局', level:'初中、高中', desc:'智能排课引擎，自动规避冲突，支持走班与合班排课。', gradient:'linear-gradient(135deg,#68d391,#48bb78)' },
+                { initial:'选', name:'选课系统', paid:true, price:'¥159/年', users:'860在用', score:'4.6', likes:320, favorites:132, views:5480, cat:'教务管理', org:'自治区教育厅', level:'高中', desc:'在线选课、志愿调整与选课结果统计。', gradient:'linear-gradient(135deg,#2dd4bf,#14b8a6)' },
+                { initial:'课', name:'课程管理', paid:false, users:'950在用', score:'4.7', likes:328, favorites:145, views:5890, cat:'教务管理', org:'本机构', level:'所有学段', desc:'课程设置、课表查询与调课申请。', gradient:'linear-gradient(135deg,#86efac,#4ade80)' }
+              ]},
+              { name: '考务成绩', apps: [
+                { initial:'考', name:'考务管理', paid:false, users:'1340在用', score:'4.7', likes:624, favorites:256, views:9820, cat:'教务管理', org:'本机构', level:'所有学段', desc:'考务全流程管理，从报名、编排到成绩录入与分析。', gradient:'linear-gradient(135deg,#9ae6b4,#68d391)' },
+                { initial:'成', name:'成绩分析', paid:false, users:'980在用', score:'4.8', likes:412, favorites:168, views:7240, cat:'教务管理', org:'本机构', level:'初中、高中', desc:'多维度成绩统计与学情诊断，支持班级与个人对比分析。', gradient:'linear-gradient(135deg,#34d399,#10b981)' },
+                { initial:'图', name:'图书管理', paid:false, users:'720在用', score:'4.5', likes:268, favorites:104, views:4360, cat:'教务管理', org:'南宁市教育局', level:'所有学段', desc:'馆藏图书编目、借阅流通与逾期提醒。', gradient:'linear-gradient(135deg,#4ade80,#22c55e)' }
+              ]}
+            ]
+          },
+          {
+            name: '智慧教育', desc: 'AI 课堂、学情与智能教学', color: '#805ad5', type: 'system',
+            subCats: [
+              { name: 'AI 教学', apps: [
+                { initial:'AI', name:'AI作文批改', paid:true, price:'¥399/年', trial:true, users:'9540在用', score:'4.9', likes:3210, favorites:1580, views:58200, cat:'智慧教育', org:'自治区教育厅', level:'小学、初中、高中', desc:'AI 驱动的作文批改与评价引擎，智能分析作文，多维评价，为教师减负。', gradient:'linear-gradient(135deg,#9f7aea,#805ad5)' },
+                { initial:'九', name:'九章爱学', paid:true, price:'¥259/年', trial:true, users:'1420在用', score:'4.8', likes:1180, favorites:540, views:19400, cat:'智慧教育', org:'自治区教育厅', level:'初中、高中', desc:'提供 24 小时智能陪伴与课程答疑以及个性化练习服务。', gradient:'linear-gradient(135deg,#667eea,#5a67d8)' },
+                { initial:'玄', name:'玄华慧', paid:true, price:'¥599/年', trial:true, users:'3000在用', score:'4.9', likes:2040, favorites:980, views:33600, cat:'智慧教育', org:'自治区教育厅', level:'所有学段', desc:'核心 AI 智慧教育产品，AI 课件开发，AI 赋能个性化学习与评测。', gradient:'linear-gradient(135deg,#f687b3,#ed64a6)' },
+                { initial:'备', name:'AI备课', paid:false, users:'9200在用', score:'4.8', likes:2860, favorites:1240, views:43800, cat:'智慧教育', org:'自治区教育厅', level:'所有学段', desc:'AI 助力教师高效生成互动课件、学案，海量资源精准匹配教材章节。', gradient:'linear-gradient(135deg,#34d399,#10b981)' }
+              ]},
+              { name: '学情分析', apps: [
+                { initial:'智', name:'智慧课堂', paid:true, price:'¥459/年', users:'2680在用', score:'4.7', likes:1760, favorites:820, views:31200, cat:'智慧教育', org:'南宁市教育局', level:'小学、初中', desc:'智慧课堂互动系统，实时反馈与学情采集，提升课堂效率。', gradient:'linear-gradient(135deg,#a78bfa,#7c3aed)' },
+                { initial:'学', name:'AI学情分析', paid:false, users:'1860在用', score:'4.6', likes:890, favorites:380, views:16400, cat:'智慧教育', org:'本机构', level:'初中、高中', desc:'基于学业数据进行智能学情诊断与改进建议。', gradient:'linear-gradient(135deg,#a78bfa,#8b5cf6)' }
+              ]}
+            ]
+          },
+          {
+            name: '教育工具', desc: '备课、组卷、问卷等教学辅助', color: '#f59e0b', type: 'system',
+            subCats: [
+              { name: '备课组卷', apps: [
+                { initial:'教', name:'教案库', paid:false, users:'1560在用', score:'4.6', likes:640, favorites:280, views:11200, cat:'教育工具', org:'本机构', level:'所有学段', desc:'教师教案上传、共享与版本管理。', gradient:'linear-gradient(135deg,#60a5fa,#3b82f6)' },
+                { initial:'题', name:'智能出题官', paid:false, users:'2100在用', score:'4.7', likes:940, favorites:410, views:17600, cat:'教育工具', org:'本机构', level:'小学、初中、高中', desc:'按知识点与难度智能生成练习题与试卷。', gradient:'linear-gradient(135deg,#34d399,#10b981)' },
+                { initial:'课', name:'排课助手', paid:false, users:'1180在用', score:'4.6', likes:520, favorites:220, views:9240, cat:'教育工具', org:'本机构', level:'小学、初中', desc:'一键生成课表并支持手动调课。', gradient:'linear-gradient(135deg,#38bdf8,#0ea5e9)' }
+              ]},
+              { name: '考试调研', apps: [
+                { initial:'考', name:'在线考试', paid:false, users:'2340在用', score:'4.7', likes:1180, favorites:530, views:21800, cat:'教育工具', org:'本机构', level:'初中、高中', desc:'题库管理、组卷与在线考试监控。', gradient:'linear-gradient(135deg,#a78bfa,#8b5cf6)' },
+                { initial:'问', name:'问卷系统', paid:false, users:'760在用', score:'4.5', likes:260, favorites:110, views:4980, cat:'教育工具', org:'本机构', level:'所有学段', desc:'在线问卷设计与数据统计，支持匿名填报。', gradient:'linear-gradient(135deg,#c084fc,#a855f7)' },
+                { initial:'阅', name:'阅卷质检', paid:false, users:'1200在用', score:'4.5', likes:480, favorites:190, views:8640, cat:'教育工具', org:'本机构', level:'初中、高中', desc:'对主观题评分进行一致性抽检与偏差预警。', gradient:'linear-gradient(135deg,#818cf8,#6366f1)' }
+              ]}
+            ]
+          },
+          {
+            name: '学生应用', desc: '社团、资助、心理与成长', color: '#06b6d4', type: 'system',
+            subCats: [
+              { name: '学生成长', apps: [
+                { initial:'社', name:'社团活动', paid:false, users:'320在用', score:'4.4', likes:98, favorites:40, views:1860, cat:'学生应用', org:'本机构', level:'初中、高中', desc:'学生社团报名、活动组织与考勤记录。', gradient:'linear-gradient(135deg,#a78bfa,#8b5cf6)' },
+                { initial:'资', name:'资助管理', paid:false, users:'210在用', score:'4.5', likes:86, favorites:32, views:1420, cat:'学生应用', org:'本机构', level:'所有学段', desc:'贫困生资助申请、审批与公示全流程管理。', gradient:'linear-gradient(135deg,#c084fc,#a855f7)' },
+                { initial:'心', name:'心理辅导助手', paid:false, users:'760在用', score:'4.6', likes:310, favorites:142, views:5240, cat:'学生应用', org:'本机构', level:'初中、高中', desc:'温和陪伴式心理疏导，识别情绪风险并给出建议。', gradient:'linear-gradient(135deg,#34d399,#10b981)' },
+                { initial:'阅', name:'阅读推荐官', paid:false, users:'540在用', score:'4.3', likes:186, favorites:78, views:3240, cat:'学生应用', org:'本机构', level:'小学、初中', desc:'根据学生兴趣与学段智能推荐阅读书目并生成导读。', gradient:'linear-gradient(135deg,#a78bfa,#8b5cf6)' },
+                { initial:'成', name:'成长档案', paid:false, users:'430在用', score:'4.4', likes:152, favorites:64, views:2680, cat:'学生应用', org:'本机构', level:'所有学段', desc:'记录学生成长轨迹、荣誉与综合素质评价。', gradient:'linear-gradient(135deg,#22d3ee,#06b6d4)' }
+              ]},
+              { name: '校园生活', apps: [
+                { initial:'宿', name:'宿舍管理', paid:false, users:'892在用', score:'4.5', likes:342, favorites:128, views:5420, cat:'学生应用', org:'本机构', level:'初中、高中', desc:'学生宿舍分配、查寝与报修管理。', gradient:'linear-gradient(135deg,#f87171,#ef4444)' }
+              ]}
+            ]
+          },
+          {
+            name: '自建应用', desc: '本机构及跨机构自建', color: '#64748b', type: 'system',
+            subCats: [
+              { name: '行政办公', apps: [
+                { initial:'档', name:'档案云', paid:false, users:'310在用', score:'4.3', likes:96, favorites:38, views:1620, cat:'自建应用', org:'校办', level:'所有学段', desc:'人事与文书档案电子化归集。', gradient:'linear-gradient(135deg,#22d3ee,#06b6d4)' },
+                { initial:'工', name:'工作流审批', paid:false, users:'430在用', score:'4.5', likes:142, favorites:58, views:2480, cat:'自建应用', org:'校办', level:'所有学段', desc:'自定义审批流程与待办提醒。', gradient:'linear-gradient(135deg,#fbbf24,#f59e0b)' },
+                { initial:'科', name:'科研申报', paid:false, users:'175在用', score:'4.2', likes:64, favorites:28, views:1180, cat:'自建应用', org:'科研处', level:'所有学段', desc:'科研项目申报、评审与过程管理。', gradient:'linear-gradient(135deg,#94a3b8,#64748b)' }
+              ]},
+              { name: '后勤保障', apps: [
+                { initial:'物', name:'物资申领', paid:false, users:'560在用', score:'4.4', likes:188, favorites:76, views:3240, cat:'自建应用', org:'后勤处', level:'所有学段', desc:'办公及教学物资申请与审批。', gradient:'linear-gradient(135deg,#fbbf24,#f59e0b)' },
+                { initial:'维', name:'维修报修', paid:false, users:'1205在用', score:'4.6', likes:516, favorites:204, views:7860, cat:'自建应用', org:'后勤处', level:'所有学段', desc:'校园设施设备在线报修与派单。', gradient:'linear-gradient(135deg,#fb923c,#f97316)' },
+                { initial:'资', name:'资产管理', paid:false, users:'520在用', score:'4.4', likes:168, favorites:68, views:3120, cat:'自建应用', org:'后勤处', level:'所有学段', desc:'学校固定资产登记、盘点与报废管理。', gradient:'linear-gradient(135deg,#34d399,#10b981)' }
+              ]}
+            ]
+          },
+          {
+            name: '自定义分类', desc: '我创建的分类', color: '#ff9f0a', type: 'custom',
+            subCats: [
+              { name: '常用工具', apps: [
+                { initial:'通', name:'通知公告', paid:false, users:'1520在用', score:'4.8', likes:620, favorites:240, views:9120, cat:'协同管理', org:'本机构', level:'所有学段', desc:'面向全体教职工的校内通知发布与阅读回执管理。', gradient:'linear-gradient(135deg,#f87171,#ef4444)' },
+                { initial:'会', name:'会议室预约', paid:false, users:'670在用', score:'4.5', likes:210, favorites:88, views:4120, cat:'协同管理', org:'本机构', level:'所有学段', desc:'会议室资源预约、冲突检测与使用统计。', gradient:'linear-gradient(135deg,#fbbf24,#f59e0b)' },
+                { initial:'维', name:'维修报修', paid:false, users:'1205在用', score:'4.6', likes:516, favorites:204, views:7860, cat:'自建应用', org:'后勤处', level:'所有学段', desc:'校园设施设备在线报修与派单。', gradient:'linear-gradient(135deg,#fb923c,#f97316)' }
+              ]},
+              { name: '教学必备', apps: [
+                { initial:'备', name:'AI备课', paid:false, users:'9200在用', score:'4.8', likes:2860, favorites:1240, views:43800, cat:'智慧教育', org:'自治区教育厅', level:'所有学段', desc:'AI 助力教师高效生成互动课件、学案，海量资源精准匹配教材章节。', gradient:'linear-gradient(135deg,#34d399,#10b981)' },
+                { initial:'题', name:'智能出题官', paid:false, users:'2100在用', score:'4.7', likes:940, favorites:410, views:17600, cat:'教育工具', org:'本机构', level:'小学、初中、高中', desc:'按知识点与难度智能生成练习题与试卷。', gradient:'linear-gradient(135deg,#34d399,#10b981)' },
+                { initial:'成', name:'成绩分析', paid:false, users:'980在用', score:'4.8', likes:412, favorites:168, views:7240, cat:'教务管理', org:'本机构', level:'初中、高中', desc:'多维度成绩统计与学情诊断，支持班级与个人对比分析。', gradient:'linear-gradient(135deg,#34d399,#10b981)' }
+              ]},
+              { name: '待整理', apps: [] }
+            ]
+          }
+        ]);
+
+        const classes = ref([
+          { name:'高三（1）班', grade:'高中三年级', teacher:'王芳', role:'班主任', students:48, apps:12, todo:3, initial:'1', gradient:'linear-gradient(135deg,#0a84ff,#5e5ce6)' },
+          { name:'高三（2）班', grade:'高中三年级', teacher:'李强', role:'任课教师', students:46, apps:12, todo:1, initial:'2', gradient:'linear-gradient(135deg,#34c759,#30d158)' },
+          { name:'高二（3）班', grade:'高中二年级', teacher:'张敏', role:'任课教师', students:52, apps:9, todo:0, initial:'3', gradient:'linear-gradient(135deg,#ff9f0a,#ff6482)' },
+          { name:'高一（5）班', grade:'高中一年级', teacher:'陈静', role:'任课教师', students:50, apps:9, todo:2, initial:'5', gradient:'linear-gradient(135deg,#bf5af2,#da8fff)' }
+        ]);
+
+        const messages = ref([
+          { icon:'审', title:'应用上线审批通过', desc:'您提交的「成绩分析」应用上线申请已通过审批，当前状态：待上架。', time:'10 分钟前', unread:true, gradient:'linear-gradient(135deg,#34c759,#30d158)' },
+          { icon:'更', title:'应用版本更新提醒', desc:'「智能排课系统」已发布 v2.3 版本，新增走班排课冲突检测能力。', time:'1 小时前', unread:true, gradient:'linear-gradient(135deg,#0a84ff,#5e5ce6)' },
+          { icon:'系', title:'系统通知', desc:'平台将于 2026-09-05 23:00 至次日 02:00 进行例行维护，期间应用中心暂停服务。', time:'昨天 16:20', unread:false, gradient:'linear-gradient(135deg,#8e8e93,#636366)' },
+          { icon:'授', title:'授权即将到期', desc:'「辰知教务」标准版授权将于 15 天后到期，请及时续费以免影响使用。', time:'2026-08-30', unread:false, gradient:'linear-gradient(135deg,#ff9f0a,#ff6482)' }
+        ]);
+
+        const meMenus = ref([
+          { label:'我的订单', icon:'<path d="M6 2h12v20l-6-3-6 3z"/>' },
+          { label:'我的收藏', icon:'<path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10z"/>' },
+          { label:'应用管理', icon:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>' },
+          { label:'消息设置', icon:'<path d="M18 8A6 6 0 1 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>' },
+          { label:'关于平台', icon:'<circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/>' }
+        ]);
+
+        const navTitle = Vue.computed(() => ({ home:'智慧教育平台', app:'应用中心', class:'班级', message:'消息', me:'我的' }[tab.value]));
+
+        // 一级分类下所有应用（跨二级分类展平）
+        const flatApps = g => g.subCats.reduce((all, sc) => all.concat(sc.apps), []);
+        // 仅返回含应用的二级分类（空分类不展示）
+        const visibleSubCats = g => g ? g.subCats.filter(sc => sc.apps.length > 0) : [];
+        const toggleExpand = name => {
+          const i = expanded.value.indexOf(name);
+          if (i >= 0) expanded.value.splice(i, 1); else expanded.value.push(name);
+        };
+        const isExpanded = name => expanded.value.indexOf(name) >= 0;
+        const openAll = name => { allGroup.value = groups.value.find(g => g.name === name); };
+        const openDetail = a => { detailApp.value = a; };
+        const install = a => { a.installed = true; detailApp.value = null; };
+
+        const tickTime = () => {
+          const d = new Date();
+          nowTime.value = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+        };
+        tickTime();
+        setInterval(tickTime, 10000);
+
+        return {
+          tab, nowTime, allGroup, detailApp, groups, classes, messages, meMenus,
+          navTitle, flatApps, visibleSubCats, toggleExpand, isExpanded, openAll, openDetail, install
+        };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>

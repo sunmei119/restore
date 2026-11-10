@@ -125,6 +125,14 @@
       box-shadow: 0 10px 32px rgba(102,126,234,0.55);
     }
 
+    .btn-mobile {
+      background: linear-gradient(135deg, #2f7df6 0%, #69b1ff 100%);
+      box-shadow: 0 6px 20px rgba(47,125,246,0.38);
+    }
+    .btn-mobile:hover {
+      box-shadow: 0 10px 32px rgba(47,125,246,0.52);
+    }
+
     .btn-prd {
       background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
       box-shadow: 0 6px 20px rgba(245,87,108,0.35);
@@ -159,7 +167,15 @@
           <rect x="2" y="3" width="20" height="14" rx="2"/>
           <path d="M8 21h8M12 17v4"/>
         </svg>
-        打开原型页面
+        打开 PC 端原型
+      </a>
+
+      <a class="btn btn-mobile" href="./output/prototype/mobile.html" target="_blank" rel="noopener">
+        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="6" y="2" width="12" height="20" rx="3"/>
+          <path d="M11 18h2"/>
+        </svg>
+        打开移动端原型
       </a>
 
       <a class="btn btn-prd" href="./output/prd/prd.html" target="_blank" rel="noopener">
