@@ -852,40 +852,40 @@
                   <el-button v-if="currentApp.editState==='pending_submit'" text type="primary" size="small" @click="onOnlineApp(currentApp)">立即提交上线申请</el-button>
                 </div>
                 <div style="display:flex;flex-direction:column;align-items:flex-start;width:100%;">
-                  <el-form-item label="应用名称" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentApp.name }}</span></el-form-item>
-                  <el-form-item label="应用简介" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentApp.name }} - 应用介绍</span></el-form-item>
-                  <el-form-item label="一级分类" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentApp.cat?.split('/')[0] }}</span></el-form-item>
-                  <el-form-item label="二级分类" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentApp.cat?.split('/')[1] || '-' }}</span></el-form-item>
-                  <el-form-item label="打开方式" style="width:50%;padding:0 8px;"><span style="line-height:32px;">PCweb、H5</span></el-form-item>
-                  <el-form-item label="跳转登录限制" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ jumpLoginLimitText(currentApp.jumpLoginLimit) }}</span></el-form-item>
-                  <el-form-item label="适用机构" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentApp.scope }}</span></el-form-item>
-                  <el-form-item label="适用学段" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentApp.level }}</span></el-form-item>
-                  <el-form-item label="应用详情介绍" style="width:50%;padding:0 8px;">
+                  <el-form-item label="应用名称：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentApp.name }}</span></el-form-item>
+                  <el-form-item label="应用简介：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentApp.name }} - 应用介绍</span></el-form-item>
+                  <el-form-item label="一级分类：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentApp.cat?.split('/')[0] }}</span></el-form-item>
+                  <el-form-item label="二级分类：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentApp.cat?.split('/')[1] || '-' }}</span></el-form-item>
+                  <el-form-item label="打开方式：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">PCweb、H5</span></el-form-item>
+                  <el-form-item label="跳转登录限制：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ jumpLoginLimitText(currentApp.jumpLoginLimit) }}</span></el-form-item>
+                  <el-form-item label="适用机构：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentApp.scope }}</span></el-form-item>
+                  <el-form-item label="适用学段：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentApp.level }}</span></el-form-item>
+                  <el-form-item label="应用详情介绍：" style="width:50%;padding:0 8px;">
                     <div style="border:1px solid var(--shell-line);border-radius:6px;padding:10px 12px;width:100%;font-size:13px;background:#fafcff;">
                       <p style="margin-bottom:4px;">课堂互动教学辅助工具，支持多端协同使用。</p>
                       <p style="color:var(--shell-text-secondary);font-size:12px;">包含操作文档和演示视频链接</p>
                     </div>
                   </el-form-item>
-                  <el-form-item label="应用视频" style="width:50%;padding:0 8px;">
+                  <el-form-item label="应用视频：" style="width:50%;padding:0 8px;">
                     <div style="font-size:12px;color:var(--shell-text-secondary);line-height:32px;">
                       <el-tag size="small" style="margin-right:6px;">demo_01.mp4</el-tag>
                       <el-tag size="small" style="margin-right:6px;">demo_02.mp4</el-tag>
                       <span>共 2 个视频</span>
                     </div>
                   </el-form-item>
-                  <el-form-item label="应用属性" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentApp.type }}{{ currentApp.native_type ? ' / ' + currentApp.native_type : '' }}</span></el-form-item>
-                  <el-form-item label="是否数据同步" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ appDataSync === 'yes' ? '是' : '否' }}</span></el-form-item>
-                  <el-form-item label="推送地址" v-show="appDataSync === 'yes'" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ pushUrl || '-' }}</span></el-form-item>
-                  <el-form-item label="TOKEN" v-show="appDataSync === 'yes'" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ syncToken || '-' }}</span></el-form-item>
-                  <el-form-item label="EncodingAesKey" v-show="appDataSync === 'yes'" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ syncAesKey || '-' }}</span></el-form-item>
-                  <el-form-item label="小程序可见身份" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教育局职工、学生、学校教职工、访客<span v-if="currentRole === 'platform_admin'">、平台管理员</span></span></el-form-item>
-                  <el-form-item label="小程序地址" style="width:50%;padding:0 8px;"><span style="line-height:32px;">https://app.example.com/m</span></el-form-item>
-                  <el-form-item label="小程序ppID" style="width:50%;padding:0 8px;"><span style="line-height:32px;">wx_7f8e3a2b</span></el-form-item>
-                  <el-form-item label="PC端可见身份" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教育局职工、学生、学校教职工、访客<span v-if="currentRole === 'platform_admin'">、平台管理员</span></span></el-form-item>
-                  <el-form-item label="PC 端地址" style="width:50%;padding:0 8px;"><span style="line-height:32px;">https://app.example.com</span></el-form-item>
-                  <el-form-item label="H5可见身份" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教育局职工、学生、学校教职工、访客<span v-if="currentRole === 'platform_admin'">、平台管理员</span></span></el-form-item>
-                  <el-form-item label="H5 地址" style="width:50%;padding:0 8px;"><span style="line-height:32px;">https://app.example.com/h5</span></el-form-item>
-                  <el-form-item label="白名单" style="width:50%;padding:0 8px;">
+                  <el-form-item label="应用属性：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentApp.type }}{{ currentApp.native_type ? ' / ' + currentApp.native_type : '' }}</span></el-form-item>
+                  <el-form-item label="是否数据同步：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ appDataSync === 'yes' ? '是' : '否' }}</span></el-form-item>
+                  <el-form-item label="推送地址：" v-show="appDataSync === 'yes'" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ pushUrl || '-' }}</span></el-form-item>
+                  <el-form-item label="TOKEN：" v-show="appDataSync === 'yes'" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ syncToken || '-' }}</span></el-form-item>
+                  <el-form-item label="EncodingAesKey：" v-show="appDataSync === 'yes'" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ syncAesKey || '-' }}</span></el-form-item>
+                  <el-form-item label="小程序可见身份：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教育局职工、学生、学校教职工、访客<span v-if="currentRole === 'platform_admin'">、平台管理员</span></span></el-form-item>
+                  <el-form-item label="小程序地址：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">https://app.example.com/m</span></el-form-item>
+                  <el-form-item label="小程序ppID：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">wx_7f8e3a2b</span></el-form-item>
+                  <el-form-item label="PC端可见身份：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教育局职工、学生、学校教职工、访客<span v-if="currentRole === 'platform_admin'">、平台管理员</span></span></el-form-item>
+                  <el-form-item label="PC 端地址：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">https://app.example.com</span></el-form-item>
+                  <el-form-item label="H5可见身份：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教育局职工、学生、学校教职工、访客<span v-if="currentRole === 'platform_admin'">、平台管理员</span></span></el-form-item>
+                  <el-form-item label="H5 地址：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">https://app.example.com/h5</span></el-form-item>
+                  <el-form-item label="白名单：" style="width:50%;padding:0 8px;">
                     <div style="display:flex;flex-wrap:wrap;gap:6px;line-height:24px;">
                       <el-tag size="small" style="background:var(--shell-primary-light,#eef3ff);border-color:var(--shell-primary,#3b6ef6);color:var(--shell-primary,#3b6ef6);">https://app.example.com/m</el-tag>
                       <el-tag size="small" style="background:var(--shell-primary-light,#eef3ff);border-color:var(--shell-primary,#3b6ef6);color:var(--shell-primary,#3b6ef6);">https://app.example.com</el-tag>
@@ -917,6 +917,13 @@
                       <el-form-item label="所属机构" required v-if="currentAppIsLowcode && currentRole==='platform_admin' && shelfConfig.crossTenant==='yes'" style="width:50%;padding:0 8px;">
                         <el-select v-model="shelfConfig.targetTenant" multiple filterable remote :remote-method="onTargetTenantSearch" :loading="targetTenantSearching" placeholder="输入机构名称模糊搜索（最多 50 条，可多选）" style="width:100%;">
                           <el-option v-for="o in targetTenantOptions" :key="o.value" :label="o.label" :value="o.value"></el-option>
+                        </el-select>
+                      </el-form-item>
+                      <el-form-item label="版本号" :required="shelfConfig.crossTenant==='no'" v-if="currentAppIsLowcode" style="width:50%;padding:0 8px;">
+                        <el-select v-model="shelfConfig.versionNo" filterable placeholder="按低代码应用 ID 远程获取版本" style="width:100%;">
+                          <el-option label="v1.0.0" value="v1.0.0"></el-option>
+                          <el-option label="v1.1.0" value="v1.1.0"></el-option>
+                          <el-option label="v1.2.0" value="v1.2.0"></el-option>
                         </el-select>
                       </el-form-item>
                       <template v-if="!currentAppIsLowcode">
@@ -962,15 +969,15 @@
                 <div v-if="detailMode==='manage' && currentAppRejection" style="margin-top:24px;padding-top:24px;border-top:1px solid var(--shell-line);">
                   <div style="margin-bottom:16px;font-weight:600;font-size:15px;">审批信息</div>
                   <div style="display:flex;flex-direction:column;align-items:flex-start;width:100%;">
-                    <el-form-item label="申请类型" style="width:50%;padding:0 8px;">
+                    <el-form-item label="申请类型：" style="width:50%;padding:0 8px;">
                       <el-tag size="small" :type="currentAppRejection.typeTag==='修改'?'warning':'primary'">{{ currentAppRejection.typeTag || '上线' }}</el-tag>
                     </el-form-item>
-                    <el-form-item label="申请时间" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentAppRejection.time || '---' }}</span></el-form-item>
-                    <el-form-item label="申请人" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentAppRejection.dev || '---' }}</span></el-form-item>
-                    <el-form-item label="审批人" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentAppRejection.reviewer || '---' }}</span></el-form-item>
-                    <el-form-item label="审批时间" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentAppRejection.doneTime || '---' }}</span></el-form-item>
-                    <el-form-item label="审批结果" style="width:50%;padding:0 8px;"><el-tag size="small" type="danger">{{ currentAppRejection.result }}</el-tag></el-form-item>
-                    <el-form-item label="审批意见" style="width:100%;padding:0 8px;"><span style="line-height:32px;color:#d9534f;">{{ currentAppRejection.reviewComment || '---' }}</span></el-form-item>
+                    <el-form-item label="申请时间：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentAppRejection.time || '---' }}</span></el-form-item>
+                    <el-form-item label="申请人：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentAppRejection.dev || '---' }}</span></el-form-item>
+                    <el-form-item label="审批人：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentAppRejection.reviewer || '---' }}</span></el-form-item>
+                    <el-form-item label="审批时间：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentAppRejection.doneTime || '---' }}</span></el-form-item>
+                    <el-form-item label="审批结果：" style="width:50%;padding:0 8px;"><el-tag size="small" type="danger">{{ currentAppRejection.result }}</el-tag></el-form-item>
+                    <el-form-item label="审批意见：" style="width:100%;padding:0 8px;"><span style="line-height:32px;color:#d9534f;">{{ currentAppRejection.reviewComment || '---' }}</span></el-form-item>
                   </div>
                 </div>
 
@@ -1189,19 +1196,44 @@
                   </div>
                 </div>
                 <div style="display:flex;flex-direction:column;align-items:flex-start;width:100%;">
-                  <el-form-item label="应用名称" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentApp.name }}</span></el-form-item>
-                  <el-form-item label="应用简介" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentApp.name }} - 应用介绍</span></el-form-item>
-                  <el-form-item label="一级分类" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentApp.cat?.split('/')[0] }}</span></el-form-item>
-                  <el-form-item label="二级分类" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentApp.cat?.split('/')[1] || '-' }}</span></el-form-item>
-                  <el-form-item label="打开方式" style="width:50%;padding:0 8px;"><span style="line-height:32px;">PCweb、H5</span></el-form-item>
-                  <el-form-item label="跳转登录限制" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ jumpLoginLimitText(currentApp.jumpLoginLimit) }}</span></el-form-item>
-                  <el-form-item label="适用机构" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentApp.scope }}</span></el-form-item>
-                  <el-form-item label="适用学段" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentApp.level }}</span></el-form-item>
-                  <el-form-item label="应用属性" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentApp.type }}{{ currentApp.native_type ? ' / ' + currentApp.native_type : '' }}</span></el-form-item>
-                  <el-form-item label="是否数据同步" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ appDataSync === 'yes' ? '是' : '否' }}</span></el-form-item>
-                  <el-form-item label="推送地址" v-show="appDataSync === 'yes'" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ pushUrl || '-' }}</span></el-form-item>
-                  <el-form-item label="TOKEN" v-show="appDataSync === 'yes'" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ syncToken || '-' }}</span></el-form-item>
-                  <el-form-item label="EncodingAesKey" v-show="appDataSync === 'yes'" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ syncAesKey || '-' }}</span></el-form-item>
+                  <el-form-item label="应用名称：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentApp.name }}</span></el-form-item>
+                  <el-form-item label="应用简介：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentApp.name }} - 应用介绍</span></el-form-item>
+                  <el-form-item label="一级分类：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentApp.cat?.split('/')[0] }}</span></el-form-item>
+                  <el-form-item label="二级分类：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentApp.cat?.split('/')[1] || '-' }}</span></el-form-item>
+                  <el-form-item label="打开方式：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">PCweb、H5</span></el-form-item>
+                  <el-form-item label="跳转登录限制：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ jumpLoginLimitText(currentApp.jumpLoginLimit) }}</span></el-form-item>
+                  <el-form-item label="适用机构：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentApp.scope }}</span></el-form-item>
+                  <el-form-item label="适用学段：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentApp.level }}</span></el-form-item>
+                  <el-form-item label="应用属性：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentApp.type }}{{ currentApp.native_type ? ' / ' + currentApp.native_type : '' }}</span></el-form-item>
+                  <el-form-item label="是否数据同步：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ appDataSync === 'yes' ? '是' : '否' }}</span></el-form-item>
+                  <el-form-item label="推送地址：" v-show="appDataSync === 'yes'" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ pushUrl || '-' }}</span></el-form-item>
+                  <el-form-item label="TOKEN：" v-show="appDataSync === 'yes'" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ syncToken || '-' }}</span></el-form-item>
+                  <el-form-item label="EncodingAesKey：" v-show="appDataSync === 'yes'" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ syncAesKey || '-' }}</span></el-form-item>
+                  <el-form-item label="应用详情介绍：" style="width:50%;padding:0 8px;">
+                    <div style="border:1px solid var(--shell-line);border-radius:6px;padding:10px 12px;width:100%;font-size:13px;background:#fafcff;">
+                      <p style="margin-bottom:4px;">课堂互动教学辅助工具，支持多端协同使用。</p>
+                      <p style="color:var(--shell-text-secondary);font-size:12px;">包含操作文档和演示视频链接</p>
+                    </div>
+                  </el-form-item>
+                  <el-form-item label="应用视频：" style="width:50%;padding:0 8px;">
+                    <div style="font-size:12px;color:var(--shell-text-secondary);line-height:32px;">
+                      <el-tag size="small" style="margin-right:6px;">demo_01.mp4</el-tag>
+                      <el-tag size="small" style="margin-right:6px;">demo_02.mp4</el-tag>
+                      <span>共 2 个视频</span>
+                    </div>
+                  </el-form-item>
+                  <el-form-item label="PC端可见身份：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教育局职工、学生、学校教职工、访客</span></el-form-item>
+                  <el-form-item label="PC 端地址：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">https://app.example.com</span></el-form-item>
+                  <el-form-item label="H5可见身份：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教育局职工、学生、学校教职工、访客</span></el-form-item>
+                  <el-form-item label="H5 地址：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">https://app.example.com/h5</span></el-form-item>
+                  <el-form-item label="白名单：" style="width:50%;padding:0 8px;">
+                    <div style="display:flex;flex-wrap:wrap;gap:6px;line-height:24px;">
+                      <el-tag size="small" style="background:var(--shell-primary-light,#eef3ff);border-color:var(--shell-primary,#3b6ef6);color:var(--shell-primary,#3b6ef6);">https://app.example.com</el-tag>
+                      <el-tag size="small" style="background:var(--shell-primary-light,#eef3ff);border-color:var(--shell-primary,#3b6ef6);color:var(--shell-primary,#3b6ef6);">https://app.example.com/h5</el-tag>
+                      <el-tag size="small" style="background:var(--shell-primary-light,#eef3ff);border-color:var(--shell-primary,#3b6ef6);color:var(--shell-primary,#3b6ef6);">https://*.example.com</el-tag>
+                      <span style="font-size:12px;color:var(--shell-text-secondary);">（最多 20 个）</span>
+                    </div>
+                  </el-form-item>
                 </div>
               </el-card>
 
@@ -1572,36 +1604,36 @@
                   </div>
                 </div>
                 <div style="display:flex;flex-direction:column;align-items:flex-start;width:100%;">
-                  <el-form-item label="应用名称" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentReview.name }}</span></el-form-item>
-                  <el-form-item label="应用简介" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentReview.name }} - 应用介绍</span></el-form-item>
-                  <el-form-item label="一级分类" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教学管理</span></el-form-item>
-                  <el-form-item label="二级分类" style="width:50%;padding:0 8px;"><span style="line-height:32px;">课堂工具</span></el-form-item>
-                  <el-form-item label="打开方式" style="width:50%;padding:0 8px;"><span style="line-height:32px;">PCweb、H5、独立小程序</span></el-form-item>
-                  <el-form-item label="跳转登录限制" style="width:50%;padding:0 8px;"><span style="line-height:32px;">仅持有账号登录</span></el-form-item>
-                  <el-form-item label="适用机构" style="width:50%;padding:0 8px;"><span style="line-height:32px;">学校、教育局、超管后台</span></el-form-item>
-                  <el-form-item label="适用学段" style="width:50%;padding:0 8px;"><span style="line-height:32px;">所有学段</span></el-form-item>
-                  <el-form-item label="应用详情介绍" style="width:50%;padding:0 8px;">
+                  <el-form-item label="应用名称：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentReview.name }}</span></el-form-item>
+                  <el-form-item label="应用简介：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentReview.name }} - 应用介绍</span></el-form-item>
+                  <el-form-item label="一级分类：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教学管理</span></el-form-item>
+                  <el-form-item label="二级分类：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">课堂工具</span></el-form-item>
+                  <el-form-item label="打开方式：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">PCweb、H5、独立小程序</span></el-form-item>
+                  <el-form-item label="跳转登录限制：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">仅持有账号登录</span></el-form-item>
+                  <el-form-item label="适用机构：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">学校、教育局、超管后台</span></el-form-item>
+                  <el-form-item label="适用学段：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">所有学段</span></el-form-item>
+                  <el-form-item label="应用详情介绍：" style="width:50%;padding:0 8px;">
                     <div style="border:1px solid var(--shell-line);border-radius:6px;padding:10px 12px;width:100%;font-size:13px;background:#fafcff;">
                       <p style="margin-bottom:4px;">课堂互动教学辅助工具，支持多端协同使用。</p>
                       <p style="color:var(--shell-text-secondary);font-size:12px;">包含操作文档和演示视频链接</p>
                     </div>
                   </el-form-item>
-                  <el-form-item label="应用视频" style="width:50%;padding:0 8px;">
+                  <el-form-item label="应用视频：" style="width:50%;padding:0 8px;">
                     <div style="font-size:12px;color:var(--shell-text-secondary);line-height:32px;">
                       <el-tag size="small" style="margin-right:6px;">demo_01.mp4</el-tag>
                       <el-tag size="small" style="margin-right:6px;">demo_02.mp4</el-tag>
                       <span>共 2 个视频</span>
                     </div>
                   </el-form-item>
-                  <el-form-item label="应用属性" style="width:50%;padding:0 8px;"><span style="line-height:32px;">原生应用</span></el-form-item>
-                  <el-form-item label="小程序可见身份" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教育局职工、学生、学校教职工、访客<span v-if="currentRole === 'platform_admin'">、平台管理员</span></span></el-form-item>
-                  <el-form-item label="小程序地址" style="width:50%;padding:0 8px;"><span style="line-height:32px;">https://app.example.com/m</span></el-form-item>
-                  <el-form-item label="小程序ppID" style="width:50%;padding:0 8px;"><span style="line-height:32px;">wx_7f8e3a2b</span></el-form-item>
-                  <el-form-item label="PC可见身份" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教育局职工、学生、学校教职工、访客<span v-if="currentRole === 'platform_admin'">、平台管理员</span></span></el-form-item>
-                  <el-form-item label="PC 端地址" style="width:50%;padding:0 8px;"><span style="line-height:32px;">https://app.example.com</span></el-form-item>
-                  <el-form-item label="H5可见身份" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教育局职工、学生、学校教职工、访客<span v-if="currentRole === 'platform_admin'">、平台管理员</span></span></el-form-item>
-                  <el-form-item label="H5 地址" style="width:50%;padding:0 8px;"><span style="line-height:32px;">https://app.example.com/h5</span></el-form-item>
-                  <el-form-item label="白名单" style="width:50%;padding:0 8px;">
+                  <el-form-item label="应用属性：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">原生应用</span></el-form-item>
+                  <el-form-item label="小程序可见身份：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教育局职工、学生、学校教职工、访客<span v-if="currentRole === 'platform_admin'">、平台管理员</span></span></el-form-item>
+                  <el-form-item label="小程序地址：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">https://app.example.com/m</span></el-form-item>
+                  <el-form-item label="小程序ppID：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">wx_7f8e3a2b</span></el-form-item>
+                  <el-form-item label="PC可见身份：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教育局职工、学生、学校教职工、访客<span v-if="currentRole === 'platform_admin'">、平台管理员</span></span></el-form-item>
+                  <el-form-item label="PC 端地址：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">https://app.example.com</span></el-form-item>
+                  <el-form-item label="H5可见身份：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教育局职工、学生、学校教职工、访客<span v-if="currentRole === 'platform_admin'">、平台管理员</span></span></el-form-item>
+                  <el-form-item label="H5 地址：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">https://app.example.com/h5</span></el-form-item>
+                  <el-form-item label="白名单：" style="width:50%;padding:0 8px;">
                     <div style="display:flex;flex-wrap:wrap;gap:6px;line-height:24px;">
                       <el-tag size="small" style="background:var(--shell-primary-light,#eef3ff);border-color:var(--shell-primary,#3b6ef6);color:var(--shell-primary,#3b6ef6);">https://app.example.com/m</el-tag>
                       <el-tag size="small" style="background:var(--shell-primary-light,#eef3ff);border-color:var(--shell-primary,#3b6ef6);color:var(--shell-primary,#3b6ef6);">https://app.example.com</el-tag>
@@ -1647,36 +1679,36 @@
                   </div>
                 </div>
                 <div style="display:flex;flex-direction:column;align-items:flex-start;width:100%;">
-                  <el-form-item label="应用名称" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentReview.name }}</span></el-form-item>
-                  <el-form-item label="应用简介" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentReview.name }} - 应用介绍</span></el-form-item>
-                  <el-form-item label="一级分类" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教学管理</span></el-form-item>
-                  <el-form-item label="二级分类" style="width:50%;padding:0 8px;"><span style="line-height:32px;">课堂工具</span></el-form-item>
-                  <el-form-item label="打开方式" style="width:50%;padding:0 8px;"><span style="line-height:32px;">PCweb、H5、独立小程序</span></el-form-item>
-                  <el-form-item label="跳转登录限制" style="width:50%;padding:0 8px;"><span style="line-height:32px;">仅持有账号登录</span></el-form-item>
-                  <el-form-item label="适用机构" style="width:50%;padding:0 8px;"><span style="line-height:32px;">学校、教育局、超管后台</span></el-form-item>
-                  <el-form-item label="适用学段" style="width:50%;padding:0 8px;"><span style="line-height:32px;">所有学段</span></el-form-item>
-                  <el-form-item label="应用详情介绍" style="width:50%;padding:0 8px;">
+                  <el-form-item label="应用名称：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentReview.name }}</span></el-form-item>
+                  <el-form-item label="应用简介：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentReview.name }} - 应用介绍</span></el-form-item>
+                  <el-form-item label="一级分类：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教学管理</span></el-form-item>
+                  <el-form-item label="二级分类：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">课堂工具</span></el-form-item>
+                  <el-form-item label="打开方式：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">PCweb、H5、独立小程序</span></el-form-item>
+                  <el-form-item label="跳转登录限制：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">仅持有账号登录</span></el-form-item>
+                  <el-form-item label="适用机构：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">学校、教育局、超管后台</span></el-form-item>
+                  <el-form-item label="适用学段：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">所有学段</span></el-form-item>
+                  <el-form-item label="应用详情介绍：" style="width:50%;padding:0 8px;">
                     <div style="border:1px solid var(--shell-line);border-radius:6px;padding:10px 12px;width:100%;font-size:13px;background:#fafcff;">
                       <p style="margin-bottom:4px;">课堂互动教学辅助工具，支持多端协同使用。</p>
                       <p style="color:var(--shell-text-secondary);font-size:12px;">包含操作文档和演示视频链接</p>
                     </div>
                   </el-form-item>
-                  <el-form-item label="应用视频" style="width:50%;padding:0 8px;">
+                  <el-form-item label="应用视频：" style="width:50%;padding:0 8px;">
                     <div style="font-size:12px;color:var(--shell-text-secondary);line-height:32px;">
                       <el-tag size="small" style="margin-right:6px;">demo_01.mp4</el-tag>
                       <el-tag size="small" style="margin-right:6px;">demo_02.mp4</el-tag>
                       <span>共 2 个视频</span>
                     </div>
                   </el-form-item>
-                  <el-form-item label="应用属性" style="width:50%;padding:0 8px;"><span style="line-height:32px;">原生应用</span></el-form-item>
-                  <el-form-item label="小程序可见身份" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教育局职工、学生、学校教职工、访客<span v-if="currentRole === 'platform_admin'">、平台管理员</span></span></el-form-item>
-                  <el-form-item label="小程序地址" style="width:50%;padding:0 8px;"><span style="line-height:32px;">https://app.example.com/m</span></el-form-item>
-                  <el-form-item label="小程序ppID" style="width:50%;padding:0 8px;"><span style="line-height:32px;">wx_7f8e3a2b</span></el-form-item>
-                  <el-form-item label="PC可见身份" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教育局职工、学生、学校教职工、访客<span v-if="currentRole === 'platform_admin'">、平台管理员</span></span></el-form-item>
-                  <el-form-item label="PC 端地址" style="width:50%;padding:0 8px;"><span style="line-height:32px;">https://app.example.com</span></el-form-item>
-                  <el-form-item label="H5可见身份" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教育局职工、学生、学校教职工、访客<span v-if="currentRole === 'platform_admin'">、平台管理员</span></span></el-form-item>
-                  <el-form-item label="H5 地址" style="width:50%;padding:0 8px;"><span style="line-height:32px;">https://app.example.com/h5</span></el-form-item>
-                  <el-form-item label="白名单" style="width:50%;padding:0 8px;">
+                  <el-form-item label="应用属性：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">原生应用</span></el-form-item>
+                  <el-form-item label="小程序可见身份：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教育局职工、学生、学校教职工、访客<span v-if="currentRole === 'platform_admin'">、平台管理员</span></span></el-form-item>
+                  <el-form-item label="小程序地址：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">https://app.example.com/m</span></el-form-item>
+                  <el-form-item label="小程序ppID：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">wx_7f8e3a2b</span></el-form-item>
+                  <el-form-item label="PC可见身份：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教育局职工、学生、学校教职工、访客<span v-if="currentRole === 'platform_admin'">、平台管理员</span></span></el-form-item>
+                  <el-form-item label="PC 端地址：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">https://app.example.com</span></el-form-item>
+                  <el-form-item label="H5可见身份：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">教育局职工、学生、学校教职工、访客<span v-if="currentRole === 'platform_admin'">、平台管理员</span></span></el-form-item>
+                  <el-form-item label="H5 地址：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">https://app.example.com/h5</span></el-form-item>
+                  <el-form-item label="白名单：" style="width:50%;padding:0 8px;">
                     <div style="display:flex;flex-wrap:wrap;gap:6px;line-height:24px;">
                       <el-tag size="small" style="background:var(--shell-primary-light,#eef3ff);border-color:var(--shell-primary,#3b6ef6);color:var(--shell-primary,#3b6ef6);">https://app.example.com/m</el-tag>
                       <el-tag size="small" style="background:var(--shell-primary-light,#eef3ff);border-color:var(--shell-primary,#3b6ef6);color:var(--shell-primary,#3b6ef6);">https://app.example.com</el-tag>
@@ -1690,18 +1722,18 @@
               <el-card class="shell-block-card" shadow="never" style="margin-top:16px;">
                 <div style="margin-bottom:16px;font-weight:600;font-size:14px;">审批信息</div>
                 <div style="display:flex;flex-direction:column;align-items:flex-start;width:100%;">
-                  <el-form-item label="申请类型" style="width:50%;padding:0 8px;">
+                  <el-form-item label="申请类型：" style="width:50%;padding:0 8px;">
                     <el-tag size="small" :type="currentReview.typeTag==='修改'?'warning':'primary'">{{ currentReview.typeTag || '上线' }}</el-tag>
                   </el-form-item>
-                  <el-form-item label="申请时间" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentReview.time || '---' }}</span></el-form-item>
-                  <el-form-item label="申请人" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentReview.dev || '---' }}</span></el-form-item>
-                  <el-form-item label="审批人" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentReview.reviewer || '---' }}</span></el-form-item>
-                  <el-form-item label="审批时间" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentReview.doneTime || '---' }}</span></el-form-item>
-                  <el-form-item label="审批结果" style="width:50%;padding:0 8px;">
+                  <el-form-item label="申请时间：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentReview.time || '---' }}</span></el-form-item>
+                  <el-form-item label="申请人：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentReview.dev || '---' }}</span></el-form-item>
+                  <el-form-item label="审批人：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentReview.reviewer || '---' }}</span></el-form-item>
+                  <el-form-item label="审批时间：" style="width:50%;padding:0 8px;"><span style="line-height:32px;">{{ currentReview.doneTime || '---' }}</span></el-form-item>
+                  <el-form-item label="审批结果：" style="width:50%;padding:0 8px;">
                     <el-tag size="small" v-if="currentReview.result" :type="currentReview.result==='通过'?'success':'danger'">{{ currentReview.result }}</el-tag>
                     <span v-else style="line-height:32px;">---</span>
                   </el-form-item>
-                  <el-form-item label="审批意见" style="width:100%;padding:0 8px;">
+                  <el-form-item label="审批意见：" style="width:100%;padding:0 8px;">
                     <span style="line-height:32px;" :style="currentReview.result==='驳回' ? 'color:#d9534f;' : ''">{{ currentReview.reviewComment || '---' }}</span>
                   </el-form-item>
                   <div style="font-size:12px;color:var(--shell-text-secondary);padding:0 16px;">说明：编辑已上架应用（重新上架审核）期间，对外仍展示修改前旧值；审批通过后新值生效。</div>
@@ -4180,6 +4212,10 @@
                   return;
                 }
               }
+              if (this.shelfConfig.crossTenant === 'no' && !this.shelfConfig.versionNo) {
+                this.$message.warning('请选择版本号');
+                return;
+              }
             } else {
               if (!this.shelfConfig.chargeType) {
                 this.$message.warning('请选择收费方式');
@@ -4247,7 +4283,11 @@
                 if (hasPendingChange) t.editState = 'pending_review';
                 saveTip = hasPendingChange ? '上线申请已提交，修改信息待审批通过后生效' : '上线申请已提交，待桂教通超级管理员审批';
               } else {
-                saveTip = '上线申请已提交';
+                // 审批为桂教通超级管理员专属操作：超管提交即上线，不生成审批记录
+                t.status = 'online';
+                t.editState = '';
+                t.pendingEdit = null;
+                saveTip = '上线成功';
               }
             }
           } else {
@@ -4319,7 +4359,7 @@
         },
         menuAccessible(idx) {
           const tenantOnly = ['P22','P21','P24','P25'];
-          const platformOnly = ['P10','P18','P19','P20','P26'];
+          const platformOnly = ['P10','P18','P19','P20','P26','P26e'];
           if (this.currentRole === 'tenant_admin') return !platformOnly.includes(idx);
           if (this.currentRole === 'platform_admin') return !tenantOnly.includes(idx);
           return true;
