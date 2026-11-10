@@ -494,7 +494,7 @@
               <el-menu-item index="P01">应用申请管理</el-menu-item>
               <el-menu-item index="P04">应用上架管理</el-menu-item>
               <el-menu-item index="P06" v-if="currentRole==='platform_admin'">全平台应用</el-menu-item>
-              <el-menu-item index="P07">上架范围管理</el-menu-item>
+              <el-menu-item index="P07" v-if="!(currentRole==='tenant_admin' && tenantOrgType==='school')">上架范围管理</el-menu-item>
               <el-menu-item index="P09">应用分类管理</el-menu-item>
               <el-menu-item index="P10" v-if="currentRole==='platform_admin'">应用审批管理</el-menu-item>
               <el-menu-item index="P12">标签管理</el-menu-item>
@@ -1024,7 +1024,7 @@
                   </tr>
                 </tbody>
               </table>
-              <div class="pagination-bar">共 12 条 第 1/1 页</div>
+              <div class="pagination-bar">共 13 条 第 1/1 页</div>
                 </el-tab-pane>
 
                 <!-- Tab 2：应用分享管理（当前机构分享给其他机构 / 桂教通平台的应用） -->
@@ -1070,13 +1070,34 @@
               </el-tabs>
 
               <!-- 停止分享弹窗 -->
-              <el-dialog title="停止分享" v-model="stopShareVisible" width="480px">
-                <div style="font-size:13px;color:var(--shell-text-secondary);margin-bottom:12px;">应用：<b style="color:var(--shell-text);">{{ stopShareApp.name }}</b></div>
-                <el-form label-width="96px">
+              <el-dialog title="停止分享" v-model="stopShareVisible" width="580px">
+                <div style="font-size:16px;color:var(--shell-text-secondary);margin-bottom:12px;">当前应用：<b style="color:var(--shell-text);">{{ stopShareApp.name }}</b></div>
+                <el-form label-width="116px">
                   <el-form-item label="停止分享范围" required>
-                    <el-select v-model="stopShareForm.scopes" multiple style="width:100%;" placeholder="请选择要停止分享的范围（可多选）">
-                      <el-option v-for="o in stopShareOptions" :key="o.value" :label="o.label" :value="o.value"></el-option>
-                    </el-select>
+                    <div style="width:100%;">
+                      <div v-if="stopHasGuide" style="margin-bottom:10px;">
+                        <el-checkbox v-model="stopShareForm.guide">桂教通平台</el-checkbox>
+                      </div>
+                      <div v-if="stopOrgTotal">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+                          <el-input v-model="stopOrgKeyword" size="small" placeholder="搜索机构名称" clearable style="width:200px;" />
+                          <span style="font-size:12px;color:var(--shell-text-secondary);">已选 <b style="color:var(--shell-primary);">{{ stopShareForm.orgs.length }}</b> / 共 {{ stopOrgTotal }} 个，单次最多 200 个</span>
+                          <div style="margin-left:auto;display:flex;gap:6px;">
+                            <el-button size="small" @click="onStopSelectAll">全选</el-button>
+                            <el-button size="small" @click="onStopClear">清空</el-button>
+                          </div>
+                        </div>
+                        <div style="max-height:220px;overflow-y:auto;border:1px solid #eef2f7;border-radius:6px;padding:6px 12px;background:#fafcff;">
+                          <el-checkbox-group v-model="stopShareForm.orgs" @change="onStopOrgsChange">
+                            <div v-for="o in stopOrgFiltered" :key="o" style="padding:3px 0;border-bottom:1px dashed #f2f5fa;">
+                              <el-checkbox :value="o">{{ o }}</el-checkbox>
+                            </div>
+                          </el-checkbox-group>
+                          <div v-if="!stopOrgFiltered.length" style="font-size:12px;color:var(--shell-text-secondary);padding:8px 0;">无匹配机构</div>
+                        </div>
+                      </div>
+                      <div v-if="!stopHasGuide && !stopOrgTotal" style="font-size:12px;color:var(--shell-text-secondary);">该应用当前无分享中的范围</div>
+                    </div>
                   </el-form-item>
                 </el-form>
                 <template #footer>
@@ -1439,30 +1460,39 @@
                     <el-form-item label="可见范围" required style="width:50%;padding:0 8px;align-items:flex-start;">
                       <div v-if="zoneForm.scopeType==='custom'" style="width:100%;">
                         <div style="margin-bottom:8px;">
-                          <el-input v-model="zoneForm.orgIdInput" placeholder="orgid，多个以英文逗号隔开" style="width:100%;" />
+                          <el-input type="textarea" :rows="3" v-model="zoneForm.orgIdInput" placeholder="输入机构 ID，多个以英文逗号隔开，单次最多 500 个" />
                         </div>
-                        <div style="display:flex;gap:8px;">
+                        <div style="display:flex;gap:8px;align-items:center;">
                           <el-button size="small" @click="onAddZoneOrgs">手动添加</el-button>
                           <el-button size="small" type="primary" @click="showImportDialog=true">批量导入</el-button>
+                          <span style="font-size:12px;color:var(--shell-text-secondary);">已添加 {{ zoneForm.visibleOrgs.length }} 个机构，单次最多添加 500 个</span>
                         </div>
-                        <div style="display:flex;flex-wrap:wrap;align-content:flex-start;gap:6px;margin-top:10px;height:180px;overflow-y:auto;background:#fafcff;border:1px solid #eef2f7;border-radius:6px;padding:12px;">
-                          <el-tag v-for="(org,i) in zoneForm.visibleOrgs" :key="i" closable :disable-transitions="true" @close="zoneForm.visibleOrgs.splice(i,1)" style="margin-bottom:4px;">{{ org }}</el-tag>
+                        <!-- 已添加机构：只读文本区域展示机构名称，分页获取数据（每页 500 条） -->
+                        <div style="margin-top:10px;">
+                          <el-input type="textarea" :rows="8" readonly :value="zoneVisibleText" placeholder="已添加的机构将在此以只读文本展示" />
+                        </div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
+                          <span style="font-size:12px;color:var(--shell-text-secondary);">共 {{ zoneForm.visibleOrgs.length }} 个机构，每页 500 条</span>
+                          <el-pagination background small layout="prev, pager, next" :total="zoneForm.visibleOrgs.length" :page-size="500" :current-page="zonePage" @current-change="onZoneVisiblePageChange" />
                         </div>
                         <div v-if="!zoneForm.visibleOrgs.length" style="color:var(--shell-text-secondary);font-size:12px;padding-top:6px;">暂无可查机构，请手动添加 orgid 或批量导入</div>
                       </div>
 
                       <div v-if="zoneForm.scopeType==='by_org'" style="width:100%;">
-                        <el-select v-model="zoneForm.selectedOrgs" multiple placeholder="请选择机构（可多选）" style="width:100%;" @change="onZoneOrgChange">
-                          <el-option label="南宁市教育局" value="南宁市教育局"></el-option>
-                          <el-option label="南宁市青秀区教育局" value="南宁市青秀区教育局"></el-option>
-                          <el-option label="南宁市兴宁区教育局" value="南宁市兴宁区教育局"></el-option>
-                          <el-option label="南宁市第一中学" value="南宁市第一中学"></el-option>
-                          <el-option label="南宁市第二中学" value="南宁市第二中学"></el-option>
+                        <!-- 数据源：当前登录机构管辖的下属教育局（仅教育局层级，不含学校）；超管为全平台教育局 -->
+                        <el-select v-model="zoneForm.selectedOrgs" multiple filterable placeholder="请选择下属教育局（可多选）" style="width:100%;" @change="onZoneOrgChange">
+                          <el-option v-for="b in zoneBureauOptions" :key="b" :label="b" :value="b"></el-option>
                         </el-select>
-                        <div style="display:flex;flex-wrap:wrap;align-content:flex-start;gap:6px;margin-top:8px;height:180px;overflow-y:auto;background:#fafcff;border:1px solid #eef2f7;border-radius:6px;padding:12px;">
-                          <el-tag v-for="(org,i) in zoneForm.visibleOrgs" :key="i" closable :disable-transitions="true" @close="removeZoneVisibleOrg(i)" style="margin-bottom:4px;">{{ org }}</el-tag>
+                        <div style="margin-top:6px;font-size:12px;color:var(--shell-text-secondary);">
+                          数据来源：{{ currentRole==='platform_admin' ? '全平台教育局' : '当前机构所管辖的下属教育局' }}，不含学校
                         </div>
-                        <div v-if="!zoneForm.visibleOrgs.length" style="color:var(--shell-text-secondary);font-size:12px;padding:4px 0;">请在上方选择机构</div>
+                        <div v-if="!zoneBureauOptions.length" style="margin-top:8px;padding:8px 12px;background:#fff7e6;border:1px solid #ffe7ba;border-radius:6px;font-size:12px;color:#ad6800;">
+                          当前机构下无下属教育局，无法按教育机构创建范围
+                        </div>
+                        <div style="margin-top:8px;">
+                          <el-input type="textarea" :rows="4" readonly :value="zoneForm.visibleOrgs.join('\n')" placeholder="已选教育机构将在此以只读文本展示" />
+                        </div>
+                        <div style="margin-top:6px;font-size:12px;color:var(--shell-text-secondary);">可见范围为当前选中教育机构及下级机构和学校</div>
                       </div>
 
                       <div v-if="zoneForm.scopeType==='by_tag'" style="width:100%;">
@@ -3121,6 +3151,8 @@
             { name:'横州市教育局', id:'ZN-D009', time:'2026-06-05' },
           ],
           zoneEditId: null,
+          // 自定义范围「可见范围」只读文本区域分页：每页 500 条
+          zonePage: 1,
           zoneForm: {
             name: '',
             scopeType: 'custom',
@@ -3337,6 +3369,8 @@
             { initial:'电', name:'电子班牌', cat:'教学管理', dev:'自治区教育厅', zoneList:['广西壮族自治区教育厅'], time:'2026-07-21', status:'listed', source:'南宁市教育局', type:'原生应用', native_type:'自建应用', appTypeLabel:'非平台型' },
             { initial:'智', name:'智慧课堂', cat:'教学管理', dev:'柳州市高级中学', zoneList:['—'], time:'2026-07-22', status:'unlisted', source:'柳州市高级中学', sharedFrom:'柳州市高级中学', type:'原生应用', native_type:'低代码应用', appTypeLabel:'平台型' },
             { initial:'考', name:'考试管理', cat:'教务管理', dev:'南宁市教育局', zoneList:['南宁市教育局'], time:'2026-07-23', status:'dismissed', source:'南宁市教育局', type:'原生应用', native_type:'自建应用', appTypeLabel:'非平台型' },
+            // 分享来源应用：分享方（柳州市高级中学）已停止分享 → 本机构侧已下架且不可重新上架
+            { initial:'安', name:'平安校园', cat:'校园安全', dev:'柳州市高级中学', zoneList:['柳州市高级中学'], time:'2026-07-24', status:'dismissed', source:'柳州市高级中学', sharedFrom:'柳州市高级中学', shareRevoked:true, type:'原生应用', native_type:'自建应用', appTypeLabel:'非平台型' },
           ],
           // 应用分享管理：当前机构分享给其他机构 / 桂教通平台的应用（shareScope 记录上架时的分享范围）
           shareList: [
@@ -3349,7 +3383,8 @@
           shareFilter: { name:'', cat:'', attr:'' },
           stopShareVisible: false,
           stopShareApp: { name:'' },
-          stopShareForm: { scopes: [] },
+          stopShareForm: { guide: false, orgs: [] },
+          stopOrgKeyword: '',
           platformAppFilter: { name:'', cat:'', appId:'' },
           platformAppList: [
             { logo:'校', name:'校园通',       appId:'2001', appOpenId:'eco_xiaoyuantong', tenantName:'南宁市教育局',   cat:'校园办公', appTypeLabel:'非平台型', type:'生态应用', native_type:'',           scope:'学校',        level:'所有学段' },
@@ -3559,6 +3594,17 @@
           ],
           // 机构管理员当前机构类型：bureau=教育局（默认，展示范围选择）、school=学校（不展示范围选择，仅分享范围，必填）
           tenantOrgType: 'bureau',
+          // 当前登录机构（机构管理员）及其管辖的下属教育局，供 P08「按教育机构」下拉取数（仅教育局层级，不含学校）
+          currentTenantName: '南宁市教育局',
+          bureauList: [
+            { name:'南宁市青秀区教育局', parent:'南宁市教育局' },
+            { name:'南宁市兴宁区教育局', parent:'南宁市教育局' },
+            { name:'南宁市江南区教育局', parent:'南宁市教育局' },
+            { name:'南宁市西乡塘区教育局', parent:'南宁市教育局' },
+            { name:'横州市教育局', parent:'南宁市教育局' },
+            { name:'柳州市城中区教育局', parent:'柳州市教育局' },
+            { name:'桂林市象山区教育局', parent:'桂林市教育局' },
+          ],
           shelfConfig: {
             crossTenant: 'no',
             crossLevel: '',
@@ -3624,6 +3670,19 @@
           return [...new Set([...this.whitelistAuto, ...manual])].slice(0, 20);
         },
         currentRoleLabel() { return this.currentRole === 'platform_admin' ? '桂教通超级管理员' : '机构管理员'; },
+        zoneBureauOptions() {
+          // 按教育机构：超管取全平台教育局；机构管理员取当前机构管辖的下属教育局（不含学校）
+          if (this.currentRole === 'platform_admin') return this.bureauList.map(b => b.name);
+          if (this.tenantOrgType === 'school') return [];
+          return this.bureauList.filter(b => b.parent === this.currentTenantName).map(b => b.name);
+        },
+        zoneVisibleText() {
+          // 自定义范围：按机构 ID 解析机构名称，只读文本区域分页展示（每页 500 条），解析不到时展示 ID
+          const start = (this.zonePage - 1) * 500;
+          return this.zoneForm.visibleOrgs.slice(start, start + 500)
+            .map(id => { const o = this.orgList.find(x => x.id === id); return o ? o.name : id; })
+            .join('\n');
+        },
         filteredOrgList() {
           const s = this.installFilter.status;
           if (!s) return this.orgList;
@@ -3640,15 +3699,16 @@
             return okName && okCat && okAttr;
           });
         },
-        stopShareOptions() {
-          const app = this.stopShareApp;
-          if (!app || !app.shareScope) return [];
-          const opts = [];
-          if (app.shareScope.indexOf('guide') > -1) opts.push({ value: 'guide', label: '桂教通平台' });
-          if (app.shareScope.indexOf('other') > -1 && app.shareOrgs && app.shareOrgs.length) {
-            app.shareOrgs.forEach(o => opts.push({ value: 'org:' + o, label: o }));
-          }
-          return opts;
+        stopHasGuide() {
+          return (this.stopShareApp.shareScope || []).indexOf('guide') > -1;
+        },
+        stopOrgTotal() {
+          return (this.stopShareApp.shareOrgs || []).length;
+        },
+        stopOrgFiltered() {
+          const k = (this.stopOrgKeyword || '').trim().toLowerCase();
+          const list = this.stopShareApp.shareOrgs || [];
+          return k ? list.filter(o => o.toLowerCase().includes(k)) : list;
         },
         filteredPlatformAppList() {
           const name = (this.platformAppFilter.name || '').trim().toLowerCase();
@@ -4360,7 +4420,12 @@
         menuAccessible(idx) {
           const tenantOnly = ['P22','P21','P24','P25'];
           const platformOnly = ['P10','P18','P19','P20','P26','P26e'];
-          if (this.currentRole === 'tenant_admin') return !platformOnly.includes(idx);
+          // 学校机构（机构管理员）无上架范围管理菜单：P07 / P07a / P08 不可访问
+          const schoolHidden = ['P07','P07a','P08'];
+          if (this.currentRole === 'tenant_admin') {
+            if (this.tenantOrgType === 'school' && schoolHidden.includes(idx)) return false;
+            return !platformOnly.includes(idx);
+          }
           if (this.currentRole === 'platform_admin') return !tenantOnly.includes(idx);
           return true;
         },
@@ -4390,6 +4455,11 @@
           document.body.removeChild(ta);
         },
         onShelfApp(a) {
+          // 分享来源应用：分享方已停止分享时，应用已下架且不可重新上架
+          if (a.shareRevoked) {
+            this.$message.error(`【${a.sharedFrom || a.dev}】已经停止分享当前应用，当前应用不能上架。`);
+            return;
+          }
           const found = this.appList.find(app => app.name === a.name);
           this.editAppId = found ? found.id : null;
           this.currentShelfRecord = a;
@@ -4434,19 +4504,41 @@
         },
         onStopShare(app) {
           this.stopShareApp = app;
-          this.stopShareForm = { scopes: [] };
+          this.stopShareForm = { guide: false, orgs: [] };
+          this.stopOrgKeyword = '';
           this.stopShareVisible = true;
+        },
+        onStopOrgsChange(val) {
+          // 单次最多停止分享 200 个机构，超出保留前 200 个
+          if (val.length > 200) {
+            this.stopShareForm.orgs = val.slice(0, 200);
+            this.$message.warning('单次最多停止分享 200 个机构，已保留前 200 个');
+          }
+        },
+        onStopSelectAll() {
+          const list = this.stopOrgFiltered;
+          const take = list.slice(0, 200);
+          this.stopShareForm.orgs = take;
+          this.$message.success(list.length > 200
+            ? '已选中前 200 个机构（单次最多 200 个）'
+            : `已选中 ${take.length} 个机构`);
+        },
+        onStopClear() {
+          this.stopShareForm.orgs = [];
         },
         onStopShareSubmit() {
           const app = this.stopShareApp;
           if (!app) return;
-          const scopes = this.stopShareForm.scopes || [];
-          if (scopes.length === 0) {
+          const stopGuide = !!this.stopShareForm.guide;
+          const stopOrgs = this.stopShareForm.orgs || [];
+          if (!stopGuide && stopOrgs.length === 0) {
             this.$message.warning('请选择要停止分享的范围（必填）');
             return;
           }
-          const stopGuide = scopes.indexOf('guide') > -1;
-          const stopOrgs = scopes.filter(s => s.indexOf('org:') === 0).map(s => s.slice(4));
+          if (stopOrgs.length > 200) {
+            this.$message.error('单次最多停止分享 200 个机构，请分批操作');
+            return;
+          }
           // 停止桂教通平台分享
           if (stopGuide) {
             app.shareScope = (app.shareScope || []).filter(s => s !== 'guide');
@@ -4458,14 +4550,18 @@
               app.shareScope = (app.shareScope || []).filter(s => s !== 'other');
             }
           }
-          // 停止分享：将对应机构应用上架管理列表中的该应用下架（已上架改为已下架，未上架保持），已安装应用不卸载
+          // 停止分享：将对应机构/桂教通平台侧应用上架管理列表中的该应用下架（已上架改为已下架，未上架保持），已安装应用不卸载
+          // 停止分享给机构或桂教通平台后，对方侧该应用不可重新上架（shareRevoked），提交上架时提示分享方已停止分享
+          const stopTargetText = (stopGuide && stopOrgs.length) ? '对应机构与桂教通平台' : (stopGuide ? '桂教通平台' : '对应机构');
           const shelfItem = this.shelfList.find(s => s.name === app.name);
           if (shelfItem) {
+            shelfItem.sharedFrom = shelfItem.sharedFrom || this.currentTenantName;
+            shelfItem.shareRevoked = true;
             if (shelfItem.status === 'listed') {
               shelfItem.status = 'dismissed';
-              this.$message.success(`已停止分享，【${app.name}】在对应机构已下架（已安装应用不卸载）`);
+              this.$message.success(`已停止分享，【${app.name}】在${stopTargetText}已下架且不可重新上架（已安装应用不卸载）`);
             } else {
-              this.$message.success(`已停止分享，【${app.name}】在对应机构保持未上架`);
+              this.$message.success(`已停止分享，【${app.name}】在${stopTargetText}保持未上架且不可重新上架`);
             }
           } else {
             this.$message.success(`已停止分享【${app.name}】`);
@@ -4533,9 +4629,13 @@
         },
         onAddZoneOrgs() {
           const ids = this.zoneForm.orgIdInput.split(',').map(s => s.trim()).filter(Boolean);
+          if (!ids.length) { this.$message.warning('请先输入机构 ID'); return; }
+          if (ids.length > 500) { this.$message.error('单次最多添加 500 个机构，请分批添加'); return; }
           ids.forEach(id => { if (!this.zoneForm.visibleOrgs.includes(id)) this.zoneForm.visibleOrgs.push(id); });
           this.zoneForm.orgIdInput = '';
+          this.zonePage = 1;
         },
+        onZoneVisiblePageChange(p) { this.zonePage = p; },
         onAddZoneInvisible() {
           const ids = this.zoneForm.invisibleInput.split(',').map(s => s.trim()).filter(Boolean);
           ids.forEach(id => { if (!this.zoneForm.invisibleOrgs.includes(id)) this.zoneForm.invisibleOrgs.push(id); });
@@ -4544,17 +4644,10 @@
         onZoneOrgChange(val) {
           this.zoneForm.visibleOrgs = [...val];
         },
-        removeZoneVisibleOrg(i) {
-          const removed = this.zoneForm.visibleOrgs[i];
-          this.zoneForm.visibleOrgs.splice(i,1);
-          if (this.zoneForm.scopeType==='by_org') {
-            const idx = this.zoneForm.selectedOrgs.indexOf(removed);
-            if (idx > -1) this.zoneForm.selectedOrgs.splice(idx,1);
-          }
-        },
         onNewZone() {
           this.zoneEditId = null;
           this.zoneForm = { name:'', scopeType:'custom', orgIdInput:'', visibleOrgs:[], invisibleInput:'', invisibleOrgs:[], selectedOrgs:[], selectedOrgTypes:[], selectedTags:[] };
+          this.zonePage = 1;
           this.goPage('P08');
         },
         onEditZone(z) {
@@ -4570,6 +4663,7 @@
             selectedOrgTypes: [],
             selectedTags: [],
           };
+          this.zonePage = 1;
           this.goPage('P08');
         },
         onSaveZone() {
@@ -4745,6 +4839,11 @@
         onConfirmShelf() {
           const a = this.currentShelfRecord;
           if (!a) { this.$message.warning('未找到待上架记录'); return; }
+          // 分享方已停止分享：提交上架时拦截
+          if (a.shareRevoked) {
+            this.$message.error(`【${a.sharedFrom || a.dev}】已经停止分享当前应用，当前应用不能上架。`);
+            return;
+          }
           if (!this.shelfConfig.agreePromise) {
             this.$message.warning('请勾选上架承诺书');
             return;
@@ -5056,6 +5155,7 @@
           });
           this.showImportDialog = false;
           this.importFileList = [];
+          this.zonePage = 1;
           this.$message.success('批量导入成功，共导入 ' + mockOrgs.length + ' 个机构');
         },
         onStatsTimeChange(val) {
