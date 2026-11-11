@@ -1277,6 +1277,10 @@
                 </div>
                 <el-form>
                   <div style="display:flex;flex-direction:column;align-items:flex-start;width:100%;">
+                    <!-- 分享来源应用：上架时补充应用分类（数据来源当前机构分类，可只选一级），必填 -->
+                    <el-form-item label="应用分类" required v-if="currentShelfRecord && currentShelfRecord.sharedFrom" style="width:50%;padding:0 8px;">
+                      <el-cascader v-model="shelfConfig.appCategory" :options="appCategoryOptions" :props="{ expandTrigger: 'hover', checkStrictly: true }" placeholder="请选择应用分类（支持只选一级）" style="width:100%;" />
+                    </el-form-item>
                     <!-- 范围选择：桂教通超级管理员、非学校的机构管理员 时展示；学校机构不展示（无范围选择） -->
                     <template v-if="(currentRole==='platform_admin') || (currentRole==='tenant_admin' && tenantOrgType!=='school')">
                       <el-form-item label="范围选择" :required="currentRole==='tenant_admin'" style="width:50%;padding:0 8px;">
@@ -3614,6 +3618,7 @@
             shareScope: [],
             versionNo: '',
             targetOrgs: [],
+            appCategory: [],
             canTrial: 'no',
             trialPackage: '',
             chargeType: 'free',
@@ -3645,7 +3650,24 @@
           const m = { P01:'应用管理', P02:'应用管理', P02b:'应用管理', P04:'应用管理', P04b:'应用管理', P05:'应用管理', P06:'应用管理', P07:'应用管理', P07a:'应用管理', P08:'应用管理', P09:'应用管理', P10:'应用管理', P11:'应用管理', P11v:'应用管理', P12:'应用管理', P12a:'应用管理', P12e:'应用管理', P17:'平台管理', P18:'订单管理', P21:'我的空间', P22:'我的空间', P24:'我的空间', P25:'我的空间', P19:'订单管理', P20:'订单管理', P26:'订单管理', P26e:'订单管理' };
           return m[this.currentPage] || '应用中心';
         },
-        currentApp() { return this.appList.find(a => a.id === this.editAppId) || null; },
+        currentApp() {
+          const a = this.appList.find(x => x.id === this.editAppId);
+          if (a) return a;
+          // 分享过来的应用不在 appList 中：P05 / P04b 以当前上架记录作为只读展示源，避免页面空白
+          const rec = this.currentShelfRecord;
+          if (rec && (this.currentPage === 'P05' || this.currentPage === 'P04b')) {
+            return {
+              id: 'shelf-' + rec.name, appId: rec.appId || '—', appOpenId: rec.appOpenId || '—',
+              name: rec.name, logo: rec.initial || (rec.name || '').slice(0, 1),
+              cat: rec.cat || '—', appTypeLabel: rec.appTypeLabel || '非平台型',
+              type: rec.type || '原生应用', native_type: rec.native_type || '',
+              scope: rec.scope || '学校', level: rec.level || '所有学段',
+              source: rec.sharedFrom || rec.dev || '—', status: 'online', listing: rec.status,
+              jumpLoginLimit: rec.jumpLoginLimit || 'account_only',
+            };
+          }
+          return null;
+        },
         currentAppRejection() {
           // 上线申请被驳回，或修改审批被驳回时，返回最近一条被驳回的审批记录，供 P02b 管理模式展示审批信息
           const a = this.currentApp;
@@ -4466,6 +4488,7 @@
           this.shelfConfig = {
             crossTenant: 'no', crossLevel: '', targetTenant: [],
             scopeType: 'all', selectedZones: [], shareScope: [], versionNo: '', targetOrgs: [],
+            appCategory: [],
             canTrial: 'no', trialPackage: '', chargeType: 'free', authPackages: [],
             agreePromise: false,
           }
@@ -4844,6 +4867,11 @@
             this.$message.error(`【${a.sharedFrom || a.dev}】已经停止分享当前应用，当前应用不能上架。`);
             return;
           }
+          // 分享来源应用：上架配置中的应用分类必填（当前机构分类，可选一级或两级）
+          if (a.sharedFrom && (!this.shelfConfig.appCategory || this.shelfConfig.appCategory.length === 0)) {
+            this.$message.warning('请选择应用分类');
+            return;
+          }
           if (!this.shelfConfig.agreePromise) {
             this.$message.warning('请勾选上架承诺书');
             return;
@@ -4864,6 +4892,7 @@
             // 分享来源应用：无分享范围，默认上架范围即本校
             if (a.sharedFrom) {
               a.zoneList = ['本校'];
+              a.cat = this.shelfConfig.appCategory.join('/');
               a.status = 'listed';
               this.$message.success('已上架到本校（分享来源应用不可再被分享给其他机构）');
               this.goPage('P04');
@@ -4896,6 +4925,8 @@
           }
           // 更新原记录的 上架范围（仅保留范围选择内容，不含分享范围；应用属性等其余字段保持不变），状态置为已上架
           a.zoneList = zones;
+          // 分享来源应用：上架时选择的分类写回记录，列表按所选分类展示
+          if (a.sharedFrom && this.shelfConfig.appCategory.length) a.cat = this.shelfConfig.appCategory.join('/');
           a.status = 'listed';
           this.$message.success('上架成功');
           this.goPage('P04');
